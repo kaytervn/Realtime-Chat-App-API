@@ -9,4 +9,4 @@ const router = express.Router();
 router.post("/create", auth("PER_C"), createPermission);
 router.get("/list", auth("PER_L"), getListPermissions);
 
-export { router as permissionRoutes };
+export { router as permissionRouter };

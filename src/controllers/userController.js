@@ -134,7 +134,6 @@ const resetUserPassword = async (req, res) => {
   }
 };
 
-
 const changeUserPassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
@@ -177,7 +176,7 @@ const updateUserProfile = async (req, res) => {
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
   }
-}
+};
 export {
   loginUser,
   getUserProfile,
@@ -186,5 +185,5 @@ export {
   registerUser,
   verifyUser,
   changeUserPassword,
-  updateUserProfile
+  updateUserProfile,
 };

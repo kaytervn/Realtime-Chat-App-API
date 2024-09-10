@@ -8,4 +8,4 @@ const router = express.Router();
 
 router.post("/upload", auth(""), upload.single("file"), uploadFile);
 
-export { router as fileRoutes };
+export { router as fileRouter };

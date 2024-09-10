@@ -32,4 +32,4 @@ router.post("/change-password", auth(""), changeUserPassword);
 // Update Profile
 router.post("/update-profile", auth(""), updateUserProfile);
 
-export { router as userRoutes };
+export { router as userRouter };

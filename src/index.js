@@ -1,11 +1,11 @@
 import express from "express";
 import dbConfig from "./configurations/dbConfig.js";
 import "dotenv/config.js";
-import { userRoutes } from "./routes/UserRoutes.js";
-import { roleRoutes } from "./routes/roleRoutes.js";
 import { swaggerDocs, swaggerUi } from "./configurations/swaggerConfig.js";
-import { permissionRoutes } from "./routes/permissionRoutes.js";
-import { fileRoutes } from "./routes/fileRoutes.js";
+import { userRouter } from "./routes/userRouter.js";
+import { roleRouter } from "./routes/roleRouter.js";
+import { fileRouter } from "./routes/fileRouter.js";
+import { permissionRouter } from "./routes/permissionRouter.js";
 
 const app = express();
 
@@ -13,10 +13,10 @@ app.use(express.json({ limit: "200mb" }));
 app.use(express.json());
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
-app.use("/v1/user", userRoutes);
-app.use("/v1/role", roleRoutes);
-app.use("/v1/file", fileRoutes);
-app.use("/v1/permission", permissionRoutes);
+app.use("/v1/user", userRouter);
+app.use("/v1/role", roleRouter);
+app.use("/v1/file", fileRouter);
+app.use("/v1/permission", permissionRouter);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

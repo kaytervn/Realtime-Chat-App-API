@@ -13,4 +13,4 @@ router.put("/update", auth("ROLE_U"), updateRole);
 router.get("/get/:id", auth("ROLE_V"), getRole);
 router.get("/list", auth("ROLE_L"), getListRoles);
 
-export { router as roleRoutes };
+export { router as roleRouter };

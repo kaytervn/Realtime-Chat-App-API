@@ -6,7 +6,9 @@ import {
   forgotUserPassword,
   registerUser,
   verifyUser,
-} from "../controllers/UserController.js";
+  changeUserPassword,
+  updateUserProfile,
+} from "../controllers/userController.js";
 import auth from "../middlewares/authentication.js";
 const router = express.Router();
 
@@ -22,5 +24,10 @@ router.post("/verify", auth(""), verifyUser);
 router.post("/reset-password", auth(""), resetUserPassword);
 // Forgot Password
 router.post("/forgot-password", auth(""), forgotUserPassword);
+
+// Reset Password
+router.post("/change-password", auth(""), changeUserPassword);
+// Forgot Password
+router.post("/update-profile", auth(""), updateUserProfile);
 
 export { router as userRoutes };

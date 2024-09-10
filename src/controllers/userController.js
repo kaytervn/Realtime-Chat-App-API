@@ -134,6 +134,50 @@ const resetUserPassword = async (req, res) => {
   }
 };
 
+
+const changeUserPassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const { user } = req;
+    const isPasswordValid = await comparePassword(
+      currentPassword,
+      user.password
+    );
+    if (!isPasswordValid) {
+      return makeErrorResponse({
+        res,
+        message: "Current password does not match",
+      });
+    }
+    if (currentPassword == newPassword) {
+      return makeErrorResponse({
+        res,
+        message: "New password must be different from current password",
+      });
+    }
+    user.updateOne({ password: await encodePassword(newPassword) });
+    return makeSuccessResponse({
+      res,
+      message: "Change password success",
+    });
+  } catch (error) {
+    return makeErrorResponse({ res, message: error.message });
+  }
+};
+
+const updateUserProfile = async (req, res) => {
+  try {
+    const { displayName, birthDate, bio, avatarUrl } = req.body;
+    const { user } = req;
+    await user.updateOne({ displayName, birthDate, bio, avatarUrl });
+    return makeSuccessResponse({
+      res,
+      message: "Update profile success",
+    });
+  } catch (error) {
+    return makeErrorResponse({ res, message: error.message });
+  }
+}
 export {
   loginUser,
   getUserProfile,
@@ -141,4 +185,6 @@ export {
   resetUserPassword,
   registerUser,
   verifyUser,
+  changeUserPassword,
+  updateUserProfile
 };

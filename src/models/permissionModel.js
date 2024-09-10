@@ -9,12 +9,10 @@ const PermissionSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      unique: true,
     },
     permissionCode: {
       type: String,
       required: true,
-      unique: true,
     },
   },
   schemaOptions

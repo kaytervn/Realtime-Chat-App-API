@@ -6,12 +6,10 @@ const ReactionSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      unique: true,
     },
     imageUrl: {
       type: String,
       default: null,
-      unique: true,
     },
   },
   schemaOptions

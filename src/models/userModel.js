@@ -48,7 +48,7 @@ const UserSchema = new mongoose.Schema(
     },
     secretKey: {
       type: String,
-      unique: true,
+      default: null,
     },
     role: {
       type: mongoose.Schema.Types.ObjectId,

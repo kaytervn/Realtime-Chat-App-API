@@ -13,7 +13,7 @@ Software Technologies & Advance Mobile Programming Courseworks
 
 ### Group Members:
 
-| Name                  | Student ID | GitHub Profile                                  |
+| Name                  | Student ID | GitHub                                          |
 | --------------------- | ---------- | ----------------------------------------------- |
 | Kiến Đức Trọng        | 21110332   | [kaytervn](https://github.com/kaytervn)         |
 | Nguyễn Trần Văn Trung | 21110335   | [vantrung1109](https://github.com/vantrung1109) |

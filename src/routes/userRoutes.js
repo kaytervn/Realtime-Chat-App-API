@@ -1,14 +1,12 @@
 import express from "express";
-<<<<<<< Updated upstream
-import { loginUser, getUserProfile, registerUser, verifyUser } from "../controllers/UserController.js";
-=======
 import {
   loginUser,
   getUserProfile,
   resetUserPassword,
   forgotUserPassword,
+  registerUser,
+  verifyUser,
 } from "../controllers/UserController.js";
->>>>>>> Stashed changes
 import auth from "../middlewares/authentication.js";
 const router = express.Router();
 

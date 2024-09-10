@@ -49,7 +49,6 @@ const getUserProfile = async (req, res) => {
   }
 };
 
-<<<<<<< Updated upstream
 const registerUser = async (req, res) => {
   try {
     const { displayName, email, password, phone } = req.body;
@@ -82,8 +81,20 @@ const registerUser = async (req, res) => {
 const verifyUser = async (req, res) => {
   const { email, otp } = req.body;
   try {
-=======
-// Forgot Password
+    const user = await User.findOne({ email });
+    if (!user) {
+      return makeErrorResponse({ res, message: "User not found" });
+    }
+    if (user.otp !== otp) {
+      return makeErrorResponse({ res, message: "Invalid OTP" });
+    }
+    user.updateOne({ status: 1 });
+    return makeSuccessResponse({ message: "Verify success" });
+  } catch (error) {
+    return makeErrorResponse({ res, message: error.message });
+  }
+};
+
 const forgotUserPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -106,7 +117,6 @@ const forgotUserPassword = async (req, res) => {
 const resetUserPassword = async (req, res) => {
   try {
     const { email, newPassword, otp } = req.body;
->>>>>>> Stashed changes
     const user = await User.findOne({ email });
     if (!user) {
       return makeErrorResponse({ res, message: "User not found" });
@@ -114,24 +124,21 @@ const resetUserPassword = async (req, res) => {
     if (user.otp !== otp) {
       return makeErrorResponse({ res, message: "Invalid OTP" });
     }
-<<<<<<< Updated upstream
-    user.updateOne({ status: 1 });
-    return makeSuccessResponse({ message: "Verify success" });
-=======
     user.updateOne({ password: await encodePassword(newPassword), otp: null });
     return makeSuccessResponse({
       res,
       message: "Reset password success",
     });
->>>>>>> Stashed changes
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
   }
 };
 
-<<<<<<< Updated upstream
-
-export { loginUser, getUserProfile, registerUser, verifyUser };
-=======
-export { loginUser, getUserProfile, forgotUserPassword, resetUserPassword };
->>>>>>> Stashed changes
+export {
+  loginUser,
+  getUserProfile,
+  forgotUserPassword,
+  resetUserPassword,
+  registerUser,
+  verifyUser,
+};

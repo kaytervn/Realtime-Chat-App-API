@@ -1,6 +1,6 @@
-package-lock.json
-node_modules/
-.vscode/
+/node_modules
+/vendor
+/.idea
 .idea/
-.DS_Store
 .env
+package-lock.json

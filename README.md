@@ -2,12 +2,12 @@
 
 Software Technologies & Advance Mobile Programming Courseworks
 
-| **Resource**                   | **Link**                                                          |
-| ------------------------------ | ----------------------------------------------------------------- |
-| Swagger UI - API Documentation | [LINK](https://realtime-chat-app-api-tbaf.onrender.com/api-docs/) |
-| Database Diagram               | [LINK](https://dbdiagram.io/d/ZaloUTE-66c6a9b4a346f9518cbd7113)   |
-| Figma Design                   |                                                                   |
-| UML Diagram                    |                                                                   |
+| **Resource**      | **Link**                                                                |
+| ----------------- | ----------------------------------------------------------------------- |
+| API Documentation | [Swagger UI](https://realtime-chat-app-api-tbaf.onrender.com/api-docs/) |
+| Database Diagram  | [DBDiagram.IO](https://dbdiagram.io/d/ZaloUTE-66c6a9b4a346f9518cbd7113) |
+| Figma Design      |                                                                         |
+| UML Diagram       |                                                                         |
 
 ---
 

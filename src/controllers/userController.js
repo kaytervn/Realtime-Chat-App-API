@@ -58,7 +58,7 @@ const registerUser = async (req, res) => {
     if (await User.findOne({ phone })) {
       return makeErrorResponse({ res, message: "Phone is taken" });
     }
-    const otp = createOtp();
+    const otp = createOtp;
     await User.create({
       displayName,
       email,
@@ -102,7 +102,7 @@ const forgotUserPassword = async (req, res) => {
     if (!user) {
       return makeErrorResponse({ res, message: "User not found" });
     }
-    await user.updateOne({ otp: createOtp() });
+    await user.updateOne({ otp: createOtp });
     await sendEmail({ email, otp, subject: "Reset your password" });
     return makeSuccessResponse({
       res,

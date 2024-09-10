@@ -13,19 +13,19 @@ import auth from "../middlewares/authentication.js";
 const router = express.Router();
 
 // Login user
-router.post("/login", auth(""), loginUser);
+router.post("/login", loginUser);
 
 // Get user profile
 router.get("/profile", auth(""), getUserProfile);
 
-router.post("/register", auth(""), registerUser);
+router.post("/register", registerUser);
 
-router.post("/verify", auth(""), verifyUser);
+router.post("/verify", verifyUser);
 
 // Reset Password
-router.post("/reset-password", auth(""), resetUserPassword);
+router.post("/reset-password", resetUserPassword);
 // Forgot Password
-router.post("/forgot-password", auth(""), forgotUserPassword);
+router.post("/forgot-password", forgotUserPassword);
 
 // Change Password
 router.post("/change-password", auth(""), changeUserPassword);

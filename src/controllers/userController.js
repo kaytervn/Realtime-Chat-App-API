@@ -10,6 +10,7 @@ import {
 import User from "../models/userModel.js";
 import Role from "../models/roleModel.js";
 
+// Login User
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -34,6 +35,8 @@ const loginUser = async (req, res) => {
   }
 };
 
+// Get user profile
+
 const getUserProfile = async (req, res) => {
   try {
     const { user } = req;
@@ -46,6 +49,7 @@ const getUserProfile = async (req, res) => {
   }
 };
 
+<<<<<<< Updated upstream
 const registerUser = async (req, res) => {
   try {
     const { displayName, email, password, phone } = req.body;
@@ -78,6 +82,31 @@ const registerUser = async (req, res) => {
 const verifyUser = async (req, res) => {
   const { email, otp } = req.body;
   try {
+=======
+// Forgot Password
+const forgotUserPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) {
+      return makeErrorResponse({ res, message: "User not found" });
+    }
+    await user.updateOne({ otp: createOtp() });
+    await sendEmail({ email, otp, subject: "Reset your password" });
+    return makeSuccessResponse({
+      res,
+      message: "Request forgot password success, please check your email",
+    });
+  } catch (error) {
+    return makeSuccessResponse({ res, message: error.message });
+  }
+};
+
+// Reset Password
+const resetUserPassword = async (req, res) => {
+  try {
+    const { email, newPassword, otp } = req.body;
+>>>>>>> Stashed changes
     const user = await User.findOne({ email });
     if (!user) {
       return makeErrorResponse({ res, message: "User not found" });
@@ -85,12 +114,24 @@ const verifyUser = async (req, res) => {
     if (user.otp !== otp) {
       return makeErrorResponse({ res, message: "Invalid OTP" });
     }
+<<<<<<< Updated upstream
     user.updateOne({ status: 1 });
     return makeSuccessResponse({ message: "Verify success" });
+=======
+    user.updateOne({ password: await encodePassword(newPassword), otp: null });
+    return makeSuccessResponse({
+      res,
+      message: "Reset password success",
+    });
+>>>>>>> Stashed changes
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
   }
 };
 
+<<<<<<< Updated upstream
 
 export { loginUser, getUserProfile, registerUser, verifyUser };
+=======
+export { loginUser, getUserProfile, forgotUserPassword, resetUserPassword };
+>>>>>>> Stashed changes

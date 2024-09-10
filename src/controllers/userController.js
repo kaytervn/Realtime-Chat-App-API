@@ -67,7 +67,6 @@ const registerUser = async (req, res) => {
       otp,
       status: 0,
       role: await Role.findOne({ name: "User" }),
-      secretKey: null,
     });
     await sendEmail({ email, otp, subject: "Verify your account" });
     return makeSuccessResponse({

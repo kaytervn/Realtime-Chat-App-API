@@ -124,6 +124,13 @@ const createOtp = otpGenerator.generate(6, {
   specialChars: false,
 });
 
+const createSecretKey = otpGenerator.generate(16, {
+  digits: true,
+  lowerCaseAlphabets: true,
+  upperCaseAlphabets: true,
+  specialChars: false,
+});
+
 const sendEmail = async ({ email, otp, subject }) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
@@ -155,4 +162,5 @@ export {
   deleteFileById,
   createOtp,
   sendEmail,
+  createSecretKey,
 };

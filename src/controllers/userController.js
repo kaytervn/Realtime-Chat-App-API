@@ -6,6 +6,7 @@ import {
   comparePassword,
   createOtp,
   sendEmail,
+  createSecretKey,
 } from "../services/apiService.js";
 import User from "../models/userModel.js";
 import Role from "../models/roleModel.js";
@@ -59,6 +60,13 @@ const registerUser = async (req, res) => {
       return makeErrorResponse({ res, message: "Phone is taken" });
     }
     const otp = createOtp;
+    let secretKey;
+    while (true) {
+      secretKey = createSecretKey;
+      if (!(await User.findOne({ secretKey }))) {
+        break;
+      }
+    }
     await User.create({
       displayName,
       email,
@@ -66,9 +74,10 @@ const registerUser = async (req, res) => {
       phone,
       otp,
       status: 0,
+      secretKey,
       role: await Role.findOne({ name: "User" }),
     });
-    await sendEmail({ email, otp, subject: "Verify your account" });
+    await sendEmail({ email, otp, subject: "VERIFY YOUR ACCOUNT" });
     return makeSuccessResponse({
       res,
       message: "Register success, please check your email",
@@ -103,7 +112,7 @@ const forgotUserPassword = async (req, res) => {
       return makeErrorResponse({ res, message: "User not found" });
     }
     await user.updateOne({ otp: createOtp });
-    await sendEmail({ email, otp, subject: "Reset your password" });
+    await sendEmail({ email, otp, subject: "RESET YOUR PASSWORD" });
     return makeSuccessResponse({
       res,
       message: "Request forgot password success, please check your email",
@@ -177,6 +186,7 @@ const updateUserProfile = async (req, res) => {
     return makeErrorResponse({ res, message: error.message });
   }
 };
+
 export {
   loginUser,
   getUserProfile,

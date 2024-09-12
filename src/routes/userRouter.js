@@ -8,12 +8,14 @@ import {
   verifyUser,
   changeUserPassword,
   updateUserProfile,
+  verifyToken,
 } from "../controllers/userController.js";
 import auth from "../middlewares/authentication.js";
 const router = express.Router();
 
 // Login user
 router.post("/login", loginUser);
+router.post("/verify-token", verifyToken);
 
 // Get user profile
 router.get("/profile", auth(""), getUserProfile);

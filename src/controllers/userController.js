@@ -10,6 +10,7 @@ import {
 } from "../services/apiService.js";
 import User from "../models/userModel.js";
 import Role from "../models/roleModel.js";
+import "dotenv/config.js";
 
 // Login User
 const loginUser = async (req, res) => {
@@ -187,6 +188,19 @@ const updateUserProfile = async (req, res) => {
   }
 };
 
+const verifyToken = async (req, res) => {
+  try {
+    const { accessToken } = req.body;
+    jwt.verify(accessToken, process.env.JWT_SECRET);
+    return makeSuccessResponse({
+      res,
+      message: "Verify token success",
+    });
+  } catch (error) {
+    return makeErrorResponse({ res, message: error.message });
+  }
+};
+
 export {
   loginUser,
   getUserProfile,
@@ -196,4 +210,5 @@ export {
   verifyUser,
   changeUserPassword,
   updateUserProfile,
+  verifyToken,
 };

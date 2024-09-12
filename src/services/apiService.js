@@ -117,19 +117,23 @@ const deleteFileById = async (id) => {
   }
 };
 
-const createOtp = otpGenerator.generate(6, {
-  digits: true,
-  lowerCaseAlphabets: false,
-  upperCaseAlphabets: false,
-  specialChars: false,
-});
+const createOtp = () => {
+  return otpGenerator.generate(6, {
+    digits: true,
+    lowerCaseAlphabets: false,
+    upperCaseAlphabets: false,
+    specialChars: false,
+  });
+};
 
-const createSecretKey = otpGenerator.generate(16, {
-  digits: true,
-  lowerCaseAlphabets: true,
-  upperCaseAlphabets: true,
-  specialChars: false,
-});
+const createSecretKey = () => {
+  return otpGenerator.generate(16, {
+    digits: true,
+    lowerCaseAlphabets: true,
+    upperCaseAlphabets: true,
+    specialChars: false,
+  });
+};
 
 const sendEmail = async ({ email, otp, subject }) => {
   const transporter = nodemailer.createTransport({
@@ -160,7 +164,7 @@ export {
   getPaginatedData,
   extractIdFromFilePath,
   deleteFileById,
-  createOtp,
   sendEmail,
   createSecretKey,
+  createOtp,
 };

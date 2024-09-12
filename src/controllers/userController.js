@@ -4,9 +4,9 @@ import {
   makeErrorResponse,
   makeSuccessResponse,
   comparePassword,
-  createOtp,
   sendEmail,
   createSecretKey,
+  createOtp,
 } from "../services/apiService.js";
 import User from "../models/userModel.js";
 import Role from "../models/roleModel.js";
@@ -59,10 +59,9 @@ const registerUser = async (req, res) => {
     if (await User.findOne({ phone })) {
       return makeErrorResponse({ res, message: "Phone is taken" });
     }
-    const otp = createOtp;
     let secretKey;
     while (true) {
-      secretKey = createSecretKey;
+      secretKey = createSecretKey();
       if (!(await User.findOne({ secretKey }))) {
         break;
       }
@@ -72,7 +71,7 @@ const registerUser = async (req, res) => {
       email,
       password: await encodePassword(password),
       phone,
-      otp,
+      otp: createOtp(),
       status: 0,
       secretKey,
       role: await Role.findOne({ name: "User" }),
@@ -97,8 +96,8 @@ const verifyUser = async (req, res) => {
     if (user.otp !== otp) {
       return makeErrorResponse({ res, message: "Invalid OTP" });
     }
-    user.updateOne({ status: 1 });
-    return makeSuccessResponse({ message: "Verify success" });
+    await user.updateOne({ status: 1 });
+    return makeSuccessResponse({ res, message: "Verify success" });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
   }
@@ -111,7 +110,7 @@ const forgotUserPassword = async (req, res) => {
     if (!user) {
       return makeErrorResponse({ res, message: "User not found" });
     }
-    await user.updateOne({ otp: createOtp });
+    await user.updateOne({ otp: createOtp() });
     await sendEmail({ email, otp, subject: "RESET YOUR PASSWORD" });
     return makeSuccessResponse({
       res,

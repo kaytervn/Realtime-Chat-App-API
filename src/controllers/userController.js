@@ -11,6 +11,7 @@ import {
 import User from "../models/userModel.js";
 import Role from "../models/roleModel.js";
 import "dotenv/config.js";
+import jwt from "jsonwebtoken";
 
 // Login User
 const loginUser = async (req, res) => {

@@ -66,12 +66,13 @@ const registerUser = async (req, res) => {
         break;
       }
     }
+    const otp = createOtp();
     await User.create({
       displayName,
       email,
       password: await encodePassword(password),
       phone,
-      otp: createOtp(),
+      otp,
       status: 0,
       secretKey,
       role: await Role.findOne({ name: "User" }),

@@ -111,9 +111,9 @@ const extractIdFromFilePath = (filePath) => {
   return id;
 };
 
-const deleteFileById = async (id) => {
-  if (id) {
-    await cloudinary.uploader.destroy(id);
+const deleteFileByUrl = async (url) => {
+  if (url) {
+    await cloudinary.uploader.destroy(extractIdFromFilePath(url));
   }
 };
 
@@ -163,7 +163,7 @@ export {
   isValidObjectId,
   getPaginatedData,
   extractIdFromFilePath,
-  deleteFileById,
+  deleteFileByUrl,
   sendEmail,
   createSecretKey,
   createOtp,

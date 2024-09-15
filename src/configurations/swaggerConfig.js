@@ -8,12 +8,32 @@ const swaggerOptions = {
     info: {
       title: "Realtime Chat App API",
       version: "1.0.0",
-      servers: [
-        {
-          url: `http://localhost:${process.env.PORT}`,
-        },
-      ],
+      description: "API documentation for the Realtime Chat Application",
+      contact: {
+        name: "API Support",
+        email: "support@realtimechatapp.com",
+      },
     },
+    servers: [
+      {
+        url: `http://localhost:${process.env.PORT}`,
+        description: "Development server",
+      },
+    ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+        },
+      },
+    },
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
   },
   apis: ["src/docs/*.js"],
 };

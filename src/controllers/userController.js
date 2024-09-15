@@ -7,6 +7,7 @@ import {
   sendEmail,
   createSecretKey,
   createOtp,
+  deleteFileByUrl,
 } from "../services/apiService.js";
 import User from "../models/userModel.js";
 import Role from "../models/roleModel.js";
@@ -180,6 +181,9 @@ const updateUserProfile = async (req, res) => {
   try {
     const { displayName, birthDate, bio, avatarUrl } = req.body;
     const { user } = req;
+    if (avatarUrl != user.avatarUrl) {
+      await deleteFileByUrl(user.avatarUrl);
+    }
     await user.updateOne({ displayName, birthDate, bio, avatarUrl });
     return makeSuccessResponse({
       res,

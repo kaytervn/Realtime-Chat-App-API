@@ -16,8 +16,12 @@ const swaggerOptions = {
     },
     servers: [
       {
+        url: `realtime-chat-app-api-tbaf.onrender.com`,
+        description: "Remote server",
+      },
+      {
         url: `http://localhost:${process.env.PORT}`,
-        description: "Development server",
+        description: "Local server",
       },
     ],
     components: {

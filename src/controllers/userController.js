@@ -113,7 +113,8 @@ const forgotUserPassword = async (req, res) => {
     if (!user) {
       return makeErrorResponse({ res, message: "User not found" });
     }
-    await user.updateOne({ otp: createOtp() });
+    const otp = createOtp();
+    await user.updateOne({ otp });
     await sendEmail({ email, otp, subject: "RESET YOUR PASSWORD" });
     return makeSuccessResponse({
       res,

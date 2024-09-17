@@ -1,16 +1,18 @@
 import express from "express";
 import dbConfig from "./configurations/dbConfig.js";
 import "dotenv/config.js";
+import cors from "cors";
 import { swaggerDocs, swaggerUi } from "./configurations/swaggerConfig.js";
 import { userRouter } from "./routes/userRouter.js";
 import { roleRouter } from "./routes/roleRouter.js";
 import { fileRouter } from "./routes/fileRouter.js";
 import { permissionRouter } from "./routes/permissionRouter.js";
+import { corsOptions } from "./static/constant.js";
 
 const app = express();
 
+app.use(cors(corsOptions));
 app.use(express.json({ limit: "200mb" }));
-app.use(express.json());
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 app.use("/v1/user", userRouter);

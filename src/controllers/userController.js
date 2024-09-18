@@ -207,6 +207,32 @@ const verifyToken = async (req, res) => {
   }
 };
 
+const changeStatusUser = async (req, res) => {
+  try {
+    const { id, newStatus } = req.body;
+    await User.updateOne({ _id: id }, { status: newStatus });
+    return makeSuccessResponse({
+      res,
+      message: "Change user status success",
+    });
+  } catch (error) {
+    return makeErrorResponse({ res, message: error.message });
+  }
+};
+
+const deleteUser = async (req, res) => {
+  try {
+    const id = req.params.id;
+    await User.deleteOne({ _id: id });
+    return makeSuccessResponse({
+      res,
+      message: "Delete user success",
+    });
+  } catch (error) {
+    return makeErrorResponse({ res, message: error.message });
+  }
+};
+
 export {
   loginUser,
   getUserProfile,
@@ -217,4 +243,6 @@ export {
   changeUserPassword,
   updateUserProfile,
   verifyToken,
+  changeStatusUser,
+  deleteUser,
 };

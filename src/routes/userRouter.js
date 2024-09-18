@@ -9,6 +9,8 @@ import {
   changeUserPassword,
   updateUserProfile,
   verifyToken,
+  deleteUser,
+  changeStatusUser,
 } from "../controllers/userController.js";
 import auth from "../middlewares/authentication.js";
 const router = express.Router();
@@ -33,5 +35,9 @@ router.post("/forgot-password", forgotUserPassword);
 router.post("/change-password", auth(""), changeUserPassword);
 // Update Profile
 router.post("/update-profile", auth(""), updateUserProfile);
+
+router.delete("/delete/:id", auth("USER_D"), deleteUser);
+
+router.put("/change-status/:id", auth("USER_C_S"), changeStatusUser);
 
 export { router as userRouter };

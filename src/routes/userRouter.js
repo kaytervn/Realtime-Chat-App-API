@@ -34,7 +34,7 @@ router.post("/forgot-password", forgotUserPassword);
 // Change Password
 router.post("/change-password", auth(""), changeUserPassword);
 // Update Profile
-router.post("/update-profile", auth(""), updateUserProfile);
+router.put("/update-profile", auth(""), updateUserProfile);
 
 router.delete("/delete/:id", auth("USER_D"), deleteUser);
 

@@ -22,8 +22,8 @@ Software Technologies & Advance Mobile Programming Courseworks
 
 ## GitHub Repository
 
-| Project         | Repository Link                                                               | Deployed Link                                              |
-| --------------- | ----------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Project         | Repository Link                                                               |                       Deployed Link                        |
+| --------------- | ----------------------------------------------------------------------------- | :--------------------------------------------------------: |
 | Web - CMS       |                                                                               |                                                            |
 | Web - Portal    | [Github Repository](https://github.com/kaytervn/Realtime-Chat-App-Portal-Web) | [LINK](https://realtime-chat-app-portal-web.onrender.com/) |
 | Mobile - CMS    |                                                                               |                                                            |

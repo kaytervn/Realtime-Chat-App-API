@@ -11,7 +11,7 @@ Software Technologies & Advance Mobile Programming Courseworks
 |  21110157  | Lê Trọng Dũng         | [trongdung721](https://github.com/trongdung721) |
 |  21110294  | Võ Hữu Tài            |   [vohuutai23](https://github.com/vohuutai23)   |
 
----
+**References:**
 
 | **Resource**      | **Link**                                                                                                                                                                                                                                                                                            |
 | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -20,9 +20,16 @@ Software Technologies & Advance Mobile Programming Courseworks
 | Figma Design      | [Figma](https://www.figma.com/design/1qtPRdtoCDbU6TWixQee4Q/Untitled?node-id=0-1&node-type=canvas&t=iKgNjOXjMSfvR7qV-0)                                                                                                                                                                             |
 | UML Diagram       | [Draw.IO Viewer](https://viewer.diagrams.net/index.html?tags=%7B%7D&lightbox=1&highlight=0000ff&edit=_blank&layers=1&nav=1&title=ZALO_UTE.drawio#Uhttps%3A%2F%2Fdrive.google.com%2Fuc%3Fid%3D10gYy3U7rP2TbTBpTU1muv2NwPHpvSXMV%26export%3Ddownload#%7B%22pageId%22%3A%221ek5O3LtdH5z4QkGbGpv%22%7D) |
 
----
+## GitHub Repository
 
-### Use Cases Specification
+| Project         | Repository Link                                                               | Deployed Link                                              |
+| --------------- | ----------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Web - CMS       |                                                                               |                                                            |
+| Web - Portal    | [Github Repository](https://github.com/kaytervn/Realtime-Chat-App-Portal-Web) | [LINK](https://realtime-chat-app-portal-web.onrender.com/) |
+| Mobile - CMS    |                                                                               |                                                            |
+| Mobile - Portal | [Github Repository](https://github.com/kaytervn/React-Native-App-Demo)        |                                                            |
+
+---
 
 # Use Case Specifications
 

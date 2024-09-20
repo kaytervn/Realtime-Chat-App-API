@@ -5,6 +5,7 @@ import cloudinary from "../utils/cloudinary.js";
 import otpGenerator from "otp-generator";
 import nodemailer from "nodemailer";
 import "dotenv/config.js";
+import dayjs from "dayjs";
 
 const isValidObjectId = (id) => mongoose.isValidObjectId(id);
 
@@ -152,6 +153,17 @@ const sendEmail = async ({ email, otp, subject }) => {
   await transporter.sendMail(mailOptions);
 };
 
+const parseDateVN = (dateString) => {
+  const parts = dateString.split(/[\s/:]+/);
+  const day = parseInt(parts[0], 10);
+  const month = parseInt(parts[1], 10) - 1;
+  const year = parseInt(parts[2], 10);
+  const hours = parseInt(parts[3], 10) + 7;
+  const minutes = parseInt(parts[4], 10);
+  const seconds = parseInt(parts[5], 10);
+  return new Date(year, month, day, hours, minutes, seconds);
+};
+
 export {
   makeErrorResponse,
   makeSuccessResponse,
@@ -167,4 +179,5 @@ export {
   sendEmail,
   createSecretKey,
   createOtp,
+  parseDateVN,
 };

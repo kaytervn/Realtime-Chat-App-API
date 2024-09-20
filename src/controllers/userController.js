@@ -8,6 +8,7 @@ import {
   createSecretKey,
   createOtp,
   deleteFileByUrl,
+  parseDateVN,
 } from "../services/apiService.js";
 import User from "../models/userModel.js";
 import Role from "../models/roleModel.js";
@@ -184,7 +185,13 @@ const updateUserProfile = async (req, res) => {
     if (avatarUrl != user.avatarUrl) {
       await deleteFileByUrl(user.avatarUrl);
     }
-    await user.updateOne({ displayName, birthDate, bio, avatarUrl });
+    const parsedBirthDate = birthDate ? parseDateVN(birthDate) : null;
+    await user.updateOne({
+      displayName,
+      birthDate: parsedBirthDate,
+      bio,
+      avatarUrl,
+    });
     return makeSuccessResponse({
       res,
       message: "Update profile success",

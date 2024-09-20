@@ -8,7 +8,7 @@ import {
   createSecretKey,
   createOtp,
   deleteFileByUrl,
-  parseDateVN,
+  parseDate,
 } from "../services/apiService.js";
 import User from "../models/userModel.js";
 import Role from "../models/roleModel.js";
@@ -185,7 +185,7 @@ const updateUserProfile = async (req, res) => {
     if (avatarUrl != user.avatarUrl) {
       await deleteFileByUrl(user.avatarUrl);
     }
-    const parsedBirthDate = birthDate ? parseDateVN(birthDate) : null;
+    const parsedBirthDate = birthDate ? parseDate(birthDate) : null;
     await user.updateOne({
       displayName,
       birthDate: parsedBirthDate,

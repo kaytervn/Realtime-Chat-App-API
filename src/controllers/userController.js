@@ -138,7 +138,12 @@ const resetUserPassword = async (req, res) => {
     if (user.otp !== otp) {
       return makeErrorResponse({ res, message: "Invalid OTP" });
     }
-    user.updateOne({ password: await encodePassword(newPassword), otp: null });
+
+    user.password = await encodePassword(newPassword);
+    user.otp = null;
+
+    await user.save();
+
     return makeSuccessResponse({
       res,
       message: "Reset password success",
@@ -147,6 +152,7 @@ const resetUserPassword = async (req, res) => {
     return makeErrorResponse({ res, message: error.message });
   }
 };
+
 
 const changeUserPassword = async (req, res) => {
   try {

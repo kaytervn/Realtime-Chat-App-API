@@ -45,6 +45,28 @@
 
 /**
  * @swagger
+ * /v1/user/verify-token:
+ *   post:
+ *     summary: Verify JWT token
+ *     tags: [User]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               accessToken:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Token verified successfully
+ *       400:
+ *         description: Bad request
+ */
+
+/**
+ * @swagger
  * /v1/user/profile:
  *   get:
  *     summary: Get user profile
@@ -187,7 +209,7 @@
 /**
  * @swagger
  * /v1/user/update-profile:
- *   post:
+ *   put:
  *     summary: Update user profile
  *     tags: [User]
  *     security:
@@ -216,10 +238,39 @@
 
 /**
  * @swagger
- * /v1/user/verify-token:
- *   post:
- *     summary: Verify JWT token
+ * /v1/user/delete/{id}:
+ *   delete:
+ *     summary: Delete a user
  *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: User deleted successfully
+ *       400:
+ *         description: Bad request
+ */
+
+/**
+ * @swagger
+ * /v1/user/change-status/{id}:
+ *   put:
+ *     summary: Change user status
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
  *     requestBody:
  *       required: true
  *       content:
@@ -227,11 +278,47 @@
  *           schema:
  *             type: object
  *             properties:
- *               accessToken:
- *                 type: string
+ *               newStatus:
+ *                 type: number
  *     responses:
  *       200:
- *         description: Token verified successfully
+ *         description: User status changed successfully
+ *       400:
+ *         description: Bad request
+ */
+
+/**
+ * @swagger
+ * /v1/user/list:
+ *   put:
+ *     summary: Get list of users
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of users retrieved successfully
+ *       400:
+ *         description: Bad request
+ */
+
+/**
+ * @swagger
+ * /v1/user/get/{id}:
+ *   get:
+ *     summary: Get a user by ID
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: User retrieved successfully
  *       400:
  *         description: Bad request
  */

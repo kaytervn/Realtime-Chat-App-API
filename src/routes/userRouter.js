@@ -11,33 +11,24 @@ import {
   verifyToken,
   deleteUser,
   changeStatusUser,
+  getListUsers,
+  getUser,
 } from "../controllers/userController.js";
 import auth from "../middlewares/authentication.js";
 const router = express.Router();
 
-// Login user
 router.post("/login", loginUser);
 router.post("/verify-token", verifyToken);
-
-// Get user profile
 router.get("/profile", auth(""), getUserProfile);
-
 router.post("/register", registerUser);
-
 router.post("/verify", verifyUser);
-
-// Reset Password
 router.post("/reset-password", resetUserPassword);
-// Forgot Password
 router.post("/forgot-password", forgotUserPassword);
-
-// Change Password
 router.post("/change-password", auth(""), changeUserPassword);
-// Update Profile
 router.put("/update-profile", auth(""), updateUserProfile);
-
 router.delete("/delete/:id", auth("USER_D"), deleteUser);
-
 router.put("/change-status/:id", auth("USER_C_S"), changeStatusUser);
+router.put("/list", auth("USER_L"), getListUsers);
+router.get("/get/:id", auth("USER_V"), getUser);
 
 export { router as userRouter };

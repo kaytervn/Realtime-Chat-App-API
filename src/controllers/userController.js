@@ -9,6 +9,7 @@ import {
   createOtp,
   deleteFileByUrl,
   parseDate,
+  getPaginatedData,
 } from "../services/apiService.js";
 import User from "../models/userModel.js";
 import Role from "../models/roleModel.js";
@@ -236,11 +237,43 @@ const changeStatusUser = async (req, res) => {
 const deleteUser = async (req, res) => {
   try {
     const id = req.params.id;
-    await User.deleteOne({ _id: id });
+    const user = await User.findById(id);
+    if (!user) {
+      return makeErrorResponse({ res, message: "User not found" });
+    }
+    await user.remove();
     return makeSuccessResponse({
       res,
       message: "Delete user success",
     });
+  } catch (error) {
+    return makeErrorResponse({ res, message: error.message });
+  }
+};
+
+const getListUsers = async (req, res) => {
+  try {
+    const result = await getPaginatedData({
+      model: User,
+      req,
+    });
+    return makeSuccessResponse({
+      res,
+      data: result,
+    });
+  } catch (error) {
+    return makeErrorResponse({ res, message: error.message });
+  }
+};
+
+const getUser = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const user = await User.findById(id);
+    if (!user) {
+      return makeErrorResponse({ res, message: "User not found" });
+    }
+    return makeSuccessResponse({ res, data: user });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
   }
@@ -258,4 +291,6 @@ export {
   verifyToken,
   changeStatusUser,
   deleteUser,
+  getListUsers,
+  getUser,
 };

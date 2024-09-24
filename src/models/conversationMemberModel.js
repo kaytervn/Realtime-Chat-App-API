@@ -1,5 +1,8 @@
 import mongoose from "mongoose";
-import { addDateGetters, schemaOptions } from "../configurations/schemaConfig";
+import {
+  addDateGetters,
+  schemaOptions,
+} from "../configurations/schemaConfig.js";
 
 const ConversationMemberSchema = new mongoose.Schema(
   {
@@ -12,21 +15,6 @@ const ConversationMemberSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-    },
-    canMessage: {
-      type: Number,
-      enum: [0, 1], // 0: false, 1: true
-      default: 1,
-    },
-    canUpdate: {
-      type: Number,
-      enum: [0, 1],
-      default: 0,
-    },
-    canAddMember: {
-      type: Number,
-      enum: [0, 1],
-      default: 0,
     },
   },
   schemaOptions

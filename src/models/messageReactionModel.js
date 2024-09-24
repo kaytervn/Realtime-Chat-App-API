@@ -1,5 +1,8 @@
 import mongoose from "mongoose";
-import { addDateGetters, schemaOptions } from "../configurations/schemaConfig";
+import {
+  addDateGetters,
+  schemaOptions,
+} from "../configurations/schemaConfig.js";
 
 const MessageReactionSchema = new mongoose.Schema(
   {

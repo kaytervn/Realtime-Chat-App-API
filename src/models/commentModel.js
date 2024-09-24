@@ -1,5 +1,8 @@
 import mongoose from "mongoose";
-import { addDateGetters, schemaOptions } from "../configurations/schemaConfig";
+import {
+  addDateGetters,
+  schemaOptions,
+} from "../configurations/schemaConfig.js";
 
 const CommentSchema = new mongoose.Schema(
   {
@@ -27,6 +30,16 @@ const CommentSchema = new mongoose.Schema(
 );
 
 addDateGetters(CommentSchema);
+
+CommentSchema.pre("remove", async function (next) {
+  const commentId = this._id;
+  try {
+    await this.model("Comment").deleteMany({ parent: commentId });
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
 
 const Comment = mongoose.model("Comment", CommentSchema);
 export default Comment;

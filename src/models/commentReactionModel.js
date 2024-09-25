@@ -4,23 +4,26 @@ import {
   schemaOptions,
 } from "../configurations/schemaConfig.js";
 
-const PostReactionSchema = new mongoose.Schema(
+const CommentReactionSchema = new mongoose.Schema(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-    post: {
+    comment: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Post",
+      ref: "Comment",
       required: true,
     },
   },
   schemaOptions
 );
 
-addDateGetters(PostReactionSchema);
+addDateGetters(CommentReactionSchema);
 
-const PostReaction = mongoose.model("PostReaction", PostReactionSchema);
-export default PostReaction;
+const CommentReaction = mongoose.model(
+  "CommentReaction",
+  CommentReactionSchema
+);
+export default CommentReaction;

@@ -18,7 +18,7 @@ import { messageReactionRouter } from "./routes/messageReactionRouter.js";
 import { messageRouter } from "./routes/messageRouter.js";
 import { notificationRouter } from "./routes/notificationRouter.js";
 import { postReactionRouter } from "./routes/postReactionRouter.js";
-import { reactionRouter } from "./routes/reactionRouter.js";
+import { commentReactionRouter } from "./routes/commentReactionRouter.js";
 
 const app = express();
 
@@ -39,7 +39,7 @@ app.use("/v1/message-reaction", messageReactionRouter);
 app.use("/v1/message", messageRouter);
 app.use("/v1/notification", notificationRouter);
 app.use("/v1/post-reaction", postReactionRouter);
-app.use("/v1/reaction", reactionRouter);
+app.use("/v1/comment-reaction", commentReactionRouter);
 
 job.start();
 

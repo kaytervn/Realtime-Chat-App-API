@@ -3,6 +3,7 @@ import {
   addDateGetters,
   schemaOptions,
 } from "../configurations/schemaConfig.js";
+import CommentReaction from "./commentReactionModel.js";
 
 const CommentSchema = new mongoose.Schema(
   {
@@ -35,6 +36,7 @@ CommentSchema.pre("remove", async function (next) {
   const commentId = this._id;
   try {
     await this.model("Comment").deleteMany({ parent: commentId });
+    await CommentReaction.deleteMany({ comment: this._id });
     next();
   } catch (error) {
     next(error);

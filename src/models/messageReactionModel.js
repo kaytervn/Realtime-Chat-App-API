@@ -11,11 +11,6 @@ const MessageReactionSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    reaction: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Reaction",
-      required: true,
-    },
     message: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Message",

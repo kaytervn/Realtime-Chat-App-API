@@ -154,7 +154,6 @@ const resetUserPassword = async (req, res) => {
   }
 };
 
-
 const changeUserPassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
@@ -279,6 +278,103 @@ const getUser = async (req, res) => {
   }
 };
 
+const createUser = async (req, res) => {
+  try {
+    const {
+      displayName,
+      email,
+      password,
+      phone,
+      birthDate,
+      bio,
+      avatarUrl,
+      roleId,
+    } = req.body;
+    const parsedBirthDate = birthDate ? parseDate(birthDate) : null;
+    const role = await Role.findById(roleId);
+    if (await User.findOne({ email })) {
+      return makeErrorResponse({ res, message: "Email is taken" });
+    }
+    if (await User.findOne({ phone })) {
+      return makeErrorResponse({ res, message: "Phone is taken" });
+    }
+    let secretKey;
+    while (true) {
+      secretKey = createSecretKey();
+      if (!(await User.findOne({ secretKey }))) {
+        break;
+      }
+    }
+    const otp = createOtp();
+    await User.create({
+      displayName,
+      email,
+      password: await encodePassword(password),
+      phone,
+      otp,
+      status: 0,
+      secretKey,
+      bio,
+      avatarUrl,
+      birthDate: parsedBirthDate,
+      role,
+    });
+    await sendEmail({ email, otp, subject: "VERIFY YOUR ACCOUNT" });
+    return makeSuccessResponse({
+      res,
+      message: "Register success, please check your email",
+    });
+  } catch (error) {
+    return makeErrorResponse({ res, message: error.message });
+  }
+};
+
+const updateUser = async (req, res) => {
+  try {
+    const {
+      id,
+      displayName,
+      email,
+      password,
+      phone,
+      birthDate,
+      bio,
+      avatarUrl,
+      roleId,
+    } = req.body;
+    const user = await User.findById(id);
+    if (avatarUrl != user.avatarUrl) {
+      await deleteFileByUrl(user.avatarUrl);
+    }
+    const parsedBirthDate = birthDate ? parseDate(birthDate) : null;
+    const role = await Role.findById(roleId);
+    if (user.email != email && (await User.findOne({ email }))) {
+      return makeErrorResponse({ res, message: "Email is taken" });
+    }
+    if (user.phone != email && (await User.findOne({ phone }))) {
+      return makeErrorResponse({ res, message: "Phone is taken" });
+    }
+    await user.updateOne({
+      displayName,
+      email,
+      password: await encodePassword(password),
+      phone,
+      status: 0,
+      bio,
+      avatarUrl,
+      birthDate: parsedBirthDate,
+      role,
+    });
+    await sendEmail({ email, otp, subject: "VERIFY YOUR ACCOUNT" });
+    return makeSuccessResponse({
+      res,
+      message: "Register success, please check your email",
+    });
+  } catch (error) {
+    return makeErrorResponse({ res, message: error.message });
+  }
+};
+
 export {
   loginUser,
   getUserProfile,
@@ -293,4 +389,6 @@ export {
   deleteUser,
   getListUsers,
   getUser,
+  createUser,
+  updateUser,
 };

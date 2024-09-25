@@ -13,6 +13,8 @@ import {
   changeStatusUser,
   getListUsers,
   getUser,
+  createUser,
+  updateUser,
 } from "../controllers/userController.js";
 import auth from "../middlewares/authentication.js";
 const router = express.Router();
@@ -30,5 +32,7 @@ router.delete("/delete/:id", auth("USER_D"), deleteUser);
 router.put("/change-status/:id", auth("USER_C_S"), changeStatusUser);
 router.put("/list", auth("USER_L"), getListUsers);
 router.get("/get/:id", auth("USER_V"), getUser);
+router.post("/create", auth("USER_C"), createUser);
+router.put("/update", auth("USER_U"), updateUser);
 
 export { router as userRouter };

@@ -6,13 +6,14 @@ import {
 
 const createPermission = async (req, res) => {
   try {
-    const { name, permissionCode } = req.body;
+    const { name, permissionCode, groupName } = req.body;
     if (await Permission.findOne({ permissionCode })) {
       return makeErrorResponse({ res, message: "Permission code existed" });
     }
     const newPermission = await Permission.create({
       name,
       permissionCode,
+      groupName,
     });
     return makeSuccessResponse({
       res,

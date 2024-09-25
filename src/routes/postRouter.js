@@ -9,10 +9,10 @@ import {
 } from "../controllers/postController.js";
 const router = express.Router();
 
-router.post("/create", auth("POST_C"), createPost);
-router.put("/update", auth("POST_U"), updatePost);
-router.get("/get/:id", auth("POST_V"), getPost);
-router.delete("/delete/:id", auth("POST_V"), deletePost);
-router.get("/list", auth("POST_L"), getListPosts);
+router.post("/create", auth(""), createPost);
+router.put("/update", auth(""), updatePost);
+router.get("/get/:id", auth(""), getPost);
+router.delete("/delete/:id", auth(""), deletePost);
+router.get("/list", auth(""), getListPosts);
 
 export { router as postRouter };

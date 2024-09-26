@@ -38,17 +38,21 @@ const MessageSchema = new mongoose.Schema(
 
 addDateGetters(MessageSchema);
 
-MessageSchema.pre("remove", async function (next) {
-  try {
-    if (this.kind == 2) {
-      await deleteFileByUrl(this.content);
+MessageSchema.pre(
+  "deleteOne",
+  { document: true, query: false },
+  async function (next) {
+    try {
+      if (this.kind == 2) {
+        await deleteFileByUrl(this.content);
+      }
+      await MessageReaction.deleteMany({ message: this._id });
+      next();
+    } catch (error) {
+      next(error);
     }
-    await MessageReaction.deleteMany({ message: this._id });
-    next();
-  } catch (error) {
-    next(error);
   }
-});
+);
 
 const Message = mongoose.model("Message", MessageSchema);
 export default Message;

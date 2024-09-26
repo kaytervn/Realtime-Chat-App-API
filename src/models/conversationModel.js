@@ -37,18 +37,22 @@ const ConversationSchema = new mongoose.Schema(
 
 addDateGetters(ConversationSchema);
 
-ConversationSchema.pre("remove", async function (next) {
-  try {
-    await ConversationMember.deleteMany({ conversation: this._id });
-    const messages = await Message.find({ conversation: this._id });
-    for (const message of messages) {
-      await message.remove();
+ConversationSchema.pre(
+  "deleteOne",
+  { document: true, query: false },
+  async function (next) {
+    try {
+      await ConversationMember.deleteMany({ conversation: this._id });
+      const messages = await Message.find({ conversation: this._id });
+      for (const message of messages) {
+        await message.deleteOne();
+      }
+      next();
+    } catch (error) {
+      next(error);
     }
-    next();
-  } catch (error) {
-    next(error);
   }
-});
+);
 
 const Conversation = mongoose.model("Conversation", ConversationSchema);
 export default Conversation;

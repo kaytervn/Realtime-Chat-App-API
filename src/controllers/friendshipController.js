@@ -106,7 +106,7 @@ const deleteFriendRequest = async (req, res) => {
         message: "Friendship not found",
       });
     }
-    await friendship.remove();
+    await friendship.deleteOne();
     return makeSuccessResponse({
       res,
       message: "Friend request deleted",

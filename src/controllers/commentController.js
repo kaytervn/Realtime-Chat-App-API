@@ -70,7 +70,7 @@ const deleteComment = async (req, res) => {
     if (!comment) {
       return makeErrorResponse({ res, message: "Comment not found" });
     }
-    await comment.remove();
+    await comment.deleteOne();
     return makeSuccessResponse({
       res,
       message: "Delete comment success",

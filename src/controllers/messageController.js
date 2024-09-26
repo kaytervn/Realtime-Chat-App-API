@@ -61,7 +61,7 @@ const deleteMessage = async (req, res) => {
     if (!message) {
       return makeErrorResponse({ res, message: "Message not found" });
     }
-    await message.remove();
+    await message.deleteOne();
     return makeSuccessResponse({
       res,
       message: "Delete message success",

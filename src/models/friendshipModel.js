@@ -28,14 +28,18 @@ const FriendshipSchema = new mongoose.Schema(
 
 addDateGetters(FriendshipSchema);
 
-FriendshipSchema.pre("remove", async function (next) {
-  try {
-    await Conversation.deleteMany({ friendship: this._id });
-    next();
-  } catch (error) {
-    next(error);
+FriendshipSchema.pre(
+  "deleteOne",
+  { document: true, query: false },
+  async function (next) {
+    try {
+      await Conversation.deleteMany({ friendship: this._id });
+      next();
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 const Friendship = mongoose.model("Friendship", FriendshipSchema);
 export default Friendship;

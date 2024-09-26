@@ -27,18 +27,22 @@ const PostSchema = new mongoose.Schema(
 
 addDateGetters(PostSchema);
 
-PostSchema.pre("remove", async function (next) {
-  try {
-    const comments = await Comment.find({ post: this._id });
-    for (const comment of comments) {
-      await comment.remove();
+PostSchema.pre(
+  "deleteOne",
+  { document: true, query: false },
+  async function (next) {
+    try {
+      const comments = await Comment.find({ post: this._id });
+      for (const comment of comments) {
+        await comment.deleteOne();
+      }
+      await PostReaction.deleteMany({ post: this._id });
+      next();
+    } catch (error) {
+      next(error);
     }
-    await PostReaction.deleteMany({ post: this._id });
-    next();
-  } catch (error) {
-    next(error);
   }
-});
+);
 
 const Post = mongoose.model("Post", PostSchema);
 export default Post;

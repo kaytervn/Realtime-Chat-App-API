@@ -37,7 +37,7 @@ const deleteMessageReaction = async (req, res) => {
     if (!messageReaction) {
       return makeErrorResponse({ res, message: "Message reaction not found" });
     }
-    await messageReaction.remove();
+    await messageReaction.deleteOne();
     return makeSuccessResponse({
       res,
       message: "Delete message reaction success",

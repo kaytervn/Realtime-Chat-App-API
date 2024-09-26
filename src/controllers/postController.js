@@ -44,7 +44,7 @@ const deletePost = async (req, res) => {
     if (!post) {
       return makeErrorResponse({ res, message: "Post not found" });
     }
-    await post.remove();
+    await post.deleteOne();
     return makeSuccessResponse({
       res,
       message: "Delete user success",

@@ -37,7 +37,7 @@ const deletePostReaction = async (req, res) => {
     if (!postReaction) {
       return makeErrorResponse({ res, message: "Post reaction not found" });
     }
-    await postReaction.remove();
+    await postReaction.deleteOne();
     return makeSuccessResponse({
       res,
       message: "Delete post reaction success",

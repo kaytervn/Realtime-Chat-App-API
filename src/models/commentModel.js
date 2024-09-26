@@ -32,16 +32,20 @@ const CommentSchema = new mongoose.Schema(
 
 addDateGetters(CommentSchema);
 
-CommentSchema.pre("remove", async function (next) {
-  const commentId = this._id;
-  try {
-    await this.model("Comment").deleteMany({ parent: commentId });
-    await CommentReaction.deleteMany({ comment: this._id });
-    next();
-  } catch (error) {
-    next(error);
+CommentSchema.pre(
+  "deleteOne",
+  { document: true, query: false },
+  async function (next) {
+    const commentId = this._id;
+    try {
+      await this.model("Comment").deleteMany({ parent: commentId });
+      await CommentReaction.deleteMany({ comment: this._id });
+      next();
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 const Comment = mongoose.model("Comment", CommentSchema);
 export default Comment;

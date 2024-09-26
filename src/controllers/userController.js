@@ -245,7 +245,7 @@ const deleteUser = async (req, res) => {
     if (!user) {
       return makeErrorResponse({ res, message: "User not found" });
     }
-    await user.remove();
+    await user.deleteOne();
     return makeSuccessResponse({
       res,
       message: "Delete user success",
@@ -396,6 +396,7 @@ const loginAdmin = async (req, res) => {
       return makeErrorResponse({ res, message: "User is not activated" });
     }
     const role = await Role.findById(user.role._id);
+    console.log(role.name);
     if (!role.name.toLowerCase().includes("admin")) {
       return makeErrorResponse({ res, message: "You are not admin" });
     }

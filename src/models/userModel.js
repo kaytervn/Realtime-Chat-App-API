@@ -74,31 +74,35 @@ const UserSchema = new mongoose.Schema(
 
 addDateGetters(UserSchema);
 
-UserSchema.pre("remove", async function (next) {
-  try {
-    const conversations = await Conversation.find({ owner: this._id });
-    for (const conversation of conversations) {
-      await conversation.remove();
+UserSchema.pre(
+  "deleteOne",
+  { document: true, query: false },
+  async function (next) {
+    try {
+      const conversations = await Conversation.find({ owner: this._id });
+      for (const conversation of conversations) {
+        await conversation.deleteOne();
+      }
+      const messages = await Message.find({ user: this._id });
+      for (const message of messages) {
+        await message.deleteOne();
+      }
+      const comments = await Comment.find({ user: this._id });
+      for (const comment of comments) {
+        await comment.deleteOne();
+      }
+      await Notification.deleteMany({ user: this._id });
+      await ConversationMember.deleteMany({ user: this._id });
+      await Post.deleteMany({ user: this._id });
+      await MessageReaction.deleteMany({ user: this._id });
+      await PostReaction.deleteMany({ user: this._id });
+      await CommentReaction.deleteMany({ user: this._id });
+      next();
+    } catch (error) {
+      next(error);
     }
-    const messages = await Message.find({ user: this._id });
-    for (const message of messages) {
-      await message.remove();
-    }
-    const comments = await Comment.find({ user: this._id });
-    for (const comment of comments) {
-      await comment.remove();
-    }
-    await Notification.deleteMany({ user: this._id });
-    await ConversationMember.deleteMany({ user: this._id });
-    await Post.deleteMany({ user: this._id });
-    await MessageReaction.deleteMany({ user: this._id });
-    await PostReaction.deleteMany({ user: this._id });
-    await CommentReaction.deleteMany({ user: this._id });
-    next();
-  } catch (error) {
-    next(error);
   }
-});
+);
 
 const User = mongoose.model("User", UserSchema);
 export default User;

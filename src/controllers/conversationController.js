@@ -72,7 +72,7 @@ const deleteConversation = async (req, res) => {
     if (!conversation) {
       return makeErrorResponse({ res, message: "Conversation not found" });
     }
-    await conversation.remove();
+    await conversation.deleteOne();
     return makeSuccessResponse({
       res,
       message: "Delete conversation success",

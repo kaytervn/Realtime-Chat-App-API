@@ -41,7 +41,7 @@ const deleteCommentReaction = async (req, res) => {
     if (!commentReaction) {
       return makeErrorResponse({ res, message: "Comment reaction not found" });
     }
-    await commentReaction.remove();
+    await commentReaction.deleteOne();
     return makeSuccessResponse({
       res,
       message: "Delete comment reaction success",

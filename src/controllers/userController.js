@@ -174,7 +174,7 @@ const changeUserPassword = async (req, res) => {
         message: "New password must be different from current password",
       });
     }
-    user.updateOne({ password: await encodePassword(newPassword) });
+    await user.updateOne({ password: await encodePassword(newPassword) });
     return makeSuccessResponse({
       res,
       message: "Change password success",

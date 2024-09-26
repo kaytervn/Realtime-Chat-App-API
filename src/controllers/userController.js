@@ -255,6 +255,7 @@ const getListUsers = async (req, res) => {
     const result = await getPaginatedData({
       model: User,
       req,
+      populateOptions: "role",
     });
     return makeSuccessResponse({
       res,

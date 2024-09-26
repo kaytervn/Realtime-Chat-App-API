@@ -1,8 +1,35 @@
 import cron from "cron";
 import Notification from "../models/notificationModel.js";
+import dayjs from "dayjs";
+import User from "../models/userModel.js";
+
+const birthDateNotification = async () => {
+  const today = dayjs().format("DD/MM");
+  const users = await User.find({
+    birthDate: {
+      $ne: null,
+      $expr: {
+        $eq: [
+          { $dateToString: { format: "%d/%m", date: "$birthDate" } },
+          today,
+        ],
+      },
+    },
+  });
+  for (const user of users) {
+    await Notification.create({
+      user: user._id,
+      message: `Chúc mừng sinh nhật ${user.displayName}! 🎉`,
+    });
+    console.log(
+      `Đã gửi thông báo sinh nhật cho người dùng: ${user.displayName}`
+    );
+  }
+};
 
 const job = new cron.CronJob("0 0 * * *", async function () {
   try {
+    await birthDateNotification();
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - 7);
     const result = await Notification.deleteMany({

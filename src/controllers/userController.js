@@ -15,6 +15,7 @@ import User from "../models/userModel.js";
 import Role from "../models/roleModel.js";
 import "dotenv/config.js";
 import jwt from "jsonwebtoken";
+import Notification from "../models/notificationModel.js";
 
 // Login User
 const loginUser = async (req, res) => {
@@ -103,6 +104,10 @@ const verifyUser = async (req, res) => {
       return makeErrorResponse({ res, message: "Invalid OTP" });
     }
     await user.updateOne({ status: 1 });
+    await Notification.create({
+      user: user._id,
+      content: `Mừng thành viên mới, ${user.displayName}!`,
+    });
     return makeSuccessResponse({ res, message: "Verify success" });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
@@ -391,7 +396,7 @@ const loginAdmin = async (req, res) => {
       return makeErrorResponse({ res, message: "User is not activated" });
     }
     const role = await Role.findById(user.role._id);
-    if (!"admin".includes(role.name.toLowerCase())) {
+    if (!role.name.toLowerCase().includes("admin")) {
       return makeErrorResponse({ res, message: "You are not admin" });
     }
     return makeSuccessResponse({

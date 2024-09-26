@@ -1,3 +1,4 @@
+import Message from "../models/messageModel.js";
 import MessageReaction from "../models/messageReactionModel.js";
 import {
   getPaginatedData,
@@ -7,13 +8,19 @@ import {
 
 const createMessageReaction = async (req, res) => {
   try {
-    const { message, reaction } = req.body;
+    const { messageId } = req.body;
     const { user } = req;
+    const message = await Message.findById(messageId).populate("user");
     await MessageReaction.create({
       user: user._id,
       message,
-      reaction,
     });
+    if (user._id != message.user._id) {
+      await Notification.create({
+        user: message.user._id,
+        content: `${user.displayName} đã thả tim tin nhắn của bạn`,
+      });
+    }
     return makeSuccessResponse({
       res,
       message: "Create message reaction success",
@@ -45,7 +52,7 @@ const getMessageReactions = async (req, res) => {
     const result = await getPaginatedData({
       model: MessageReaction,
       req,
-      populateOptions: "user reaction message",
+      populateOptions: "user message",
     });
     return makeSuccessResponse({
       res,

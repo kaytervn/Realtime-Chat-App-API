@@ -1,3 +1,4 @@
+import Comment from "../models/commentModel.js";
 import CommentReaction from "../models/commentReactionModel.js";
 import {
   getPaginatedData,
@@ -7,13 +8,23 @@ import {
 
 const createCommentReaction = async (req, res) => {
   try {
-    const { comment, reaction } = req.body;
+    const { commentId } = req.body;
     const { user } = req;
+    const comment = Comment.findById(commentId).populate("user");
+    if (!comment) {
+      return makeErrorResponse({ res, message: "Comment not found" });
+    }
     await CommentReaction.create({
       user: user._id,
-      comment,
+      comment: comment._id,
       reaction,
     });
+    if (user._id != comment.user._id) {
+      await Notification.create({
+        user: comment.user._id,
+        content: `${user.displayName} đã thả tim bình luận "${comment.content}"`,
+      });
+    }
     return makeSuccessResponse({
       res,
       message: "Create comment reaction success",
@@ -45,7 +56,7 @@ const getCommentReactions = async (req, res) => {
     const result = await getPaginatedData({
       model: CommentReaction,
       req,
-      populateOptions: "user reaction comment",
+      populateOptions: "user comment",
     });
     return makeSuccessResponse({
       res,

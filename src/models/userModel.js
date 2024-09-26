@@ -12,6 +12,7 @@ import MessageReaction from "./messageReactionModel.js";
 import PostReaction from "./postReactionModel.js";
 import Post from "./postModel.js";
 import Notification from "./notificationModel.js";
+import CommentReaction from "./commentReactionModel.js";
 
 const UserSchema = new mongoose.Schema(
   {
@@ -92,6 +93,7 @@ UserSchema.pre("remove", async function (next) {
     await Post.deleteMany({ user: this._id });
     await MessageReaction.deleteMany({ user: this._id });
     await PostReaction.deleteMany({ user: this._id });
+    await CommentReaction.deleteMany({ user: this._id });
     next();
   } catch (error) {
     next(error);

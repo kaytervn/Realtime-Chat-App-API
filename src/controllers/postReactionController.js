@@ -1,3 +1,4 @@
+import Post from "../models/postModel.js";
 import PostReaction from "../models/postReactionModel.js";
 import {
   getPaginatedData,
@@ -7,13 +8,19 @@ import {
 
 const createPostReaction = async (req, res) => {
   try {
-    const { post, reaction } = req.body;
+    const { postId } = req.body;
     const { user } = req;
+    const post = await Post.findById(postId).populate("user");
     await PostReaction.create({
       user: user._id,
       post,
-      reaction,
     });
+    if (user._id != post.user._id) {
+      await Notification.create({
+        user: post.user._id,
+        content: `${user.displayName} đã thả tim bài đăng "${post.content}"`,
+      });
+    }
     return makeSuccessResponse({
       res,
       message: "Create post reaction success",
@@ -45,7 +52,7 @@ const getPostReactions = async (req, res) => {
     const result = await getPaginatedData({
       model: PostReaction,
       req,
-      populateOptions: "user reaction post",
+      populateOptions: "user post",
     });
     return makeSuccessResponse({
       res,

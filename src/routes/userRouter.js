@@ -30,7 +30,7 @@ router.post("/change-password", auth(""), changeUserPassword);
 router.put("/update-profile", auth(""), updateUserProfile);
 router.delete("/delete/:id", auth("USER_D"), deleteUser);
 router.put("/change-status/:id", auth("USER_C_S"), changeStatusUser);
-router.put("/list", auth("USER_L"), getListUsers);
+router.get("/list", auth("USER_L"), getListUsers);
 router.get("/get/:id", auth("USER_V"), getUser);
 router.post("/create", auth("USER_C"), createUser);
 router.put("/update", auth("USER_U"), updateUser);

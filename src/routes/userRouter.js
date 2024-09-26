@@ -15,6 +15,7 @@ import {
   getUser,
   createUser,
   updateUser,
+  loginAdmin,
 } from "../controllers/userController.js";
 import auth from "../middlewares/authentication.js";
 const router = express.Router();
@@ -34,5 +35,6 @@ router.get("/list", auth("USER_L"), getListUsers);
 router.get("/get/:id", auth("USER_V"), getUser);
 router.post("/create", auth("USER_C"), createUser);
 router.put("/update", auth("USER_U"), updateUser);
+router.post("/login-admin", loginAdmin);
 
 export { router as userRouter };

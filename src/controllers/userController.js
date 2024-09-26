@@ -376,6 +376,34 @@ const updateUser = async (req, res) => {
   }
 };
 
+const loginAdmin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) {
+      return makeErrorResponse({ res, message: "User not found" });
+    }
+    const isPasswordValid = await comparePassword(password, user.password);
+    if (!isPasswordValid) {
+      return makeErrorResponse({ res, message: "Invalid password" });
+    }
+    if (user.status != 1) {
+      return makeErrorResponse({ res, message: "User is not activated" });
+    }
+    const role = await Role.findById(user.role._id);
+    if (!"admin".includes(role.name.toLowerCase())) {
+      return makeErrorResponse({ res, message: "You are not admin" });
+    }
+    return makeSuccessResponse({
+      res,
+      message: "Login success!",
+      data: { accessToken: createToken(user._id) },
+    });
+  } catch (error) {
+    return makeErrorResponse({ res, message: error.message });
+  }
+};
+
 export {
   loginUser,
   getUserProfile,
@@ -392,4 +420,5 @@ export {
   getUser,
   createUser,
   updateUser,
+  loginAdmin,
 };

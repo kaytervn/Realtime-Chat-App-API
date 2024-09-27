@@ -14,7 +14,7 @@ const addMember = async (req, res) => {
     });
     await Notification.create({
       user: userId,
-      content: `Bạn đã được thêm vào cuộc trò chuyện "${conversationId}"`,
+      message: `Bạn đã được thêm vào cuộc trò chuyện "${conversationId}"`,
     });
     return makeSuccessResponse({
       res,
@@ -35,7 +35,7 @@ const removeMember = async (req, res) => {
     });
     await Notification.create({
       user: userId,
-      content: `Bạn đã bị xóa khỏi cuộc trò chuyện "${conversationId}"`,
+      message: `Bạn đã bị xóa khỏi cuộc trò chuyện "${conversationId}"`,
     });
     return makeSuccessResponse({
       res,

@@ -18,7 +18,7 @@ const createPostReaction = async (req, res) => {
     if (user._id != post.user._id) {
       await Notification.create({
         user: post.user._id,
-        content: `${user.displayName} đã thả tim bài đăng "${post.content}"`,
+        message: `${user.displayName} đã thả tim bài đăng "${post.content}"`,
       });
     }
     return makeSuccessResponse({

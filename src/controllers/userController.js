@@ -106,7 +106,7 @@ const verifyUser = async (req, res) => {
     await user.updateOne({ status: 1 });
     await Notification.create({
       user: user._id,
-      content: `Mừng thành viên mới, ${user.displayName}!`,
+      message: `Mừng thành viên mới, ${user.displayName}!`,
     });
     return makeSuccessResponse({ res, message: "Verify success" });
   } catch (error) {

@@ -30,7 +30,7 @@ const sendFriendRequest = async (req, res) => {
     });
     await Notification.create({
       user: receiverId,
-      content: `${user.displayName} đã gửi lời mời kết bạn`,
+      message: `${user.displayName} đã gửi lời mời kết bạn`,
     });
     return makeSuccessResponse({
       res,
@@ -52,7 +52,7 @@ const acceptFriendRequest = async (req, res) => {
     ).populate("sender receiver");
     await Notification.create({
       user: friendship.receiver._id,
-      content: `${friendship.receiver.displayName} đã chấp nhận lời mời kết bạn`,
+      message: `${friendship.receiver.displayName} đã chấp nhận lời mời kết bạn`,
     });
     const conversation = await Conversation.create({ kind: 2 });
     await ConversationMember.create({
@@ -81,7 +81,7 @@ const rejectFriendRequest = async (req, res) => {
     );
     await Notification.create({
       user: friendship.receiver._id,
-      content: `${friendship.receiver.displayName} đã từ chối lời mời kết bạn`,
+      message: `${friendship.receiver.displayName} đã từ chối lời mời kết bạn`,
     });
     await friendship.deleteOne();
     return makeSuccessResponse({

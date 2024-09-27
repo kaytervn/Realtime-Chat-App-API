@@ -31,13 +31,13 @@ const createComment = async (req, res) => {
     if (parentComment) {
       await Notification.create({
         user: parentComment.user._id,
-        content: `${user.displayName} đã trả lời bình luận "${parentComment.content}"`,
+        message: `${user.displayName} đã trả lời bình luận "${parentComment.content}"`,
       });
     }
     if (user._id != post.user._id) {
       await Notification.create({
         user: post.user._id,
-        content: `${user.displayName} đã bình luận vào bài viết "${post.content}"`,
+        message: `${user.displayName} đã bình luận vào bài viết "${post.content}"`,
       });
     }
     return makeSuccessResponse({

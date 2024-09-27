@@ -45,7 +45,7 @@ const job = new cron.CronJob("0 0 * * *", async function () {
       createdAt: { $lt: cutoffDate },
     });
     for (const user of users) {
-      await User.deleteOne({ _id: user._id });
+      await user.deleteOne();
       console.log(`Deleted user with id: ${user._id}`);
     }
   } catch (error) {

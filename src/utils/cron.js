@@ -2,6 +2,7 @@ import cron from "cron";
 import Notification from "../models/notificationModel.js";
 import dayjs from "dayjs";
 import User from "../models/userModel.js";
+import { Promise } from "mongoose";
 
 const birthDateNotification = async () => {
   const today = dayjs().format("DD/MM");
@@ -32,14 +33,26 @@ const job = new cron.CronJob("0 0 * * *", async function () {
     await birthDateNotification();
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - 7);
+    // Delete notifications older than 7 days
     const result = await Notification.deleteMany({
       createdAt: { $lt: cutoffDate },
     });
     console.log(
       `Deleted ${result.deletedCount} notifications older than 7 days.`
     );
+    // Delete users with status 0 and createdAt older than 7 days
+    const users = await User.find({
+      status: 0,
+      createdAt: { $lt: cutoffDate },
+    });
+    await Promise.all(
+      users.map(async (user) => {
+        await User.deleteOne({ _id: user._id });
+        console.log(`Deleted user with id: ${user._id}`);
+      })
+    );
   } catch (error) {
-    console.error("Error deleting notifications:", error);
+    console.error("Error running cron job:", error);
   }
 });
 

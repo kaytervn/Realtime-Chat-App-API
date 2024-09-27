@@ -39,15 +39,6 @@ const job = new cron.CronJob("0 0 * * *", async function () {
     console.log(
       `Deleted ${result.deletedCount} notifications older than 7 days.`
     );
-    // Delete users with status 0 and createdAt older than 7 days
-    const users = await User.find({
-      status: 0,
-      createdAt: { $lt: cutoffDate },
-    });
-    for (const user of users) {
-      await user.deleteOne();
-      console.log(`Deleted user with id: ${user._id}`);
-    }
   } catch (error) {
     console.error("Error running cron job:", error);
   }

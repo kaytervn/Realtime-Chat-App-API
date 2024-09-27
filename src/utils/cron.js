@@ -44,12 +44,10 @@ const job = new cron.CronJob("0 0 * * *", async function () {
       status: 0,
       createdAt: { $lt: cutoffDate },
     });
-    await Promise.all(
-      users.map(async (user) => {
-        await User.deleteOne({ _id: user._id });
-        console.log(`Deleted user with id: ${user._id}`);
-      })
-    );
+    for (const user of users) {
+      await User.deleteOne({ _id: user._id });
+      console.log(`Deleted user with id: ${user._id}`);
+    }
   } catch (error) {
     console.error("Error running cron job:", error);
   }

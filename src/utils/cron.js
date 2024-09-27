@@ -2,7 +2,6 @@ import cron from "cron";
 import Notification from "../models/notificationModel.js";
 import dayjs from "dayjs";
 import User from "../models/userModel.js";
-import { Promise } from "mongoose";
 
 const birthDateNotification = async () => {
   const today = dayjs().format("DD/MM");

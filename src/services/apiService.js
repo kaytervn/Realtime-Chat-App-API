@@ -5,7 +5,6 @@ import cloudinary from "../utils/cloudinary.js";
 import otpGenerator from "otp-generator";
 import nodemailer from "nodemailer";
 import "dotenv/config.js";
-import dayjs from "dayjs";
 
 const isValidObjectId = (id) => mongoose.isValidObjectId(id);
 
@@ -77,8 +76,8 @@ const getPaginatedData = async ({
 
     const query = {};
     for (const [key, value] of Object.entries(criteria)) {
-      if (key.toLowerCase().includes("id")) {
-        query[key] = mongoose.Types.ObjectId(value);
+      if (mongoose.isValidObjectId(value)) {
+        query[key] = new mongoose.Types.ObjectId(value);
       } else if (value) {
         query[key] = new RegExp(value, "i");
       }

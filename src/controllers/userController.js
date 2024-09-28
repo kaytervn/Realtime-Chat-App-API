@@ -345,7 +345,7 @@ const updateUser = async (req, res) => {
     if (updateUser.email != email && (await User.findOne({ email }))) {
       return makeErrorResponse({ res, message: "Email is taken" });
     }
-    if (updateUser.phone != email && (await User.findOne({ phone }))) {
+    if (updateUser.phone != phone && (await User.findOne({ phone }))) {
       return makeErrorResponse({ res, message: "Phone is taken" });
     }
     await updateUser.updateOne({

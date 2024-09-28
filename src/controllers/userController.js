@@ -354,6 +354,9 @@ const updateUser = async (req, res) => {
     } = req.body;
     const { user } = req;
     const updateUser = await User.findById(id);
+    if (!updateUser) {
+      return makeErrorResponse({ res, message: "User not found" });
+    }
     if (avatarUrl != updateUser.avatarUrl) {
       await deleteFileByUrl(updateUser.avatarUrl);
     }
@@ -378,7 +381,7 @@ const updateUser = async (req, res) => {
     if (password) {
       updateData.password = await encodePassword(password);
     }
-    await updateUser.updateOne({ updateData });
+    await User.updateOne({ _id: id }, updateData);
     if (updateUser._id != user._id) {
       await Notification.create({
         user: updateUser._id,

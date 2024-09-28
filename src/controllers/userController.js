@@ -257,11 +257,17 @@ const deleteUser = async (req, res) => {
 
 const getListUsers = async (req, res) => {
   try {
-    const result = await getPaginatedData({
-      model: User,
-      req,
-      populateOptions: "role",
-    });
+    const { isPaged } = req.query;
+    let result;
+    if (isPaged === "0") {
+      result = await User.find().populate("role");
+    } else {
+      result = await getPaginatedData({
+        model: User,
+        req,
+        populateOptions: "role",
+      });
+    }
     return makeSuccessResponse({
       res,
       data: result,

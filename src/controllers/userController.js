@@ -352,7 +352,6 @@ const updateUser = async (req, res) => {
       displayName,
       email,
       phone,
-      status: 0,
       bio,
       avatarUrl,
       birthDate: parsedBirthDate,

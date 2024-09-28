@@ -77,7 +77,9 @@ const getPaginatedData = async ({
 
     const query = {};
     for (const [key, value] of Object.entries(criteria)) {
-      if (value) {
+      if (key.toLowerCase().includes("id")) {
+        query[key] = mongoose.Types.ObjectId(value);
+      } else if (value) {
         query[key] = new RegExp(value, "i");
       }
     }

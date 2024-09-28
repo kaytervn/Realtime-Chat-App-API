@@ -344,6 +344,7 @@ const updateUser = async (req, res) => {
       avatarUrl,
       roleId,
       status,
+      password,
     } = req.body;
     const { user } = req;
     const updateUser = await User.findById(id);
@@ -358,7 +359,7 @@ const updateUser = async (req, res) => {
     if (updateUser.phone != phone && (await User.findOne({ phone }))) {
       return makeErrorResponse({ res, message: "Phone is taken" });
     }
-    await updateUser.updateOne({
+    const updateData = {
       displayName,
       email,
       phone,
@@ -367,7 +368,11 @@ const updateUser = async (req, res) => {
       avatarUrl,
       birthDate: parsedBirthDate,
       role,
-    });
+    };
+    if (password) {
+      updateData.password = await encodePassword(password);
+    }
+    await updateUser.updateOne({ updateData });
     if (updateUser._id != user._id) {
       await Notification.create({
         user: updateUser._id,

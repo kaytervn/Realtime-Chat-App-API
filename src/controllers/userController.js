@@ -326,6 +326,7 @@ const createUser = async (req, res) => {
       birthDate: parsedBirthDate,
       role,
     });
+    return makeSuccessResponse({ res, message: "Create user success" });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
   }
@@ -373,6 +374,7 @@ const updateUser = async (req, res) => {
         message: "Thông tin của bạn đã được quản trị viên cập nhật",
       });
     }
+    return makeSuccessResponse({ res, message: "Update user success" });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
   }

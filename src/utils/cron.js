@@ -6,24 +6,24 @@ import User from "../models/userModel.js";
 const birthDateNotification = async () => {
   const today = dayjs().format("DD/MM");
   const users = await User.find({
-    birthDate: {
-      $ne: null,
-      $expr: {
-        $eq: [
-          { $dateToString: { format: "%d/%m", date: "$birthDate" } },
-          today,
-        ],
-      },
+    birthDate: { $ne: null },
+    $expr: {
+      $eq: [{ $dateToString: { format: "%d/%m", date: "$birthDate" } }, today],
     },
   });
-  for (const user of users) {
-    await Notification.create({
+  if (users.length > 0) {
+    const notifications = users.map((user) => ({
       user: user._id,
       message: `Chúc mừng sinh nhật ${user.displayName}! 🎉`,
-    });
-    console.log(
-      `Đã gửi thông báo sinh nhật cho người dùng: ${user.displayName}`
-    );
+    }));
+    await Notification.insertMany(notifications);
+    const superAdmin = await User.findOne({ isSuperAdmin: 1 });
+    if (superAdmin) {
+      await Notification.create({
+        user: superAdmin._id,
+        message: `Hệ thống đã gửi thông báo sinh nhật cho ${users.length} người dùng!`,
+      });
+    }
   }
 };
 
@@ -32,13 +32,16 @@ const job = new cron.CronJob("0 0 * * *", async function () {
     await birthDateNotification();
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - 7);
-    // Delete notifications older than 7 days
-    const result = await Notification.deleteMany({
+    const { deletedCount } = await Notification.deleteMany({
       createdAt: { $lt: cutoffDate },
     });
-    console.log(
-      `Deleted ${result.deletedCount} notifications older than 7 days.`
-    );
+    const superAdmin = await User.findOne({ isSuperAdmin: 1 });
+    if (superAdmin && deletedCount > 0) {
+      await Notification.create({
+        user: superAdmin._id,
+        message: `Hệ thống đã xóa ${deletedCount} thông báo quá hạn 7 ngày!`,
+      });
+    }
   } catch (error) {
     console.error("Error running cron job:", error);
   }

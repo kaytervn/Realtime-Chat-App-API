@@ -294,6 +294,7 @@ const createUser = async (req, res) => {
       birthDate,
       bio,
       avatarUrl,
+      status,
       roleId,
     } = req.body;
     const parsedBirthDate = birthDate ? parseDate(birthDate) : null;
@@ -318,17 +319,12 @@ const createUser = async (req, res) => {
       password: await encodePassword(password),
       phone,
       otp,
-      status: 0,
+      status,
       secretKey,
       bio,
       avatarUrl,
       birthDate: parsedBirthDate,
       role,
-    });
-    await sendEmail({ email, otp, subject: "VERIFY YOUR ACCOUNT" });
-    return makeSuccessResponse({
-      res,
-      message: "Register success, please check your email",
     });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
@@ -337,33 +333,24 @@ const createUser = async (req, res) => {
 
 const updateUser = async (req, res) => {
   try {
-    const {
-      id,
-      displayName,
-      email,
-      password,
-      phone,
-      birthDate,
-      bio,
-      avatarUrl,
-      roleId,
-    } = req.body;
-    const user = await User.findById(id);
-    if (avatarUrl != user.avatarUrl) {
-      await deleteFileByUrl(user.avatarUrl);
+    const { id, displayName, email, phone, birthDate, bio, avatarUrl, roleId } =
+      req.body;
+    const { user } = req;
+    const updateUser = await User.findById(id);
+    if (avatarUrl != updateUser.avatarUrl) {
+      await deleteFileByUrl(updateUser.avatarUrl);
     }
     const parsedBirthDate = birthDate ? parseDate(birthDate) : null;
     const role = await Role.findById(roleId);
-    if (user.email != email && (await User.findOne({ email }))) {
+    if (updateUser.email != email && (await User.findOne({ email }))) {
       return makeErrorResponse({ res, message: "Email is taken" });
     }
-    if (user.phone != email && (await User.findOne({ phone }))) {
+    if (updateUser.phone != email && (await User.findOne({ phone }))) {
       return makeErrorResponse({ res, message: "Phone is taken" });
     }
-    await user.updateOne({
+    await updateUser.updateOne({
       displayName,
       email,
-      password: await encodePassword(password),
       phone,
       status: 0,
       bio,
@@ -371,11 +358,12 @@ const updateUser = async (req, res) => {
       birthDate: parsedBirthDate,
       role,
     });
-    await sendEmail({ email, otp, subject: "VERIFY YOUR ACCOUNT" });
-    return makeSuccessResponse({
-      res,
-      message: "Register success, please check your email",
-    });
+    if (updateUser._id != user._id) {
+      await Notification.create({
+        user: updateUser._id,
+        message: "Thông tin của bạn đã được quản trị viên cập nhật",
+      });
+    }
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
   }

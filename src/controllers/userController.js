@@ -333,8 +333,17 @@ const createUser = async (req, res) => {
 
 const updateUser = async (req, res) => {
   try {
-    const { id, displayName, email, phone, birthDate, bio, avatarUrl, roleId } =
-      req.body;
+    const {
+      id,
+      displayName,
+      email,
+      phone,
+      birthDate,
+      bio,
+      avatarUrl,
+      roleId,
+      status,
+    } = req.body;
     const { user } = req;
     const updateUser = await User.findById(id);
     if (avatarUrl != updateUser.avatarUrl) {
@@ -352,6 +361,7 @@ const updateUser = async (req, res) => {
       displayName,
       email,
       phone,
+      status,
       bio,
       avatarUrl,
       birthDate: parsedBirthDate,

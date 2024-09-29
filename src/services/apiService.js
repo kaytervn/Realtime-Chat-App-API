@@ -151,7 +151,7 @@ const sendEmail = async ({ email, otp, subject }) => {
     from: `NO REPLY <${process.env.NODEMAILER_USER}>`,
     to: email,
     subject,
-    text: `Your OTP is: ${otp}`,
+    text: `Mã xác thực OTP của bạn là: ${otp}`,
   };
   await transporter.sendMail(mailOptions);
 };

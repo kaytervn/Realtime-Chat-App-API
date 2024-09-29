@@ -25,12 +25,12 @@ const auth = (permissionCode) => {
         const hasPermission = user.role.permissions.some(
           (perm) => perm.permissionCode === permissionCode
         );
-        // if (!hasPermission) {
-        //   return makeErrorResponse({
-        //     res,
-        //     message: "You don't have permission",
-        //   });
-        // }
+        if (!hasPermission) {
+          return makeErrorResponse({
+            res,
+            message: "You don't have permission",
+          });
+        }
       }
       req.user = user;
       next();

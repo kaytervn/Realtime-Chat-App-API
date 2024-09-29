@@ -13,7 +13,9 @@ const getListNotifications = async (req, res) => {
     if (status === "1" || status === "2") {
       query.status = status;
     }
-    const result = await Notification.find(query);
+    const result = await Notification.find(query).sort({
+      createdAt: -1,
+    });
     return makeSuccessResponse({
       res,
       data: result,
@@ -35,9 +37,13 @@ const readNotification = async (req, res) => {
     if (!notification) {
       return makeErrorResponse({ res, message: "Notification not found" });
     }
+    const result = await Notification.find({ user: user._id }).sort({
+      createdAt: -1,
+    });
     return makeSuccessResponse({
       res,
       message: "Notification marked as read",
+      data: result,
     });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
@@ -48,8 +54,12 @@ const readAllNotifications = async (req, res) => {
   try {
     const { user } = req;
     await Notification.updateMany({ user: user._id, status: 1 }, { status: 2 });
+    const result = await Notification.find({ user: user._id }).sort({
+      createdAt: -1,
+    });
     return makeSuccessResponse({
       res,
+      data: result,
       message: "All notifications marked as read",
     });
   } catch (error) {
@@ -68,8 +78,12 @@ const deleteNotification = async (req, res) => {
     if (!notification) {
       return makeErrorResponse({ res, message: "Notification not found" });
     }
+    const result = await Notification.find({ user: user._id }).sort({
+      createdAt: -1,
+    });
     return makeSuccessResponse({
       res,
+      data: result,
       message: "Notification deleted successfully",
     });
   } catch (error) {
@@ -81,8 +95,12 @@ const deleteAllNotifications = async (req, res) => {
   try {
     const { user } = req;
     await Notification.deleteMany({ user: user._id });
+    const result = await Notification.find({ user: user._id }).sort({
+      createdAt: -1,
+    });
     return makeSuccessResponse({
       res,
+      data: result,
       message: "All notifications deleted successfully",
     });
   } catch (error) {

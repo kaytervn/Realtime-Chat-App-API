@@ -85,12 +85,16 @@ const getPaginatedData = async ({
       }
     }
 
-    const data = await model
-      .find({ ...query, ...queryOptions })
-      .populate({
+    let customeQuery = model.find({ ...query, ...queryOptions });
+
+    if (populateOptions) {
+      customeQuery = customeQuery.populate({
         path: populateOptions,
         select: "-permissions",
-      })
+      });
+    }
+
+    const data = await customeQuery
       .skip(offset)
       .limit(limit)
       .sort({ [sortField]: sortDirection.toLowerCase() === "desc" ? -1 : 1 });

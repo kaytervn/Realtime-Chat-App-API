@@ -15,7 +15,7 @@ const createMessageReaction = async (req, res) => {
       user: user._id,
       message,
     });
-    if (user._id != message.user._id) {
+    if (!user._id.equals(message.user._id)) {
       await Notification.create({
         user: message.user._id,
         message: `${user.displayName} đã thả tim tin nhắn của bạn`,

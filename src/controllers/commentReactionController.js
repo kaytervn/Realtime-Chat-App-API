@@ -19,7 +19,7 @@ const createCommentReaction = async (req, res) => {
       comment: comment._id,
       reaction,
     });
-    if (user._id != comment.user._id) {
+    if (!user._id.equals(comment.user._id)) {
       await Notification.create({
         user: comment.user._id,
         message: `${user.displayName} đã thả tim bình luận "${comment.content}"`,

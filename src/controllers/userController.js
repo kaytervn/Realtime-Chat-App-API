@@ -382,7 +382,7 @@ const updateUser = async (req, res) => {
       updateData.password = await encodePassword(password);
     }
     await User.updateOne({ _id: id }, updateData);
-    if (updateUser._id != user._id) {
+    if (!updateUser._id.equals(user._id)) {
       await Notification.create({
         user: updateUser._id,
         message: "Thông tin của bạn đã được quản trị viên cập nhật",

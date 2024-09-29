@@ -34,7 +34,7 @@ const createComment = async (req, res) => {
         message: `${user.displayName} đã trả lời bình luận "${parentComment.content}"`,
       });
     }
-    if (user._id != post.user._id) {
+    if (!user._id.equals(post.user._id)) {
       await Notification.create({
         user: post.user._id,
         message: `${user.displayName} đã bình luận vào bài viết "${post.content}"`,

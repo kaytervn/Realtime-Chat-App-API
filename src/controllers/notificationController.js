@@ -7,11 +7,13 @@ import {
 
 const getListNotifications = async (req, res) => {
   try {
-    const result = await getPaginatedData({
-      model: Notification,
-      req,
-      populateOptions: "user",
-    });
+    const { user } = req;
+    const { status } = req.query;
+    const query = { user };
+    if (status === "1" || status === "2") {
+      query.status = status;
+    }
+    const result = await Notification.find(query);
     return makeSuccessResponse({
       res,
       data: result,

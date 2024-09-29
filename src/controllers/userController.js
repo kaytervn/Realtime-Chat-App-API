@@ -266,7 +266,10 @@ const getListUsers = async (req, res) => {
     const { isPaged } = req.query;
     let result;
     if (isPaged === "0") {
-      result = await User.find().populate("role");
+      result = await User.find().populate({
+        path: "role",
+        select: "-permissions",
+      });
     } else {
       result = await getPaginatedData({
         model: User,

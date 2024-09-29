@@ -87,7 +87,10 @@ const getPaginatedData = async ({
 
     const data = await model
       .find({ ...query, ...queryOptions })
-      .populate(populateOptions)
+      .populate({
+        path: populateOptions,
+        select: "-permissions",
+      })
       .skip(offset)
       .limit(limit)
       .sort({ [sortField]: sortDirection.toLowerCase() === "desc" ? -1 : 1 });

@@ -5,6 +5,7 @@ import cloudinary from "../utils/cloudinary.js";
 import otpGenerator from "otp-generator";
 import nodemailer from "nodemailer";
 import "dotenv/config.js";
+import { formatDate } from "../configurations/schemaConfig.js";
 
 const isValidObjectId = (id) => mongoose.isValidObjectId(id);
 
@@ -60,6 +61,7 @@ const getPaginatedData = async ({
   model,
   queryOptions = {},
   populateOptions = "",
+  customFields = [],
   req,
 }) => {
   try {
@@ -85,19 +87,73 @@ const getPaginatedData = async ({
       }
     }
 
-    let customeQuery = model.find({ ...query, ...queryOptions });
+    let aggregationPipeline = [{ $match: { ...query, ...queryOptions } }];
+
+    if (customFields.includes("totalComments")) {
+      aggregationPipeline.push({
+        $lookup: {
+          from: "comments",
+          localField: "_id",
+          foreignField: "post",
+          as: "comments",
+        },
+      });
+      aggregationPipeline.push({
+        $addFields: {
+          totalComments: { $size: "$comments" },
+        },
+      });
+      aggregationPipeline.push({
+        $project: {
+          comments: 0,
+        },
+      });
+    }
+
+    if (customFields.includes("totalReactions")) {
+      aggregationPipeline.push({
+        $lookup: {
+          from: "postreactions",
+          localField: "_id",
+          foreignField: "post",
+          as: "reactions",
+        },
+      });
+      aggregationPipeline.push({
+        $addFields: {
+          totalReactions: { $size: "$reactions" },
+        },
+      });
+      aggregationPipeline.push({
+        $project: {
+          reactions: 0,
+        },
+      });
+    }
+
+    aggregationPipeline.push(
+      {
+        $sort: { [sortField]: sortDirection.toLowerCase() === "desc" ? -1 : 1 },
+      },
+      { $skip: offset },
+      { $limit: limit }
+    );
+
+    let data = await model.aggregate(aggregationPipeline);
+
+    data = data.map((item) => {
+      if (item.createdAt) item.createdAt = formatDate(item.createdAt);
+      if (item.updatedAt) item.updatedAt = formatDate(item.updatedAt);
+      if (item.birthDate) item.birthDate = formatDate(item.birthDate);
+      return item;
+    });
 
     if (populateOptions) {
-      customeQuery = customeQuery.populate({
+      data = await model.populate(data, {
         path: populateOptions,
         select: "-permissions",
       });
     }
-
-    const data = await customeQuery
-      .skip(offset)
-      .limit(limit)
-      .sort({ [sortField]: sortDirection.toLowerCase() === "desc" ? -1 : 1 });
 
     const totalElements = await model.countDocuments({
       ...query,

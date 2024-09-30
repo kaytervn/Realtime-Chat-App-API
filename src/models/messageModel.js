@@ -1,5 +1,10 @@
 import mongoose from "mongoose";
-import { addDateGetters, schemaOptions } from "../configurations/schemaConfig";
+import {
+  addDateGetters,
+  schemaOptions,
+} from "../configurations/schemaConfig.js";
+import MessageReaction from "./messageReactionModel.js";
+import { deleteFileByUrl } from "../services/apiService.js";
 
 const MessageSchema = new mongoose.Schema(
   {
@@ -19,13 +24,8 @@ const MessageSchema = new mongoose.Schema(
     },
     kind: {
       type: Number,
-      enum: [1, 2, 3], // 1: text, 2: file, 3: image
+      enum: [1, 2], // 1: text, 2: image
       default: 1,
-    },
-    isDeleted: {
-      type: Number,
-      enum: [0, 1], // 0: false, 1: true
-      default: 0,
     },
     parent: {
       type: mongoose.Schema.Types.ObjectId,
@@ -37,6 +37,22 @@ const MessageSchema = new mongoose.Schema(
 );
 
 addDateGetters(MessageSchema);
+
+MessageSchema.pre(
+  "deleteOne",
+  { document: true, query: false },
+  async function (next) {
+    try {
+      if (this.kind == 2) {
+        await deleteFileByUrl(this.content);
+      }
+      await MessageReaction.deleteMany({ message: this._id });
+      next();
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 const Message = mongoose.model("Message", MessageSchema);
 export default Message;

@@ -9,11 +9,13 @@ import {
   createOtp,
   deleteFileByUrl,
   parseDate,
+  getPaginatedData,
 } from "../services/apiService.js";
 import User from "../models/userModel.js";
 import Role from "../models/roleModel.js";
 import "dotenv/config.js";
 import jwt from "jsonwebtoken";
+import Notification from "../models/notificationModel.js";
 
 // Login User
 const loginUser = async (req, res) => {
@@ -21,14 +23,17 @@ const loginUser = async (req, res) => {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
     if (!user) {
-      return makeErrorResponse({ res, message: "User not found" });
+      return makeErrorResponse({ res, message: "Tài khoản không tồn tại" });
     }
     const isPasswordValid = await comparePassword(password, user.password);
     if (!isPasswordValid) {
-      return makeErrorResponse({ res, message: "Invalid password" });
+      return makeErrorResponse({ res, message: "Sai mật khẩu" });
     }
     if (user.status != 1) {
-      return makeErrorResponse({ res, message: "User is not activated" });
+      return makeErrorResponse({
+        res,
+        message: "Tài khoản chưa được kích hoạt",
+      });
     }
     return makeSuccessResponse({
       res,
@@ -58,10 +63,13 @@ const registerUser = async (req, res) => {
   try {
     const { displayName, email, password, phone } = req.body;
     if (await User.findOne({ email })) {
-      return makeErrorResponse({ res, message: "Email is taken" });
+      return makeErrorResponse({ res, message: "Email đã được sử dụng" });
     }
     if (await User.findOne({ phone })) {
-      return makeErrorResponse({ res, message: "Phone is taken" });
+      return makeErrorResponse({
+        res,
+        message: "Số điện thoại đã được sử dụng",
+      });
     }
     let secretKey;
     while (true) {
@@ -81,7 +89,7 @@ const registerUser = async (req, res) => {
       secretKey,
       role: await Role.findOne({ name: "User" }),
     });
-    await sendEmail({ email, otp, subject: "VERIFY YOUR ACCOUNT" });
+    await sendEmail({ email, otp, subject: "XÁC MINH TÀI KHOẢN" });
     return makeSuccessResponse({
       res,
       message: "Register success, please check your email",
@@ -99,9 +107,13 @@ const verifyUser = async (req, res) => {
       return makeErrorResponse({ res, message: "User not found" });
     }
     if (user.otp !== otp) {
-      return makeErrorResponse({ res, message: "Invalid OTP" });
+      return makeErrorResponse({ res, message: "Sai mã xác thực OTP" });
     }
     await user.updateOne({ status: 1 });
+    await Notification.create({
+      user: user._id,
+      message: `Mừng thành viên mới, ${user.displayName}!`,
+    });
     return makeSuccessResponse({ res, message: "Verify success" });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
@@ -113,11 +125,11 @@ const forgotUserPassword = async (req, res) => {
     const { email } = req.body;
     const user = await User.findOne({ email });
     if (!user) {
-      return makeErrorResponse({ res, message: "User not found" });
+      return makeErrorResponse({ res, message: "Tài khoản không tồn tại" });
     }
     const otp = createOtp();
     await user.updateOne({ otp });
-    await sendEmail({ email, otp, subject: "RESET YOUR PASSWORD" });
+    await sendEmail({ email, otp, subject: "ĐẶT LẠI MẬT KHẨU" });
     return makeSuccessResponse({
       res,
       message: "Request forgot password success, please check your email",
@@ -136,7 +148,7 @@ const resetUserPassword = async (req, res) => {
       return makeErrorResponse({ res, message: "User not found" });
     }
     if (user.otp !== otp) {
-      return makeErrorResponse({ res, message: "Invalid OTP" });
+      return makeErrorResponse({ res, message: "Sai mã xác thực OTP" });
     }
 
     user.password = await encodePassword(newPassword);
@@ -153,7 +165,6 @@ const resetUserPassword = async (req, res) => {
   }
 };
 
-
 const changeUserPassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
@@ -165,16 +176,16 @@ const changeUserPassword = async (req, res) => {
     if (!isPasswordValid) {
       return makeErrorResponse({
         res,
-        message: "Current password does not match",
+        message: "Mật khẩu hiện tại không chính xác",
       });
     }
     if (currentPassword == newPassword) {
       return makeErrorResponse({
         res,
-        message: "New password must be different from current password",
+        message: "Mật khẩu mới không được trùng với mật khẩu hiện tại",
       });
     }
-    user.updateOne({ password: await encodePassword(newPassword) });
+    await user.updateOne({ password: await encodePassword(newPassword) });
     return makeSuccessResponse({
       res,
       message: "Change password success",
@@ -236,10 +247,203 @@ const changeStatusUser = async (req, res) => {
 const deleteUser = async (req, res) => {
   try {
     const id = req.params.id;
-    await User.deleteOne({ _id: id });
+    const user = await User.findById(id);
+    if (!user) {
+      return makeErrorResponse({ res, message: "User not found" });
+    }
+    await user.deleteOne();
     return makeSuccessResponse({
       res,
       message: "Delete user success",
+    });
+  } catch (error) {
+    return makeErrorResponse({ res, message: error.message });
+  }
+};
+
+const getListUsers = async (req, res) => {
+  try {
+    const { isPaged } = req.query;
+    let result;
+    if (isPaged === "0") {
+      result = await User.find()
+        .populate({
+          path: "role",
+          select: "-permissions",
+        })
+        .sort({
+          displayName: 1,
+        });
+    } else {
+      result = await getPaginatedData({
+        model: User,
+        req,
+        populateOptions: "role",
+      });
+    }
+    return makeSuccessResponse({
+      res,
+      data: result,
+    });
+  } catch (error) {
+    return makeErrorResponse({ res, message: error.message });
+  }
+};
+
+const getUser = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const user = await User.findById(id);
+    if (!user) {
+      return makeErrorResponse({ res, message: "User not found" });
+    }
+    return makeSuccessResponse({ res, data: user });
+  } catch (error) {
+    return makeErrorResponse({ res, message: error.message });
+  }
+};
+
+const createUser = async (req, res) => {
+  try {
+    const {
+      displayName,
+      email,
+      password,
+      phone,
+      birthDate,
+      bio,
+      avatarUrl,
+      status,
+      roleId,
+    } = req.body;
+    const parsedBirthDate = birthDate ? parseDate(birthDate) : null;
+    const role = await Role.findById(roleId);
+    if (await User.findOne({ email })) {
+      return makeErrorResponse({ res, message: "Email đã được sử dụng" });
+    }
+    if (await User.findOne({ phone })) {
+      return makeErrorResponse({
+        res,
+        message: "Số điện thoại đã được sử dụng",
+      });
+    }
+    let secretKey;
+    while (true) {
+      secretKey = createSecretKey();
+      if (!(await User.findOne({ secretKey }))) {
+        break;
+      }
+    }
+    const otp = createOtp();
+    await User.create({
+      displayName,
+      email,
+      password: await encodePassword(password),
+      phone,
+      otp,
+      status,
+      secretKey,
+      bio,
+      avatarUrl,
+      birthDate: parsedBirthDate,
+      role,
+    });
+    return makeSuccessResponse({ res, message: "Create user success" });
+  } catch (error) {
+    return makeErrorResponse({ res, message: error.message });
+  }
+};
+
+const updateUser = async (req, res) => {
+  try {
+    const {
+      id,
+      displayName,
+      email,
+      phone,
+      birthDate,
+      bio,
+      avatarUrl,
+      roleId,
+      status,
+      password,
+    } = req.body;
+    const { user } = req;
+    const updateUser = await User.findById(id);
+    if (!updateUser) {
+      return makeErrorResponse({ res, message: "User not found" });
+    }
+    if (avatarUrl != updateUser.avatarUrl) {
+      await deleteFileByUrl(updateUser.avatarUrl);
+    }
+    const parsedBirthDate = birthDate ? parseDate(birthDate) : null;
+    const role = await Role.findById(roleId);
+    if (updateUser.email != email && (await User.findOne({ email }))) {
+      return makeErrorResponse({ res, message: "Email đã được sử dụng" });
+    }
+    if (updateUser.phone != phone && (await User.findOne({ phone }))) {
+      return makeErrorResponse({
+        res,
+        message: "Số điện thoại đã được sử dụng",
+      });
+    }
+    const updateData = {
+      displayName,
+      email,
+      phone,
+      status,
+      bio,
+      avatarUrl,
+      birthDate: parsedBirthDate,
+      role,
+    };
+    if (password) {
+      updateData.password = await encodePassword(password);
+    }
+    await User.updateOne({ _id: id }, updateData);
+    if (!updateUser._id.equals(user._id)) {
+      await Notification.create({
+        user: updateUser._id,
+        message: "Thông tin của bạn đã được quản trị viên cập nhật",
+      });
+    }
+    return makeSuccessResponse({ res, message: "Update user success" });
+  } catch (error) {
+    return makeErrorResponse({ res, message: error.message });
+  }
+};
+
+const loginAdmin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) {
+      return makeErrorResponse({ res, message: "Tài khoản không tồn tại" });
+    }
+    const isPasswordValid = await comparePassword(password, user.password);
+    if (!isPasswordValid) {
+      return makeErrorResponse({ res, message: "Sai mật khẩu" });
+    }
+    if (user.status != 1) {
+      return makeErrorResponse({
+        res,
+        message: "Tài khoản chưa được kích hoạt",
+      });
+    }
+    const role = await Role.findById(user.role._id);
+    if (
+      !role.name.toLowerCase().includes("admin") &&
+      !role.name.toLowerCase().includes("quản trị")
+    ) {
+      return makeErrorResponse({
+        res,
+        message: "Bạn không phải quản trị viên",
+      });
+    }
+    return makeSuccessResponse({
+      res,
+      message: "Login success!",
+      data: { accessToken: createToken(user._id) },
     });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
@@ -258,4 +462,9 @@ export {
   verifyToken,
   changeStatusUser,
   deleteUser,
+  getListUsers,
+  getUser,
+  createUser,
+  updateUser,
+  loginAdmin,
 };

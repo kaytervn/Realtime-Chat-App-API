@@ -1,16 +1,14 @@
 import mongoose from "mongoose";
-import { addDateGetters, schemaOptions } from "../configurations/schemaConfig";
+import {
+  addDateGetters,
+  schemaOptions,
+} from "../configurations/schemaConfig.js";
 
 const MessageReactionSchema = new mongoose.Schema(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
-    },
-    reaction: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Reaction",
       required: true,
     },
     message: {

@@ -1,5 +1,9 @@
 import mongoose from "mongoose";
-import { addDateGetters, schemaOptions } from "../configurations/schemaConfig";
+import {
+  addDateGetters,
+  schemaOptions,
+} from "../configurations/schemaConfig.js";
+import Conversation from "./conversationModel.js";
 
 const FriendshipSchema = new mongoose.Schema(
   {
@@ -15,7 +19,7 @@ const FriendshipSchema = new mongoose.Schema(
     },
     status: {
       type: Number,
-      enum: [1, 2, 3], // 1: pending, 2: accepted, 3: blocked
+      enum: [1, 2], // 1: pending, 2: accepted
       default: 1,
     },
   },
@@ -23,6 +27,19 @@ const FriendshipSchema = new mongoose.Schema(
 );
 
 addDateGetters(FriendshipSchema);
+
+FriendshipSchema.pre(
+  "deleteOne",
+  { document: true, query: false },
+  async function (next) {
+    try {
+      await Conversation.deleteMany({ friendship: this._id });
+      next();
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 const Friendship = mongoose.model("Friendship", FriendshipSchema);
 export default Friendship;

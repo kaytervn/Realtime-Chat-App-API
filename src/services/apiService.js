@@ -5,7 +5,6 @@ import cloudinary from "../utils/cloudinary.js";
 import otpGenerator from "otp-generator";
 import nodemailer from "nodemailer";
 import "dotenv/config.js";
-import dayjs from "dayjs";
 
 const isValidObjectId = (id) => mongoose.isValidObjectId(id);
 
@@ -77,14 +76,25 @@ const getPaginatedData = async ({
 
     const query = {};
     for (const [key, value] of Object.entries(criteria)) {
-      if (value) {
+      if (mongoose.isValidObjectId(value)) {
+        query[key] = new mongoose.Types.ObjectId(value);
+      } else if (!isNaN(value) && key !== "phone") {
+        query[key] = Number(value);
+      } else if (value) {
         query[key] = new RegExp(value, "i");
       }
     }
 
-    const data = await model
-      .find({ ...query, ...queryOptions })
-      .populate(populateOptions)
+    let customeQuery = model.find({ ...query, ...queryOptions });
+
+    if (populateOptions) {
+      customeQuery = customeQuery.populate({
+        path: populateOptions,
+        select: "-permissions",
+      });
+    }
+
+    const data = await customeQuery
       .skip(offset)
       .limit(limit)
       .sort({ [sortField]: sortDirection.toLowerCase() === "desc" ? -1 : 1 });
@@ -148,7 +158,7 @@ const sendEmail = async ({ email, otp, subject }) => {
     from: `NO REPLY <${process.env.NODEMAILER_USER}>`,
     to: email,
     subject,
-    text: `Your OTP is: ${otp}`,
+    text: `Mã xác thực OTP của bạn là: ${otp}`,
   };
   await transporter.sendMail(mailOptions);
 };

@@ -50,10 +50,16 @@ const getRole = async (req, res) => {
 
 const getListRoles = async (req, res) => {
   try {
-    const result = await getPaginatedData({
-      model: Role,
-      req,
-    });
+    const { isPaged } = req.query;
+    let result;
+    if (isPaged === "0") {
+      result = await Role.find();
+    } else {
+      result = await getPaginatedData({
+        model: Role,
+        req,
+      });
+    }
     return makeSuccessResponse({
       res,
       data: result,

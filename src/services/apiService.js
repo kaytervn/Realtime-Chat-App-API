@@ -5,6 +5,7 @@ import cloudinary from "../utils/cloudinary.js";
 import otpGenerator from "otp-generator";
 import nodemailer from "nodemailer";
 import "dotenv/config.js";
+import { formatDate } from "../configurations/schemaConfig.js";
 
 const isValidObjectId = (id) => mongoose.isValidObjectId(id);
 
@@ -139,6 +140,13 @@ const getPaginatedData = async ({
     );
 
     let data = await model.aggregate(aggregationPipeline);
+
+    data = data.map((item) => {
+      if (item.createdAt) item.createdAt = formatDate(item.createdAt);
+      if (item.updatedAt) item.updatedAt = formatDate(item.updatedAt);
+      if (item.birthDate) item.birthDate = formatDate(item.birthDate);
+      return item;
+    });
 
     if (populateOptions) {
       data = await model.populate(data, {

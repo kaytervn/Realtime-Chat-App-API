@@ -73,6 +73,7 @@ const getListPosts = async (req, res) => {
       model: Post,
       req,
       populateOptions: "user",
+      customFields: ["totalComments", "totalReactions"],
     });
     return makeSuccessResponse({
       res,

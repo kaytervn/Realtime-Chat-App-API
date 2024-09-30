@@ -56,7 +56,16 @@ const getCommentReactions = async (req, res) => {
     const result = await getPaginatedData({
       model: CommentReaction,
       req,
-      populateOptions: "user comment",
+      populateOptions: [
+        { path: "user", populate: { path: "role", select: "-permissions" } },
+        {
+          path: "comment",
+          populate: {
+            path: "user",
+            populate: { path: "role", select: "-permissions" },
+          },
+        },
+      ],
     });
     return makeSuccessResponse({
       res,

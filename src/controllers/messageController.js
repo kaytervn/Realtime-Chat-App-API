@@ -74,7 +74,16 @@ const deleteMessage = async (req, res) => {
 const getMessage = async (req, res) => {
   try {
     const id = req.params.id;
-    const message = await Message.findById(id).populate("user conversation");
+    const message = await Message.findById(id).populate([
+      { path: "user", populate: { path: "role", select: "-permissions" } },
+      {
+        path: "conversation",
+        populate: {
+          path: "owner",
+          populate: { path: "role", select: "-permissions" },
+        },
+      },
+    ]);
     if (!message) {
       return makeErrorResponse({ res, message: "Message not found" });
     }
@@ -89,7 +98,16 @@ const getListMessages = async (req, res) => {
     const result = await getPaginatedData({
       model: Message,
       req,
-      populateOptions: "user conversation",
+      populateOptions: [
+        { path: "user", populate: { path: "role", select: "-permissions" } },
+        {
+          path: "conversation",
+          populate: {
+            path: "owner",
+            populate: { path: "role", select: "-permissions" },
+          },
+        },
+      ],
     });
     return makeSuccessResponse({
       res,

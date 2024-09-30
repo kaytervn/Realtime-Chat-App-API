@@ -60,7 +60,7 @@ const ignoreFields = (obj, ignoreFields) => {
 const getPaginatedData = async ({
   model,
   queryOptions = {},
-  populateOptions = "",
+  populateOptions = [],
   customFields = [],
   req,
 }) => {
@@ -148,11 +148,8 @@ const getPaginatedData = async ({
       return item;
     });
 
-    if (populateOptions) {
-      data = await model.populate(data, {
-        path: populateOptions,
-        select: "-permissions",
-      });
+    if (populateOptions && populateOptions.length) {
+      data = await model.populate(data, populateOptions);
     }
 
     const totalElements = await model.countDocuments({

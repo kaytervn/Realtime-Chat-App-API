@@ -278,7 +278,12 @@ const getListUsers = async (req, res) => {
       result = await getPaginatedData({
         model: User,
         req,
-        populateOptions: "role",
+        populateOptions: [
+          {
+            path: "role",
+            select: "-permissions",
+          },
+        ],
       });
     }
     return makeSuccessResponse({

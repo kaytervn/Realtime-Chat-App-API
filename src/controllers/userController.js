@@ -87,7 +87,7 @@ const registerUser = async (req, res) => {
       otp,
       status: 0,
       secretKey,
-      role: await Role.findOne({ name: "User" }),
+      role: await Role.findById("66df92539c35ca0c7c2bacbb"),
     });
     await sendEmail({ email, otp, subject: "XÁC MINH TÀI KHOẢN" });
     return makeSuccessResponse({
@@ -278,7 +278,12 @@ const getListUsers = async (req, res) => {
       result = await getPaginatedData({
         model: User,
         req,
-        populateOptions: "role",
+        populateOptions: [
+          {
+            path: "role",
+            select: "-permissions",
+          },
+        ],
       });
     }
     return makeSuccessResponse({

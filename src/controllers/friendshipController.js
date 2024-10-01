@@ -123,7 +123,13 @@ const getFriendships = async (req, res) => {
     const friendships = await Friendship.find({
       $or: [{ sender: user._id }, { receiver: user._id }],
       status: 2, // accepted
-    }).populate("sender receiver");
+    }).populate([
+      { path: "sender", populate: { path: "role", select: "-permissions" } },
+      {
+        path: "receiver",
+        populate: { path: "role", select: "-permissions" },
+      },
+    ]);
     return makeSuccessResponse({
       res,
       data: friendships,
@@ -140,7 +146,13 @@ const getListFriendships = async (req, res) => {
       model: Friendship,
       req,
       queryOptions: { user: user._id },
-      populateOptions: "sender receiver",
+      populateOptions: [
+        { path: "sender", populate: { path: "role", select: "-permissions" } },
+        {
+          path: "receiver",
+          populate: { path: "role", select: "-permissions" },
+        },
+      ],
     });
     return makeSuccessResponse({
       res,

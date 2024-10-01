@@ -52,7 +52,16 @@ const getMessageReactions = async (req, res) => {
     const result = await getPaginatedData({
       model: MessageReaction,
       req,
-      populateOptions: "user message",
+      populateOptions: [
+        { path: "user", populate: { path: "role", select: "-permissions" } },
+        {
+          path: "message",
+          populate: {
+            path: "user",
+            populate: { path: "role", select: "-permissions" },
+          },
+        },
+      ],
     });
     return makeSuccessResponse({
       res,

@@ -85,7 +85,9 @@ const deleteConversation = async (req, res) => {
 const getConversation = async (req, res) => {
   try {
     const id = req.params.id;
-    const conversation = await Conversation.findById(id).populate("owner");
+    const conversation = await Conversation.findById(id).populate([
+      { path: "owner", populate: { path: "role", select: "-permissions" } },
+    ]);
     if (!conversation) {
       return makeErrorResponse({ res, message: "Conversation not found" });
     }
@@ -102,7 +104,9 @@ const getListConversations = async (req, res) => {
       model: ConversationMember,
       req,
       queryOptions: { user: user._id },
-      populateOptions: "owner",
+      populateOptions: [
+        { path: "owner", populate: { path: "role", select: "-permissions" } },
+      ],
     });
     return makeSuccessResponse({
       res,

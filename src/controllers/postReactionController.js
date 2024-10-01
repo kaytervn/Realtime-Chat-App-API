@@ -52,7 +52,16 @@ const getPostReactions = async (req, res) => {
     const result = await getPaginatedData({
       model: PostReaction,
       req,
-      populateOptions: "user post",
+      populateOptions: [
+        { path: "user", populate: { path: "role", select: "-permissions" } },
+        {
+          path: "post",
+          populate: {
+            path: "user",
+            populate: { path: "role", select: "-permissions" },
+          },
+        },
+      ],
     });
     return makeSuccessResponse({
       res,

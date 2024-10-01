@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Notification from "../models/notificationModel.js";
 import Post from "../models/postModel.js";
 import {
@@ -72,13 +73,75 @@ const deletePost = async (req, res) => {
 const getPost = async (req, res) => {
   try {
     const id = req.params.id;
-    const post = await Post.findById(id).populate([
-      { path: "user", populate: { path: "role", select: "-permissions" } },
-    ]);
-    if (!post) {
+    let aggregationPipeline = [
+      { $match: { _id: new mongoose.Types.ObjectId(id) } },
+      {
+        $lookup: {
+          from: "users",
+          localField: "user",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      { $unwind: "$user" },
+      {
+        $lookup: {
+          from: "roles",
+          localField: "user.role",
+          foreignField: "_id",
+          as: "user.role",
+        },
+      },
+      { $unwind: "$user.role" },
+      {
+        $project: {
+          "user.role.permissions": 0,
+        },
+      },
+    ];
+    aggregationPipeline.push({
+      $lookup: {
+        from: "comments",
+        localField: "_id",
+        foreignField: "post",
+        as: "comments",
+      },
+    });
+    aggregationPipeline.push({
+      $addFields: {
+        totalComments: { $size: "$comments" },
+      },
+    });
+    aggregationPipeline.push({
+      $project: {
+        comments: 0,
+      },
+    });
+    aggregationPipeline.push({
+      $lookup: {
+        from: "postreactions",
+        localField: "_id",
+        foreignField: "post",
+        as: "reactions",
+      },
+    });
+    aggregationPipeline.push({
+      $addFields: {
+        totalReactions: { $size: "$reactions" },
+      },
+    });
+    aggregationPipeline.push({
+      $project: {
+        reactions: 0,
+      },
+    });
+    const post = await Post.aggregate(aggregationPipeline);
+
+    if (!post || post.length === 0) {
       return makeErrorResponse({ res, message: "Post not found" });
     }
-    return makeSuccessResponse({ res, data: post });
+
+    return makeSuccessResponse({ res, data: post[0] });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
   }

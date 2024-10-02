@@ -7,11 +7,11 @@ import {
 
 const createRole = async (req, res) => {
   try {
-    const { name, permissions } = req.body;
+    const { name, permissions, kind } = req.body;
     if (await Role.findOne({ name })) {
       return makeErrorResponse({ res, message: "Name existed" });
     }
-    await Role.create({ name, permissions });
+    await Role.create({ name, permissions, kind });
     return makeSuccessResponse({ res, message: "Role created" });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
@@ -20,7 +20,7 @@ const createRole = async (req, res) => {
 
 const updateRole = async (req, res) => {
   try {
-    const { id, name, permissions } = req.body;
+    const { id, name, permissions, kind } = req.body;
     const role = await Role.findById(id);
     if (!role) {
       return makeErrorResponse({ res, message: "Role not found" });
@@ -28,7 +28,7 @@ const updateRole = async (req, res) => {
     if (name !== role.name && (await Role.findOne({ name }))) {
       return makeErrorResponse({ res, message: "Name existed" });
     }
-    await role.updateOne({ name, permissions });
+    await role.updateOne({ name, permissions, kind });
     return makeSuccessResponse({ res, message: "Role updated" });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
@@ -50,16 +50,10 @@ const getRole = async (req, res) => {
 
 const getListRoles = async (req, res) => {
   try {
-    const { isPaged } = req.query;
-    let result;
-    if (isPaged === "0") {
-      result = await Role.find();
-    } else {
-      result = await getPaginatedData({
-        model: Role,
-        req,
-      });
-    }
+    const result = await getPaginatedData({
+      model: Role,
+      req,
+    });
     return makeSuccessResponse({
       res,
       data: result,

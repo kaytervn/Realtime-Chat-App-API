@@ -13,6 +13,7 @@ import PostReaction from "./postReactionModel.js";
 import Post from "./postModel.js";
 import Notification from "./notificationModel.js";
 import CommentReaction from "./commentReactionModel.js";
+import Friendship from "./friendshipModel.js";
 
 const UserSchema = new mongoose.Schema(
   {
@@ -79,6 +80,7 @@ UserSchema.pre(
   { document: true, query: false },
   async function (next) {
     try {
+      await deleteFileByUrl(this.avatarUrl);
       const conversations = await Conversation.find({ owner: this._id });
       for (const conversation of conversations) {
         await conversation.deleteOne();
@@ -91,9 +93,18 @@ UserSchema.pre(
       for (const comment of comments) {
         await comment.deleteOne();
       }
+      const posts = await Post.find({ user: this._id });
+      for (const post of posts) {
+        await post.deleteOne();
+      }
+      const friendships = await Friendship.find({
+        $or: [{ sender: this._id }, { receiver: this._id }],
+      });
+      for (const friendship of friendships) {
+        await friendship.deleteOne();
+      }
       await Notification.deleteMany({ user: this._id });
       await ConversationMember.deleteMany({ user: this._id });
-      await Post.deleteMany({ user: this._id });
       await MessageReaction.deleteMany({ user: this._id });
       await PostReaction.deleteMany({ user: this._id });
       await CommentReaction.deleteMany({ user: this._id });

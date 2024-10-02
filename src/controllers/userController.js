@@ -87,7 +87,7 @@ const registerUser = async (req, res) => {
       otp,
       status: 0,
       secretKey,
-      role: await Role.findById("66df92539c35ca0c7c2bacbb"),
+      role: await Role.findOne({ kind: 1 }),
     });
     await sendEmail({ email, otp, subject: "XÁC MINH TÀI KHOẢN" });
     return makeSuccessResponse({
@@ -179,7 +179,7 @@ const changeUserPassword = async (req, res) => {
         message: "Mật khẩu hiện tại không chính xác",
       });
     }
-    if (currentPassword == newPassword) {
+    if (currentPassword === newPassword) {
       return makeErrorResponse({
         res,
         message: "Mật khẩu mới không được trùng với mật khẩu hiện tại",
@@ -263,29 +263,16 @@ const deleteUser = async (req, res) => {
 
 const getListUsers = async (req, res) => {
   try {
-    const { isPaged } = req.query;
-    let result;
-    if (isPaged === "0") {
-      result = await User.find()
-        .populate({
+    const result = await getPaginatedData({
+      model: User,
+      req,
+      populateOptions: [
+        {
           path: "role",
           select: "-permissions",
-        })
-        .sort({
-          displayName: 1,
-        });
-    } else {
-      result = await getPaginatedData({
-        model: User,
-        req,
-        populateOptions: [
-          {
-            path: "role",
-            select: "-permissions",
-          },
-        ],
-      });
-    }
+        },
+      ],
+    });
     return makeSuccessResponse({
       res,
       data: result,
@@ -436,13 +423,10 @@ const loginAdmin = async (req, res) => {
       });
     }
     const role = await Role.findById(user.role._id);
-    if (
-      !role.name.toLowerCase().includes("admin") &&
-      !role.name.toLowerCase().includes("quản trị")
-    ) {
+    if (role.kind === 1) {
       return makeErrorResponse({
         res,
-        message: "Bạn không phải quản trị viên",
+        message: "Bạn không được phép đăng nhập vào trang này",
       });
     }
     return makeSuccessResponse({

@@ -2,6 +2,7 @@ import Comment from "../models/commentModel.js";
 import Notification from "../models/notificationModel.js";
 import Post from "../models/postModel.js";
 import {
+  deleteFileByUrl,
   getPaginatedData,
   makeErrorResponse,
   makeSuccessResponse,
@@ -9,7 +10,7 @@ import {
 
 const createComment = async (req, res) => {
   try {
-    const { postId, content, parentId } = req.body;
+    const { postId, content, parentId, imageUrl } = req.body;
     const { user } = req;
     let parentComment;
     if (parentId) {
@@ -27,6 +28,7 @@ const createComment = async (req, res) => {
       post: post._id,
       content,
       parent: parentComment?._id,
+      imageUrl,
     });
     if (parentComment) {
       await Notification.create({
@@ -51,12 +53,15 @@ const createComment = async (req, res) => {
 
 const updateComment = async (req, res) => {
   try {
-    const { id, content } = req.body;
+    const { id, content, imageUrl } = req.body;
     const comment = await Comment.findById(id);
     if (!comment) {
       return makeErrorResponse({ res, message: "Comment not found" });
     }
-    await comment.updateOne({ content });
+    if (comment.imageUrl !== imageUrl) {
+      await deleteFileByUrl(comment.imageUrl);
+    }
+    await comment.updateOne({ content, imageUrl });
     return makeSuccessResponse({ res, message: "Comment updated" });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
@@ -93,45 +98,16 @@ const getComment = async (req, res) => {
   }
 };
 
-const getListCommentsByPostId = async (req, res) => {
+const getListComments = async (req, res) => {
   try {
-    const { parentId } = req.params;
-    const result = await Comment.find({ parent: parentId });
-    return makeSuccessResponse({
-      res,
-      data: result,
+    req.query.getComments = "1";
+    const result = await getPaginatedData({
+      model: Comment,
+      req,
+      populateOptions: [
+        { path: "user", populate: { path: "role", select: "-permissions" } },
+      ],
     });
-  } catch (error) {
-    return makeErrorResponse({ res, message: error.message });
-  }
-};
-
-const getListCommentsByParentId = async (req, res) => {
-  try {
-    const { postId } = req.params;
-    const result = await Comment.aggregate([
-      {
-        $match: { post: mongoose.Types.ObjectId(postId) },
-      },
-      {
-        $lookup: {
-          from: "comments",
-          localField: "_id",
-          foreignField: "parent",
-          as: "children",
-        },
-      },
-      {
-        $addFields: {
-          totalChildren: { $size: "$children" },
-        },
-      },
-      {
-        $project: {
-          children: 0,
-        },
-      },
-    ]);
     return makeSuccessResponse({
       res,
       data: result,
@@ -146,6 +122,5 @@ export {
   updateComment,
   deleteComment,
   getComment,
-  getListCommentsByPostId,
-  getListCommentsByParentId,
+  getListComments,
 };

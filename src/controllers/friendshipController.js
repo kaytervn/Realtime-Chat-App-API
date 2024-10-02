@@ -3,6 +3,7 @@ import Conversation from "../models/conversationModel.js";
 import Friendship from "../models/friendshipModel.js";
 import Notification from "../models/notificationModel.js";
 import {
+  getPaginatedData,
   makeErrorResponse,
   makeSuccessResponse,
 } from "../services/apiService.js";
@@ -117,35 +118,11 @@ const deleteFriendRequest = async (req, res) => {
   }
 };
 
-const getFriendships = async (req, res) => {
-  try {
-    const { user } = req;
-    const friendships = await Friendship.find({
-      $or: [{ sender: user._id }, { receiver: user._id }],
-      status: 2, // accepted
-    }).populate([
-      { path: "sender", populate: { path: "role", select: "-permissions" } },
-      {
-        path: "receiver",
-        populate: { path: "role", select: "-permissions" },
-      },
-    ]);
-    return makeSuccessResponse({
-      res,
-      data: friendships,
-    });
-  } catch (error) {
-    return makeErrorResponse({ res, message: error.message });
-  }
-};
-
 const getListFriendships = async (req, res) => {
   try {
-    const { user } = req;
     const result = await getPaginatedData({
       model: Friendship,
       req,
-      queryOptions: { user: user._id },
       populateOptions: [
         { path: "sender", populate: { path: "role", select: "-permissions" } },
         {
@@ -167,7 +144,6 @@ export {
   sendFriendRequest,
   acceptFriendRequest,
   rejectFriendRequest,
-  getFriendships,
   getListFriendships,
   deleteFriendRequest,
 };

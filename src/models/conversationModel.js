@@ -5,6 +5,7 @@ import {
 } from "../configurations/schemaConfig.js";
 import ConversationMember from "./conversationMemberModel.js";
 import Message from "./messageModel.js";
+import { deleteFileByUrl } from "../services/apiService.js";
 
 const ConversationSchema = new mongoose.Schema(
   {
@@ -42,6 +43,7 @@ ConversationSchema.pre(
   { document: true, query: false },
   async function (next) {
     try {
+      await deleteFileByUrl(this.avatarUrl);
       await ConversationMember.deleteMany({ conversation: this._id });
       const messages = await Message.find({ conversation: this._id });
       for (const message of messages) {

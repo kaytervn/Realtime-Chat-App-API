@@ -22,10 +22,9 @@ const MessageSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
-    kind: {
-      type: Number,
-      enum: [1, 2], // 1: text, 2: image
-      default: 1,
+    imageUrl: {
+      type: String,
+      default: null,
     },
     parent: {
       type: mongoose.Schema.Types.ObjectId,
@@ -43,9 +42,7 @@ MessageSchema.pre(
   { document: true, query: false },
   async function (next) {
     try {
-      if (this.kind == 2) {
-        await deleteFileByUrl(this.content);
-      }
+      await deleteFileByUrl(this.content);
       await MessageReaction.deleteMany({ message: this._id });
       next();
     } catch (error) {

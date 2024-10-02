@@ -1,5 +1,6 @@
 import Comment from "../models/commentModel.js";
 import CommentReaction from "../models/commentReactionModel.js";
+import Notification from "../models/notificationModel.js";
 import {
   getPaginatedData,
   makeErrorResponse,
@@ -36,8 +37,11 @@ const createCommentReaction = async (req, res) => {
 
 const deleteCommentReaction = async (req, res) => {
   try {
-    const id = req.params.id;
-    const commentReaction = await CommentReaction.findById(id);
+    const commentId = req.params.id;
+    const commentReaction = await CommentReaction.findOne({
+      comment: commentId,
+      user: req.user._id,
+    });
     if (!commentReaction) {
       return makeErrorResponse({ res, message: "Comment reaction not found" });
     }
@@ -58,13 +62,6 @@ const getCommentReactions = async (req, res) => {
       req,
       populateOptions: [
         { path: "user", populate: { path: "role", select: "-permissions" } },
-        {
-          path: "comment",
-          populate: {
-            path: "user",
-            populate: { path: "role", select: "-permissions" },
-          },
-        },
       ],
     });
     return makeSuccessResponse({

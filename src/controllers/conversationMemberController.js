@@ -1,6 +1,7 @@
 import ConversationMember from "../models/conversationMemberModel.js";
 import Notification from "../models/notificationModel.js";
 import {
+  getPaginatedData,
   makeErrorResponse,
   makeSuccessResponse,
 } from "../services/apiService.js";
@@ -48,13 +49,16 @@ const removeMember = async (req, res) => {
 
 const getConversationMembers = async (req, res) => {
   try {
-    const { conversationId } = req.params;
-    const members = await ConversationMember.find({
-      conversation: conversationId,
-    }).populate("user");
+    const result = await getPaginatedData({
+      model: ConversationMember,
+      req,
+      populateOptions: [
+        { path: "user", populate: { path: "role", select: "-permissions" } },
+      ],
+    });
     return makeSuccessResponse({
       res,
-      data: members,
+      data: result,
     });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });

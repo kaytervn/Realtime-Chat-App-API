@@ -6,6 +6,19 @@ import otpGenerator from "otp-generator";
 import nodemailer from "nodemailer";
 import "dotenv/config.js";
 import { formatDate } from "../configurations/schemaConfig.js";
+import {
+  addFieldTotalChildrenToComments,
+  addFieldTotalComments,
+  addFieldTotalReactions,
+  addFieldTotalReactionsToComments,
+  addFieldTotalReactionsToMessages,
+  getPostByFriends,
+} from "./postUtils.js";
+import {
+  getListUsersIgnoreFriendships,
+  getUserConversations,
+  getUserFriendships,
+} from "./UserUtils.js";
 
 const isValidObjectId = (id) => mongoose.isValidObjectId(id);
 
@@ -61,16 +74,32 @@ const getPaginatedData = async ({
   model,
   queryOptions = {},
   populateOptions = [],
-  customFields = [],
   req,
 }) => {
   try {
+    const { user } = req;
+
     const {
+      isPaged,
+      getMyFriendPosts,
+      getMyPosts,
+      getMyNotifications,
+      getUsersIgnoreFriendship,
+      getMyFriendships,
+      getMyConversations,
+      getPosts,
+      getComments,
+      getParentComments,
+      getMessages,
       page = 0,
-      size = 10,
+      size = isPaged === "0" ? Number.MAX_SAFE_INTEGER : 10,
       sort = "createdAt,desc",
       ...criteria
     } = req.query;
+
+    if (getMyPosts === "1" || getMyNotifications === "1") {
+      criteria.user = user._id;
+    }
 
     const offset = parseInt(page, 10) * parseInt(size, 10);
     const limit = parseInt(size, 10);
@@ -89,57 +118,46 @@ const getPaginatedData = async ({
 
     let aggregationPipeline = [{ $match: { ...query, ...queryOptions } }];
 
-    if (customFields.includes("totalComments")) {
-      aggregationPipeline.push({
-        $lookup: {
-          from: "comments",
-          localField: "_id",
-          foreignField: "post",
-          as: "comments",
-        },
-      });
-      aggregationPipeline.push({
-        $addFields: {
-          totalComments: { $size: "$comments" },
-        },
-      });
-      aggregationPipeline.push({
-        $project: {
-          comments: 0,
-        },
-      });
+    if (getMyFriendPosts === "1") {
+      getPostByFriends(aggregationPipeline, user._id);
     }
 
-    if (customFields.includes("totalReactions")) {
-      aggregationPipeline.push({
-        $lookup: {
-          from: "postreactions",
-          localField: "_id",
-          foreignField: "post",
-          as: "reactions",
-        },
-      });
-      aggregationPipeline.push({
-        $addFields: {
-          totalReactions: { $size: "$reactions" },
-        },
-      });
-      aggregationPipeline.push({
-        $project: {
-          reactions: 0,
-        },
-      });
+    if (getUsersIgnoreFriendship === "1") {
+      getListUsersIgnoreFriendships(aggregationPipeline, user._id);
     }
 
-    aggregationPipeline.push(
-      {
-        $sort: { [sortField]: sortDirection.toLowerCase() === "desc" ? -1 : 1 },
+    if (getMyFriendships === "1") {
+      getUserFriendships(aggregationPipeline, user._id);
+    }
+
+    if (getMyConversations === "1") {
+      getUserConversations(aggregationPipeline, user._id);
+    }
+
+    if (getPosts === "1") {
+      addFieldTotalComments(aggregationPipeline);
+      addFieldTotalReactions(aggregationPipeline);
+    }
+
+    if (getMessages === "1") {
+      addFieldTotalReactionsToMessages(aggregationPipeline);
+    }
+
+    if (getComments === "1") {
+      if (getParentComments === "1") {
+        addFieldTotalChildrenToComments(aggregationPipeline);
+      }
+      addFieldTotalReactionsToComments(aggregationPipeline);
+    }
+
+    aggregationPipeline.push({
+      $sort: {
+        [sortField]: sortDirection.toLowerCase() === "desc" ? -1 : 1,
       },
-      { $skip: offset },
-      { $limit: limit }
-    );
+    });
 
-    let data = await model.aggregate(aggregationPipeline);
+    const allData = await model.aggregate(aggregationPipeline);
+    let data = allData.slice(offset, offset + limit);
 
     data = data.map((item) => {
       if (item.createdAt) item.createdAt = formatDate(item.createdAt);
@@ -152,10 +170,7 @@ const getPaginatedData = async ({
       data = await model.populate(data, populateOptions);
     }
 
-    const totalElements = await model.countDocuments({
-      ...query,
-      ...queryOptions,
-    });
+    const totalElements = allData.length;
     const totalPages = Math.ceil(totalElements / limit);
 
     return {

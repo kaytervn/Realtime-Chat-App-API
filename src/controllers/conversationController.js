@@ -1,6 +1,7 @@
 import Conversation from "../models/conversationModel.js";
 import ConversationMember from "../models/conversationMemberModel.js";
 import {
+  deleteFileByUrl,
   getPaginatedData,
   makeErrorResponse,
   makeSuccessResponse,
@@ -37,7 +38,7 @@ const createConversation = async (req, res) => {
     );
     await Notification.create(
       memberIds.map((userId) => ({
-        message: `Bạn được ${user.displayName} thêm vào cuộc trò chuyện "${name}"`,
+        message: `Bạn đã được ${user.displayName} thêm vào cuộc trò chuyện "${name}"`,
         user: userId,
       }))
     );
@@ -57,6 +58,9 @@ const updateConversation = async (req, res) => {
     const conversation = await Conversation.findById(id);
     if (!conversation) {
       return makeErrorResponse({ res, message: "Conversation not found" });
+    }
+    if (conversation.avatarUrl !== avatarUrl) {
+      await deleteFileByUrl(conversation.avatarUrl);
     }
     await conversation.updateOne({ name, avatarUrl });
     return makeSuccessResponse({ res, message: "Conversation updated" });
@@ -99,13 +103,15 @@ const getConversation = async (req, res) => {
 
 const getListConversations = async (req, res) => {
   try {
-    const { user } = req;
     const result = await getPaginatedData({
-      model: ConversationMember,
+      model: Conversation,
       req,
-      queryOptions: { user: user._id },
       populateOptions: [
         { path: "owner", populate: { path: "role", select: "-permissions" } },
+        {
+          path: "friendship",
+          populate: [{ path: "sender" }, { path: "receiver" }],
+        },
       ],
     });
     return makeSuccessResponse({

@@ -1,6 +1,7 @@
 import Conversation from "../models/conversationModel.js";
 import Message from "../models/messageModel.js";
 import {
+  deleteFileByUrl,
   getPaginatedData,
   makeErrorResponse,
   makeSuccessResponse,
@@ -8,7 +9,7 @@ import {
 
 const createMessage = async (req, res) => {
   try {
-    const { conversationId, content, kind, parentId } = req.body;
+    const { conversationId, content, parentId, imageUrl } = req.body;
     const { user } = req;
     let parentMessage;
     if (parentId) {
@@ -28,7 +29,7 @@ const createMessage = async (req, res) => {
       conversation: conversation._id,
       user: user._id,
       content,
-      kind,
+      imageUrl,
       parent: parentMessage?._id,
     });
     return makeSuccessResponse({
@@ -42,10 +43,13 @@ const createMessage = async (req, res) => {
 
 const updateMessage = async (req, res) => {
   try {
-    const { id, content } = req.body;
+    const { id, content, imageUrl } = req.body;
     const message = await Message.findById(id);
     if (!message) {
       return makeErrorResponse({ res, message: "Message not found" });
+    }
+    if (message.imageUrl !== imageUrl) {
+      await deleteFileByUrl(message.imageUrl);
     }
     await message.updateOne({ content });
     return makeSuccessResponse({ res, message: "Message updated" });
@@ -95,18 +99,12 @@ const getMessage = async (req, res) => {
 
 const getListMessages = async (req, res) => {
   try {
+    req.query.getMessages = "1";
     const result = await getPaginatedData({
       model: Message,
       req,
       populateOptions: [
         { path: "user", populate: { path: "role", select: "-permissions" } },
-        {
-          path: "conversation",
-          populate: {
-            path: "owner",
-            populate: { path: "role", select: "-permissions" },
-          },
-        },
       ],
     });
     return makeSuccessResponse({

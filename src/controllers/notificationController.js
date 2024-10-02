@@ -1,20 +1,15 @@
 import Notification from "../models/notificationModel.js";
 import {
+  getPaginatedData,
   makeErrorResponse,
   makeSuccessResponse,
-  getPaginatedData,
 } from "../services/apiService.js";
 
 const getListNotifications = async (req, res) => {
   try {
-    const { user } = req;
-    const { status } = req.query;
-    const query = { user };
-    if (status === "1" || status === "2") {
-      query.status = status;
-    }
-    const result = await Notification.find(query).sort({
-      createdAt: -1,
+    const result = await getPaginatedData({
+      model: Notification,
+      req,
     });
     return makeSuccessResponse({
       res,

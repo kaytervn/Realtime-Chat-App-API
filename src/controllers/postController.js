@@ -1,4 +1,3 @@
-import mongoose from "mongoose";
 import Notification from "../models/notificationModel.js";
 import Post from "../models/postModel.js";
 import {
@@ -6,15 +5,17 @@ import {
   makeErrorResponse,
   makeSuccessResponse,
 } from "../services/apiService.js";
+import { getPostAggregationPipeline } from "../services/postUtils.js";
 
 const createPost = async (req, res) => {
   try {
-    const { content, imageUrl } = req.body;
+    const { content, imageUrl, status } = req.body;
     const { user } = req;
     await Post.create({
       user: user._id,
       content,
       imageUrl,
+      status: status ? status : 1,
     });
     return makeSuccessResponse({
       res,
@@ -28,19 +29,36 @@ const createPost = async (req, res) => {
 const updatePost = async (req, res) => {
   try {
     const { id, content, imageUrl } = req.body;
-    const { user } = req;
     const post = await Post.findById(id).populate("user");
     if (!post) {
       return makeErrorResponse({ res, message: "Post not found" });
     }
     await post.updateOne({ content, imageUrl });
+    return makeSuccessResponse({ res, message: "Post updated" });
+  } catch (error) {
+    return makeErrorResponse({ res, message: error.message });
+  }
+};
+
+const changeStatusPost = async (req, res) => {
+  try {
+    const { id, status, reason } = req.body;
+    const { user } = req;
+    const post = await Post.findById(id).populate("user");
+    if (!post) {
+      return makeErrorResponse({ res, message: "Post not found" });
+    }
+    await post.updateOne({ status });
     if (!post.user._id.equals(user._id)) {
       await Notification.create({
         user: post.user._id,
-        message: "Bài đăng của bạn đã được quản trị viên cập nhật",
+        message:
+          status === 2
+            ? "Bài đăng của bạn đã được xét duyệt thành công"
+            : `Bài đăng của bạn đã bị từ chối\nLý do: ${reason}`,
       });
     }
-    return makeSuccessResponse({ res, message: "Post updated" });
+    return makeSuccessResponse({ res, message: "Post status changed" });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
   }
@@ -49,6 +67,7 @@ const updatePost = async (req, res) => {
 const deletePost = async (req, res) => {
   try {
     const id = req.params.id;
+    const { reason } = req.body;
     const { user } = req;
     const post = await Post.findById(id).populate("user");
     if (!post) {
@@ -58,7 +77,7 @@ const deletePost = async (req, res) => {
     if (!post.user._id.equals(user._id)) {
       await Notification.create({
         user: post.user._id,
-        message: "Bài đăng của bạn đã bị quản trị viên gỡ bỏ",
+        message: `Bài đăng của bạn đã bị gỡ bỏ\nLý do: ${reason}`,
       });
     }
     return makeSuccessResponse({
@@ -73,74 +92,10 @@ const deletePost = async (req, res) => {
 const getPost = async (req, res) => {
   try {
     const id = req.params.id;
-    let aggregationPipeline = [
-      { $match: { _id: new mongoose.Types.ObjectId(id) } },
-      {
-        $lookup: {
-          from: "users",
-          localField: "user",
-          foreignField: "_id",
-          as: "user",
-        },
-      },
-      { $unwind: "$user" },
-      {
-        $lookup: {
-          from: "roles",
-          localField: "user.role",
-          foreignField: "_id",
-          as: "user.role",
-        },
-      },
-      { $unwind: "$user.role" },
-      {
-        $project: {
-          "user.role.permissions": 0,
-        },
-      },
-    ];
-    aggregationPipeline.push({
-      $lookup: {
-        from: "comments",
-        localField: "_id",
-        foreignField: "post",
-        as: "comments",
-      },
-    });
-    aggregationPipeline.push({
-      $addFields: {
-        totalComments: { $size: "$comments" },
-      },
-    });
-    aggregationPipeline.push({
-      $project: {
-        comments: 0,
-      },
-    });
-    aggregationPipeline.push({
-      $lookup: {
-        from: "postreactions",
-        localField: "_id",
-        foreignField: "post",
-        as: "reactions",
-      },
-    });
-    aggregationPipeline.push({
-      $addFields: {
-        totalReactions: { $size: "$reactions" },
-      },
-    });
-    aggregationPipeline.push({
-      $project: {
-        reactions: 0,
-      },
-    });
-    const post = await Post.aggregate(aggregationPipeline);
-
+    const post = await Post.aggregate(getPostAggregationPipeline(id));
     if (!post || post.length === 0) {
       return makeErrorResponse({ res, message: "Post not found" });
     }
-
     return makeSuccessResponse({ res, data: post[0] });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
@@ -149,13 +104,13 @@ const getPost = async (req, res) => {
 
 const getListPosts = async (req, res) => {
   try {
+    req.query.getPosts = "1";
     const result = await getPaginatedData({
       model: Post,
       req,
       populateOptions: [
         { path: "user", populate: { path: "role", select: "-permissions" } },
       ],
-      customFields: ["totalComments", "totalReactions"],
     });
     return makeSuccessResponse({
       res,
@@ -166,4 +121,11 @@ const getListPosts = async (req, res) => {
   }
 };
 
-export { createPost, updatePost, deletePost, getPost, getListPosts };
+export {
+  createPost,
+  updatePost,
+  deletePost,
+  getPost,
+  getListPosts,
+  changeStatusPost,
+};

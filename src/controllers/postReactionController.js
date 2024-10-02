@@ -1,3 +1,4 @@
+import Notification from "../models/notificationModel.js";
 import Post from "../models/postModel.js";
 import PostReaction from "../models/postReactionModel.js";
 import {
@@ -32,8 +33,11 @@ const createPostReaction = async (req, res) => {
 
 const deletePostReaction = async (req, res) => {
   try {
-    const id = req.params.id;
-    const postReaction = await PostReaction.findById(id);
+    const postId = req.params.id;
+    const postReaction = await PostReaction.findOne({
+      post: postId,
+      user: req.user._id,
+    });
     if (!postReaction) {
       return makeErrorResponse({ res, message: "Post reaction not found" });
     }
@@ -54,13 +58,6 @@ const getPostReactions = async (req, res) => {
       req,
       populateOptions: [
         { path: "user", populate: { path: "role", select: "-permissions" } },
-        {
-          path: "post",
-          populate: {
-            path: "user",
-            populate: { path: "role", select: "-permissions" },
-          },
-        },
       ],
     });
     return makeSuccessResponse({

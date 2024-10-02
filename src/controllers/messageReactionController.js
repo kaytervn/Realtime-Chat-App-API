@@ -1,5 +1,6 @@
 import Message from "../models/messageModel.js";
 import MessageReaction from "../models/messageReactionModel.js";
+import Notification from "../models/notificationModel.js";
 import {
   getPaginatedData,
   makeErrorResponse,
@@ -32,8 +33,11 @@ const createMessageReaction = async (req, res) => {
 
 const deleteMessageReaction = async (req, res) => {
   try {
-    const id = req.params.id;
-    const messageReaction = await MessageReaction.findById(id);
+    const messageId = req.params.id;
+    const messageReaction = await MessageReaction.findOne({
+      message: messageId,
+      user: req.user._id,
+    });
     if (!messageReaction) {
       return makeErrorResponse({ res, message: "Message reaction not found" });
     }
@@ -54,13 +58,6 @@ const getMessageReactions = async (req, res) => {
       req,
       populateOptions: [
         { path: "user", populate: { path: "role", select: "-permissions" } },
-        {
-          path: "message",
-          populate: {
-            path: "user",
-            populate: { path: "role", select: "-permissions" },
-          },
-        },
       ],
     });
     return makeSuccessResponse({

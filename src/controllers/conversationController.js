@@ -21,7 +21,6 @@ const createConversation = async (req, res) => {
     const conversation = await Conversation.create({
       name,
       avatarUrl,
-      kind: 1,
       owner: user._id,
     });
     // Add current user to conversation

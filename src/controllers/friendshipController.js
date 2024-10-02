@@ -55,15 +55,7 @@ const acceptFriendRequest = async (req, res) => {
       user: friendship.receiver._id,
       message: `${friendship.receiver.displayName} đã chấp nhận lời mời kết bạn`,
     });
-    const conversation = await Conversation.create({ kind: 2 });
-    await ConversationMember.create({
-      conversation: conversation._id,
-      user: friendship.sender._id,
-    });
-    await ConversationMember.create({
-      conversation: conversation._id,
-      user: friendship.receiver._id,
-    });
+    await Conversation.create({ friendship });
     return makeSuccessResponse({
       res,
       message: "Friend request accepted",

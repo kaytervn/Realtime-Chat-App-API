@@ -15,6 +15,7 @@ const formatNotificationData = async (notification) => {
     _id: notification._id,
     status: notification.status,
     kind: notification.kind,
+    message: notification.message,
     data: formattedData,
     createdAt: formatDistanceToNow(notification.createdAt),
   };

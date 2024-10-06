@@ -281,7 +281,7 @@ const updateUserProfile = async (req, res) => {
           message: "Mật khẩu mới không được trùng với mật khẩu hiện tại",
         });
       }
-      updateData.password = await encodePassword(password);
+      updateData.password = await encodePassword(newPassword);
       await Notification.create({
         user: user._id,
         data: {
@@ -293,7 +293,7 @@ const updateUserProfile = async (req, res) => {
         message: "Thay đổi mật khẩu thành công",
       });
     }
-    await User.updateOne({ _id: id }, updateData);
+    await user.updateOne(updateData);
     return makeSuccessResponse({ res, message: "Update user profile success" });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });

@@ -1,7 +1,7 @@
 import express from "express";
 import auth from "../middlewares/authentication.js";
 import {
-  getListNotifications,
+  getMyNotifications,
   readNotification,
   readAllNotifications,
   deleteNotification,
@@ -9,7 +9,7 @@ import {
 } from "../controllers/notificationController.js";
 const router = express.Router();
 
-router.get("/list", auth("NO_L"), getListNotifications);
+router.get("/list", auth("NO_L"), getMyNotifications);
 router.put("/read/:id", auth(""), readNotification);
 router.put("/read-all", auth(""), readAllNotifications);
 router.delete("/delete/:id", auth(""), deleteNotification);

@@ -1,8 +1,5 @@
 import mongoose from "mongoose";
-import {
-  addDateGetters,
-  schemaOptions,
-} from "../configurations/schemaConfig.js";
+import { schemaOptions } from "../configurations/schemaConfig.js";
 
 const PostReactionSchema = new mongoose.Schema(
   {
@@ -19,8 +16,6 @@ const PostReactionSchema = new mongoose.Schema(
   },
   schemaOptions
 );
-
-addDateGetters(PostReactionSchema);
 
 const PostReaction = mongoose.model("PostReaction", PostReactionSchema);
 export default PostReaction;

@@ -1,9 +1,5 @@
 import mongoose from "mongoose";
-import {
-  addDateGetters,
-  formatDate,
-  schemaOptions,
-} from "../configurations/schemaConfig.js";
+import { formatDate, schemaOptions } from "../configurations/schemaConfig.js";
 import Message from "./messageModel.js";
 import ConversationMember from "./conversationMemberModel.js";
 import Conversation from "./conversationModel.js";
@@ -14,6 +10,8 @@ import Post from "./postModel.js";
 import Notification from "./notificationModel.js";
 import CommentReaction from "./commentReactionModel.js";
 import Friendship from "./friendshipModel.js";
+import Story from "./storyModel.js";
+import { deleteFileByUrl } from "../services/apiService.js";
 
 const UserSchema = new mongoose.Schema(
   {
@@ -32,7 +30,13 @@ const UserSchema = new mongoose.Schema(
     },
     phone: {
       type: String,
-      default: null,
+      required: true,
+      unique: true,
+    },
+    studentId: {
+      type: String,
+      required: true,
+      unique: true,
     },
     birthDate: {
       type: Date,
@@ -69,11 +73,13 @@ const UserSchema = new mongoose.Schema(
       enum: [0, 1], // 0: inactive, 1: active
       default: 0,
     },
+    lastLogin: {
+      type: Date,
+      default: new Date(),
+    },
   },
   schemaOptions
 );
-
-addDateGetters(UserSchema);
 
 UserSchema.pre(
   "deleteOne",
@@ -96,6 +102,10 @@ UserSchema.pre(
       const posts = await Post.find({ user: this._id });
       for (const post of posts) {
         await post.deleteOne();
+      }
+      const stories = await Story.find({ user: this._id });
+      for (const story of stories) {
+        await story.deleteOne();
       }
       const friendships = await Friendship.find({
         $or: [{ sender: this._id }, { receiver: this._id }],

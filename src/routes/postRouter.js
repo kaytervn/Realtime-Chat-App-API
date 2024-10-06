@@ -4,7 +4,7 @@ import {
   changeStatusPost,
   createPost,
   deletePost,
-  getListPosts,
+  getPosts,
   getPost,
   updatePost,
 } from "../controllers/postController.js";
@@ -14,7 +14,7 @@ router.post("/create", auth("POST_C"), createPost);
 router.put("/update", auth("POST_U"), updatePost);
 router.get("/get/:id", auth("POST_V"), getPost);
 router.delete("/delete/:id", auth("POST_D"), deletePost);
-router.get("/list", auth("POST_L"), getListPosts);
+router.get("/list", auth("POST_L"), getPosts);
 router.get("/change-state/:id", auth("POST_C_S"), changeStatusPost);
 
 export { router as postRouter };

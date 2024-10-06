@@ -1,22 +1,32 @@
+import Comment from "../models/commentModel.js";
 import Notification from "../models/notificationModel.js";
 import Post from "../models/postModel.js";
+import PostReaction from "../models/postReactionModel.js";
 import {
-  getPaginatedData,
+  deleteFileByUrl,
+  isValidUrl,
   makeErrorResponse,
   makeSuccessResponse,
 } from "../services/apiService.js";
-import { getPostAggregationPipeline } from "../services/postUtils.js";
+import { formatPostData, getListPosts } from "../services/postService.js";
 
 const createPost = async (req, res) => {
   try {
-    const { content, imageUrl, status } = req.body;
+    const { content, imageUrls, status, kind } = req.body;
     const { user } = req;
+
     await Post.create({
       user: user._id,
       content,
-      imageUrl,
+      imageUrls: imageUrls
+        ? imageUrls
+            .map((imageUrl) => (isValidUrl(imageUrl) ? imageUrl : null))
+            .filter((url) => url !== null)
+        : [],
       status: status ? status : 1,
+      kind,
     });
+
     return makeSuccessResponse({
       res,
       message: "Create post success",
@@ -28,12 +38,28 @@ const createPost = async (req, res) => {
 
 const updatePost = async (req, res) => {
   try {
-    const { id, content, imageUrl } = req.body;
+    const { id, content, imageUrls, kind } = req.body;
     const post = await Post.findById(id).populate("user");
     if (!post) {
       return makeErrorResponse({ res, message: "Post not found" });
     }
-    await post.updateOne({ content, imageUrl });
+    const oldImageUrls = post.imageUrls || [];
+    const imagesToDelete = oldImageUrls.filter(
+      (url) => !imageUrls.includes(url)
+    );
+    for (const imageUrl of imagesToDelete) {
+      await deleteFileByUrl(imageUrl);
+    }
+    await post.updateOne({
+      content,
+      kind,
+      isUpdated: 1,
+      imageUrls: imageUrls
+        ? imageUrls
+            .map((imageUrl) => (isValidUrl(imageUrl) ? imageUrl : null))
+            .filter((url) => url !== null)
+        : [],
+    });
     return makeSuccessResponse({ res, message: "Post updated" });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
@@ -52,10 +78,16 @@ const changeStatusPost = async (req, res) => {
     if (!post.user._id.equals(user._id)) {
       await Notification.create({
         user: post.user._id,
+        data: {
+          post: {
+            _id: post.id,
+          },
+        },
+        kind: status === 2 ? 2 : 3,
         message:
           status === 2
             ? "Bài đăng của bạn đã được xét duyệt thành công"
-            : `Bài đăng của bạn đã bị từ chối\nLý do: ${reason}`,
+            : `Bài đăng của bạn đã bị từ chối!\nLý do: ${reason}`,
       });
     }
     return makeSuccessResponse({ res, message: "Post status changed" });
@@ -74,9 +106,10 @@ const deletePost = async (req, res) => {
       return makeErrorResponse({ res, message: "Post not found" });
     }
     await post.deleteOne();
-    if (!post.user._id.equals(user._id)) {
+    if (!post.user._id.equals(user._id) && reason) {
       await Notification.create({
         user: post.user._id,
+        kind: 3,
         message: `Bài đăng của bạn đã bị gỡ bỏ\nLý do: ${reason}`,
       });
     }
@@ -92,26 +125,23 @@ const deletePost = async (req, res) => {
 const getPost = async (req, res) => {
   try {
     const id = req.params.id;
-    const post = await Post.aggregate(getPostAggregationPipeline(id));
-    if (!post || post.length === 0) {
+    const currentUser = req.user;
+    const post = await Post.findById(id).populate("user");
+    if (!post) {
       return makeErrorResponse({ res, message: "Post not found" });
     }
-    return makeSuccessResponse({ res, data: post[0] });
+    return makeSuccessResponse({
+      res,
+      data: await formatPostData(post, currentUser),
+    });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
   }
 };
 
-const getListPosts = async (req, res) => {
+const getPosts = async (req, res) => {
   try {
-    req.query.getPosts = "1";
-    const result = await getPaginatedData({
-      model: Post,
-      req,
-      populateOptions: [
-        { path: "user", populate: { path: "role", select: "-permissions" } },
-      ],
-    });
+    const result = await getListPosts(req);
     return makeSuccessResponse({
       res,
       data: result,
@@ -126,6 +156,6 @@ export {
   updatePost,
   deletePost,
   getPost,
-  getListPosts,
+  getPosts,
   changeStatusPost,
 };

@@ -2,8 +2,8 @@ import Role from "../models/roleModel.js";
 import {
   makeErrorResponse,
   makeSuccessResponse,
-  getPaginatedData,
 } from "../services/apiService.js";
+import { formatRoleData, getListRoles } from "../services/roleService.js";
 
 const createRole = async (req, res) => {
   try {
@@ -28,7 +28,11 @@ const updateRole = async (req, res) => {
     if (name !== role.name && (await Role.findOne({ name }))) {
       return makeErrorResponse({ res, message: "Name existed" });
     }
-    await role.updateOne({ name, permissions, kind });
+    const updateData = { name, permissions };
+    if (kind) {
+      updateData.kind = kind;
+    }
+    await role.updateOne(updateData);
     return makeSuccessResponse({ res, message: "Role updated" });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
@@ -42,18 +46,15 @@ const getRole = async (req, res) => {
     if (!role) {
       return makeErrorResponse({ res, message: "Role not found" });
     }
-    return makeSuccessResponse({ res, data: role });
+    return makeSuccessResponse({ res, data: formatRoleData(role) });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
   }
 };
 
-const getListRoles = async (req, res) => {
+const getRoles = async (req, res) => {
   try {
-    const result = await getPaginatedData({
-      model: Role,
-      req,
-    });
+    const result = await getListRoles(req);
     return makeSuccessResponse({
       res,
       data: result,
@@ -63,4 +64,4 @@ const getListRoles = async (req, res) => {
   }
 };
 
-export { createRole, updateRole, getListRoles, getRole };
+export { createRole, updateRole, getRoles, getRole };

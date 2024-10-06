@@ -1,8 +1,5 @@
 import mongoose from "mongoose";
-import {
-  addDateGetters,
-  schemaOptions,
-} from "../configurations/schemaConfig.js";
+import { schemaOptions } from "../configurations/schemaConfig.js";
 
 const RoleSchema = new mongoose.Schema(
   {
@@ -24,8 +21,6 @@ const RoleSchema = new mongoose.Schema(
   },
   schemaOptions
 );
-
-addDateGetters(RoleSchema);
 
 const Role = mongoose.model("Role", RoleSchema);
 export default Role;

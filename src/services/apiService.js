@@ -5,20 +5,6 @@ import cloudinary from "../utils/cloudinary.js";
 import otpGenerator from "otp-generator";
 import nodemailer from "nodemailer";
 import "dotenv/config.js";
-import { formatDate } from "../configurations/schemaConfig.js";
-import {
-  addFieldTotalChildrenToComments,
-  addFieldTotalComments,
-  addFieldTotalReactions,
-  addFieldTotalReactionsToComments,
-  addFieldTotalReactionsToMessages,
-  getPostByFriends,
-} from "./postUtils.js";
-import {
-  getListUsersIgnoreFriendships,
-  getUserConversations,
-  getUserFriendships,
-} from "./UserUtils.js";
 
 const isValidObjectId = (id) => mongoose.isValidObjectId(id);
 
@@ -70,116 +56,12 @@ const ignoreFields = (obj, ignoreFields) => {
   return result;
 };
 
-const getPaginatedData = async ({
-  model,
-  queryOptions = {},
-  populateOptions = [],
-  req,
-}) => {
+const isValidUrl = (url) => {
   try {
-    const { user } = req;
-
-    const {
-      isPaged,
-      getMyFriendPosts,
-      getMyPosts,
-      getMyNotifications,
-      getUsersIgnoreFriendship,
-      getMyFriendships,
-      getMyConversations,
-      getPosts,
-      getComments,
-      getParentComments,
-      getMessages,
-      page = 0,
-      size = isPaged === "0" ? Number.MAX_SAFE_INTEGER : 10,
-      sort = "createdAt,desc",
-      ...criteria
-    } = req.query;
-
-    if (getMyPosts === "1" || getMyNotifications === "1") {
-      criteria.user = user._id;
-    }
-
-    const offset = parseInt(page, 10) * parseInt(size, 10);
-    const limit = parseInt(size, 10);
-    const [sortField, sortDirection] = sort.split(",");
-
-    const query = {};
-    for (const [key, value] of Object.entries(criteria)) {
-      if (mongoose.isValidObjectId(value)) {
-        query[key] = new mongoose.Types.ObjectId(value);
-      } else if (!isNaN(value) && key !== "phone") {
-        query[key] = Number(value);
-      } else if (value) {
-        query[key] = new RegExp(value, "i");
-      }
-    }
-
-    let aggregationPipeline = [{ $match: { ...query, ...queryOptions } }];
-
-    if (getMyFriendPosts === "1") {
-      getPostByFriends(aggregationPipeline, user._id);
-    }
-
-    if (getUsersIgnoreFriendship === "1") {
-      getListUsersIgnoreFriendships(aggregationPipeline, user._id);
-    }
-
-    if (getMyFriendships === "1") {
-      getUserFriendships(aggregationPipeline, user._id);
-    }
-
-    if (getMyConversations === "1") {
-      getUserConversations(aggregationPipeline, user._id);
-    }
-
-    if (getPosts === "1") {
-      addFieldTotalComments(aggregationPipeline);
-      addFieldTotalReactions(aggregationPipeline);
-    }
-
-    if (getMessages === "1") {
-      addFieldTotalReactionsToMessages(aggregationPipeline);
-    }
-
-    if (getComments === "1") {
-      if (getParentComments === "1") {
-        addFieldTotalChildrenToComments(aggregationPipeline);
-      }
-      addFieldTotalReactionsToComments(aggregationPipeline);
-    }
-
-    aggregationPipeline.push({
-      $sort: {
-        [sortField]: sortDirection.toLowerCase() === "desc" ? -1 : 1,
-      },
-    });
-
-    const allData = await model.aggregate(aggregationPipeline);
-    let data = allData.slice(offset, offset + limit);
-
-    data = data.map((item) => {
-      if (item.createdAt) item.createdAt = formatDate(item.createdAt);
-      if (item.updatedAt) item.updatedAt = formatDate(item.updatedAt);
-      if (item.birthDate) item.birthDate = formatDate(item.birthDate);
-      return item;
-    });
-
-    if (populateOptions && populateOptions.length) {
-      data = await model.populate(data, populateOptions);
-    }
-
-    const totalElements = allData.length;
-    const totalPages = Math.ceil(totalElements / limit);
-
-    return {
-      content: data,
-      totalPages,
-      totalElements,
-    };
-  } catch (error) {
-    throw new Error(error.message);
+    new URL(url);
+    return true;
+  } catch (e) {
+    return false;
   }
 };
 
@@ -251,11 +133,11 @@ export {
   comparePassword,
   removeNullValues,
   isValidObjectId,
-  getPaginatedData,
   extractIdFromFilePath,
   deleteFileByUrl,
   sendEmail,
   createSecretKey,
   createOtp,
   parseDate,
+  isValidUrl,
 };

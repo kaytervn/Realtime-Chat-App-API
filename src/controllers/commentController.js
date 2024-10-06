@@ -2,44 +2,79 @@ import Comment from "../models/commentModel.js";
 import Notification from "../models/notificationModel.js";
 import Post from "../models/postModel.js";
 import {
-  deleteFileByUrl,
-  getPaginatedData,
+  isValidObjectId,
   makeErrorResponse,
   makeSuccessResponse,
 } from "../services/apiService.js";
+import {
+  formatCommentData,
+  getListComments,
+} from "../services/commentService.js";
 
 const createComment = async (req, res) => {
   try {
-    const { postId, content, parentId, imageUrl } = req.body;
-    const { user } = req;
+    const { post, content, parent, imageUrl } = req.body;
+    const currenttUser = req.user;
     let parentComment;
-    if (parentId) {
-      parentComment = await Comment.findById(parentId);
+    if (isValidObjectId(parent)) {
+      parentComment = await Comment.findById(parent);
       if (!parentComment) {
-        return makeErrorResponse({ res, message: "Parent comment not found" });
+        return makeErrorResponse({
+          res,
+          message: "Parent comment not found",
+        });
       }
     }
-    const post = await Post.findById(postId);
-    if (!post) {
+    if (!isValidObjectId(post)) {
+      return makeErrorResponse({ res, message: "Invalid post" });
+    }
+    const getPost = await Post.findById(post);
+    if (!getPost) {
       return makeErrorResponse({ res, message: "Post not found" });
     }
-    await Comment.create({
-      user: user._id,
-      post: post._id,
+    const comment = await Comment.create({
+      post: getPost._id,
+      user: currenttUser._id,
       content,
-      parent: parentComment?._id,
-      imageUrl,
+      imageUrl: isValidUrl(imageUrl) ? imageUrl : null,
+      parent: parentComment ? parentComment._id : null,
     });
     if (parentComment) {
       await Notification.create({
         user: parentComment.user._id,
-        message: `${user.displayName} đã trả lời bình luận "${parentComment.content}"`,
+        data: {
+          post: {
+            _id: getPost._id,
+          },
+          comment: {
+            _id: parentComment._id,
+          },
+          user: {
+            _id: currenttUser._id,
+            displayName: currenttUser.displayName,
+            avatarUrl: currenttUser.avatarUrl,
+          },
+        },
+        message: `${currenttUser.displayName} đã trả lời bình luận của bạn`,
       });
     }
-    if (!user._id.equals(post.user._id)) {
+    if (!currenttUser._id.equals(getPost.user._id)) {
       await Notification.create({
-        user: post.user._id,
-        message: `${user.displayName} đã bình luận vào bài viết "${post.content}"`,
+        user: getPost.user._id,
+        data: {
+          post: {
+            _id: getPost._id,
+          },
+          comment: {
+            _id: comment._id,
+          },
+          user: {
+            _id: currenttUser._id,
+            displayName: currenttUser.displayName,
+            avatarUrl: currenttUser.avatarUrl,
+          },
+        },
+        message: `${currenttUser.displayName} đã bình luận vào bài viết của bạn`,
       });
     }
     return makeSuccessResponse({
@@ -54,14 +89,17 @@ const createComment = async (req, res) => {
 const updateComment = async (req, res) => {
   try {
     const { id, content, imageUrl } = req.body;
-    const comment = await Comment.findById(id);
-    if (!comment) {
-      return makeErrorResponse({ res, message: "Comment not found" });
+    if (!isValidObjectId(id)) {
+      return makeErrorResponse({ res, message: "Invalid id" });
     }
+    const comment = await Comment.findById(id);
     if (comment.imageUrl !== imageUrl) {
       await deleteFileByUrl(comment.imageUrl);
     }
-    await comment.updateOne({ content, imageUrl });
+    await comment.updateOne({
+      content,
+      imageUrl: isValidUrl(imageUrl) ? imageUrl : null,
+    });
     return makeSuccessResponse({ res, message: "Comment updated" });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
@@ -71,10 +109,10 @@ const updateComment = async (req, res) => {
 const deleteComment = async (req, res) => {
   try {
     const id = req.params.id;
-    const comment = await Comment.findById(id);
-    if (!comment) {
-      return makeErrorResponse({ res, message: "Comment not found" });
+    if (!isValidObjectId(id)) {
+      return makeErrorResponse({ res, message: "Invalid id" });
     }
+    const comment = await Comment.findById(id);
     await comment.deleteOne();
     return makeSuccessResponse({
       res,
@@ -88,26 +126,23 @@ const deleteComment = async (req, res) => {
 const getComment = async (req, res) => {
   try {
     const id = req.params.id;
-    const post = await Post.findById(id).populate("user");
-    if (!post) {
-      return makeErrorResponse({ res, message: "Post not found" });
+    const currentUser = req.user;
+    if (!isValidObjectId(id)) {
+      return makeErrorResponse({ res, message: "Invalid id" });
     }
-    return makeSuccessResponse({ res, data: post });
+    const comment = await Comment.findById(id);
+    return makeSuccessResponse({
+      res,
+      data: await formatCommentData(comment, currentUser),
+    });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
   }
 };
 
-const getListComments = async (req, res) => {
+const getComments = async (req, res) => {
   try {
-    req.query.getComments = "1";
-    const result = await getPaginatedData({
-      model: Comment,
-      req,
-      populateOptions: [
-        { path: "user", populate: { path: "role", select: "-permissions" } },
-      ],
-    });
+    const result = await getListComments(req);
     return makeSuccessResponse({
       res,
       data: result,
@@ -117,10 +152,4 @@ const getListComments = async (req, res) => {
   }
 };
 
-export {
-  createComment,
-  updateComment,
-  deleteComment,
-  getComment,
-  getListComments,
-};
+export { createComment, updateComment, deleteComment, getComment, getComments };

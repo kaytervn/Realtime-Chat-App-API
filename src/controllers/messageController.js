@@ -2,18 +2,23 @@ import Conversation from "../models/conversationModel.js";
 import Message from "../models/messageModel.js";
 import {
   deleteFileByUrl,
-  getPaginatedData,
+  isValidObjectId,
+  isValidUrl,
   makeErrorResponse,
   makeSuccessResponse,
 } from "../services/apiService.js";
+import {
+  formatMessageData,
+  getListMessages,
+} from "../services/messageService.js";
 
 const createMessage = async (req, res) => {
   try {
-    const { conversationId, content, parentId, imageUrl } = req.body;
-    const { user } = req;
+    const { conversation, content, parent, imageUrl } = req.body;
+    const currrentUser = req.user;
     let parentMessage;
-    if (parentId) {
-      parentMessage = await Message.findById(parentId);
+    if (isValidObjectId(parent)) {
+      parentMessage = await Message.findById(parent);
       if (!parentMessage) {
         return makeErrorResponse({
           res,
@@ -21,16 +26,19 @@ const createMessage = async (req, res) => {
         });
       }
     }
-    const conversation = await Conversation.findById(conversationId);
-    if (!conversation) {
+    if (!isValidObjectId(conversation)) {
+      return makeErrorResponse({ res, message: "Invalid conversation" });
+    }
+    const getConversation = await Conversation.findById(conversation);
+    if (!getConversation) {
       return makeErrorResponse({ res, message: "Conversation not found" });
     }
     await Message.create({
-      conversation: conversation._id,
-      user: user._id,
+      conversation: getConversation._id,
+      user: currrentUser._id,
       content,
-      imageUrl,
-      parent: parentMessage?._id,
+      imageUrl: isValidUrl(imageUrl) ? imageUrl : null,
+      parent: parentMessage ? parentMessage._id : null,
     });
     return makeSuccessResponse({
       res,
@@ -44,14 +52,17 @@ const createMessage = async (req, res) => {
 const updateMessage = async (req, res) => {
   try {
     const { id, content, imageUrl } = req.body;
-    const message = await Message.findById(id);
-    if (!message) {
-      return makeErrorResponse({ res, message: "Message not found" });
+    if (!isValidObjectId(id)) {
+      return makeErrorResponse({ res, message: "Invalid id" });
     }
+    const message = await Message.findById(id);
     if (message.imageUrl !== imageUrl) {
       await deleteFileByUrl(message.imageUrl);
     }
-    await message.updateOne({ content });
+    await message.updateOne({
+      content,
+      imageUrl: isValidUrl(imageUrl) ? imageUrl : null,
+    });
     return makeSuccessResponse({ res, message: "Message updated" });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
@@ -61,10 +72,10 @@ const updateMessage = async (req, res) => {
 const deleteMessage = async (req, res) => {
   try {
     const id = req.params.id;
-    const message = await Message.findById(id);
-    if (!message) {
-      return makeErrorResponse({ res, message: "Message not found" });
+    if (!isValidObjectId(id)) {
+      return makeErrorResponse({ res, message: "Invalid id" });
     }
+    const message = await Message.findById(id);
     await message.deleteOne();
     return makeSuccessResponse({
       res,
@@ -78,35 +89,23 @@ const deleteMessage = async (req, res) => {
 const getMessage = async (req, res) => {
   try {
     const id = req.params.id;
-    const message = await Message.findById(id).populate([
-      { path: "user", populate: { path: "role", select: "-permissions" } },
-      {
-        path: "conversation",
-        populate: {
-          path: "owner",
-          populate: { path: "role", select: "-permissions" },
-        },
-      },
-    ]);
-    if (!message) {
-      return makeErrorResponse({ res, message: "Message not found" });
+    const currentUser = req.user;
+    if (!isValidObjectId(id)) {
+      return makeErrorResponse({ res, message: "Invalid id" });
     }
-    return makeSuccessResponse({ res, data: message });
+    const message = await Message.findById(id).populate("user parent");
+    return makeSuccessResponse({
+      res,
+      data: await formatMessageData(message, currentUser),
+    });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
   }
 };
 
-const getListMessages = async (req, res) => {
+const getMessages = async (req, res) => {
   try {
-    req.query.getMessages = "1";
-    const result = await getPaginatedData({
-      model: Message,
-      req,
-      populateOptions: [
-        { path: "user", populate: { path: "role", select: "-permissions" } },
-      ],
-    });
+    const result = await getListMessages(req);
     return makeSuccessResponse({
       res,
       data: result,
@@ -116,10 +115,4 @@ const getListMessages = async (req, res) => {
   }
 };
 
-export {
-  createMessage,
-  updateMessage,
-  deleteMessage,
-  getMessage,
-  getListMessages,
-};
+export { createMessage, updateMessage, deleteMessage, getMessage, getMessages };

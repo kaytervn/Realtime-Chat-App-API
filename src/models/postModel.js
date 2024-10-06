@@ -1,8 +1,5 @@
 import mongoose from "mongoose";
-import {
-  addDateGetters,
-  schemaOptions,
-} from "../configurations/schemaConfig.js";
+import { schemaOptions } from "../configurations/schemaConfig.js";
 import PostReaction from "./postReactionModel.js";
 import Comment from "./commentModel.js";
 import { deleteFileByUrl } from "../services/apiService.js";
@@ -18,27 +15,37 @@ const PostSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    imageUrl: {
-      type: String,
-      default: null,
+    imageUrls: {
+      type: [String], // List image URLs
+      default: [],
+    },
+    kind: {
+      type: Number,
+      enum: [1, 2, 3], // 1: public, 2: friend, 3: only me
+      required: true,
     },
     status: {
       type: Number,
       enum: [1, 2, 3], // 1: pending, 2: accepted, 3: rejected
       default: 1,
     },
+    isUpdated: {
+      type: Number,
+      enum: [0, 1],
+      default: 0,
+    },
   },
   schemaOptions
 );
-
-addDateGetters(PostSchema);
 
 PostSchema.pre(
   "deleteOne",
   { document: true, query: false },
   async function (next) {
     try {
-      await deleteFileByUrl(this.imageUrl);
+      for (const imageUrl of this.imageUrls) {
+        await deleteFileByUrl(imageUrl);
+      }
       const comments = await Comment.find({ post: this._id });
       for (const comment of comments) {
         await comment.deleteOne();

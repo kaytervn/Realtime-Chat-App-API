@@ -1,8 +1,5 @@
 import mongoose from "mongoose";
-import {
-  addDateGetters,
-  schemaOptions,
-} from "../configurations/schemaConfig.js";
+import { schemaOptions } from "../configurations/schemaConfig.js";
 
 const CommentReactionSchema = new mongoose.Schema(
   {
@@ -19,8 +16,6 @@ const CommentReactionSchema = new mongoose.Schema(
   },
   schemaOptions
 );
-
-addDateGetters(CommentReactionSchema);
 
 const CommentReaction = mongoose.model(
   "CommentReaction",

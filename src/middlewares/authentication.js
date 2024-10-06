@@ -21,6 +21,12 @@ const auth = (permissionCode) => {
       if (!user) {
         return makeErrorResponse({ res, message: "User not found!" });
       }
+      if (user.status === 0) {
+        return makeErrorResponse({
+          res,
+          message: "Tài khoản chưa được kích hoạt",
+        });
+      }
       if (permissionCode) {
         const hasPermission = user.role.permissions.some(
           (perm) => perm.permissionCode === permissionCode
@@ -32,6 +38,7 @@ const auth = (permissionCode) => {
           });
         }
       }
+      await User.findByIdAndUpdate(user._id, { lastLogin: new Date() });
       req.user = user;
       next();
     } catch (error) {

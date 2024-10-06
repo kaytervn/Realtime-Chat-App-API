@@ -1,26 +1,64 @@
 import ConversationMember from "../models/conversationMemberModel.js";
 import Notification from "../models/notificationModel.js";
+import User from "../models/userModel.js";
 import {
-  getPaginatedData,
+  isValidObjectId,
   makeErrorResponse,
   makeSuccessResponse,
 } from "../services/apiService.js";
+import { getListConversationMembers } from "../services/conversationMemberService.js";
 
 const addMember = async (req, res) => {
   try {
-    const { conversationId, userId } = req.body;
-    const member = await ConversationMember.create({
-      conversation: conversationId,
-      user: userId,
+    const { conversation, user } = req.body;
+    const currentUser = req.user;
+    if (!isValidObjectId(conversation) || !isValidObjectId(user)) {
+      return makeErrorResponse({ res, message: "Invalid id" });
+    }
+    const newMember = await User.findById(user);
+    if (!newMember) {
+      return makeErrorResponse({ res, message: "User not found" });
+    }
+    const existingMember = await ConversationMember.findOne({
+      conversation,
+      user: newMember._id,
+    });
+    if (existingMember) {
+      return makeErrorResponse({ res, message: "User already a member" });
+    }
+    await ConversationMember.create({
+      conversation,
+      user: newMember._id,
+    });
+    const notificationData = {
+      user: {
+        _id: currentUser._id,
+        displayName: currentUser.displayName,
+        avatarUrl: currentUser.avatarUrl,
+      },
+      conversation: {
+        _id: conversation,
+      },
+    };
+    const conversationMembers = await ConversationMember.find({
+      conversation,
+      user: { $nin: [currentUser._id, newMember._id] },
     });
     await Notification.create({
-      user: userId,
-      message: `Bạn đã được thêm vào cuộc trò chuyện "${conversationId}"`,
+      user: newMember._id,
+      data: notificationData,
+      message: `${currentUser.displayName} đã thêm bạn vào cuộc trò chuyện`,
     });
+    await Notification.create(
+      conversationMembers.map((member) => ({
+        message: `${currentUser.displayName} đã thêm ${newMember.displayName} vào cuộc trò chuyện`,
+        data: notificationData,
+        user: member.user,
+      }))
+    );
     return makeSuccessResponse({
       res,
       message: "Member added to conversation",
-      data: member,
     });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
@@ -29,15 +67,51 @@ const addMember = async (req, res) => {
 
 const removeMember = async (req, res) => {
   try {
-    const { conversationId, userId } = req.body;
-    await ConversationMember.findOneAndDelete({
-      conversation: conversationId,
-      user: userId,
+    const { conversation, user } = req.body;
+    const currentUser = req.user;
+    if (!isValidObjectId(conversation) || !isValidObjectId(user)) {
+      return makeErrorResponse({ res, message: "Invalid id" });
+    }
+    const memberToRemove = await User.findById(user);
+    if (!memberToRemove) {
+      return makeErrorResponse({ res, message: "User not found" });
+    }
+    await ConversationMember.deleteOne({
+      conversation,
+      user: memberToRemove._id,
     });
     await Notification.create({
-      user: userId,
-      message: `Bạn đã bị xóa khỏi cuộc trò chuyện "${conversationId}"`,
+      user: memberToRemove._id,
+      message: `${currentUser.displayName} đã xóa bạn khỏi cuộc trò chuyện`,
+      data: {
+        user: {
+          _id: currentUser._id,
+          displayName: currentUser.displayName,
+          avatarUrl: currentUser.avatarUrl,
+        },
+      },
+      kind: 3,
     });
+    const conversationMembers = await ConversationMember.find({
+      conversation,
+      user: { $nin: [currentUser._id, memberToRemove._id] },
+    });
+    await Notification.create(
+      conversationMembers.map((member) => ({
+        message: `${currentUser.displayName} đã xóa ${memberToRemove.displayName} khỏi cuộc trò chuyện`,
+        data: {
+          user: {
+            _id: currentUser._id,
+            displayName: currentUser.displayName,
+            avatarUrl: currentUser.avatarUrl,
+          },
+          conversation: {
+            _id: conversation,
+          },
+        },
+        user: member.user,
+      }))
+    );
     return makeSuccessResponse({
       res,
       message: "Member removed from conversation",
@@ -47,15 +121,56 @@ const removeMember = async (req, res) => {
   }
 };
 
+const grantPermissionForMember = async (req, res) => {
+  try {
+    const { conversation, user, canMessage, canUpdate, canAddMember } =
+      req.body;
+    const currentUser = req.user;
+    if (!isValidObjectId(conversation) || !isValidObjectId(user)) {
+      return makeErrorResponse({ res, message: "Invalid id" });
+    }
+    const member = await ConversationMember.findOne({
+      conversation,
+      user,
+    });
+    if (!member) {
+      return makeErrorResponse({
+        res,
+        message: "Member not found in the conversation",
+      });
+    }
+    member.canMessage =
+      canMessage !== undefined ? canMessage : member.canMessage;
+    member.canUpdate = canUpdate !== undefined ? canUpdate : member.canUpdate;
+    member.canAddMember =
+      canAddMember !== undefined ? canAddMember : member.canAddMember;
+    await member.save();
+    await Notification.create({
+      user: member.user,
+      message: `${currentUser.displayName} đã cập nhật quyền cho bạn trong cuộc trò chuyện`,
+      data: {
+        conversation: {
+          _id: conversation,
+        },
+        user: {
+          _id: currentUser._id,
+          displayName: currentUser.displayName,
+          avatarUrl: currentUser.avatarUrl,
+        },
+      },
+    });
+    return makeSuccessResponse({
+      res,
+      message: "Permissions updated successfully",
+    });
+  } catch (error) {
+    return makeErrorResponse({ res, message: error.message });
+  }
+};
+
 const getConversationMembers = async (req, res) => {
   try {
-    const result = await getPaginatedData({
-      model: ConversationMember,
-      req,
-      populateOptions: [
-        { path: "user", populate: { path: "role", select: "-permissions" } },
-      ],
-    });
+    const result = await getListConversationMembers(req);
     return makeSuccessResponse({
       res,
       data: result,
@@ -65,4 +180,9 @@ const getConversationMembers = async (req, res) => {
   }
 };
 
-export { addMember, removeMember, getConversationMembers };
+export {
+  addMember,
+  removeMember,
+  getConversationMembers,
+  grantPermissionForMember,
+};

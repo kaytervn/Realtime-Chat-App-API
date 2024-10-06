@@ -1,11 +1,9 @@
 import mongoose from "mongoose";
-import {
-  addDateGetters,
-  schemaOptions,
-} from "../configurations/schemaConfig.js";
+import { schemaOptions } from "../configurations/schemaConfig.js";
 import ConversationMember from "./conversationMemberModel.js";
 import Message from "./messageModel.js";
 import { deleteFileByUrl } from "../services/apiService.js";
+import Friendship from "./friendshipModel.js";
 
 const ConversationSchema = new mongoose.Schema(
   {
@@ -26,17 +24,17 @@ const ConversationSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Friendship",
       required: false, // for direct chats
+      default: null,
     },
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: false, // for group chats
+      default: null,
     },
   },
   schemaOptions
 );
-
-addDateGetters(ConversationSchema);
 
 ConversationSchema.pre(
   "deleteOne",
@@ -45,6 +43,10 @@ ConversationSchema.pre(
     try {
       await deleteFileByUrl(this.avatarUrl);
       await ConversationMember.deleteMany({ conversation: this._id });
+      const friendship = await Friendship.findOne({
+        _id: this.friendship,
+      });
+      friendship.deleteOne();
       const messages = await Message.find({ conversation: this._id });
       for (const message of messages) {
         await message.deleteOne();

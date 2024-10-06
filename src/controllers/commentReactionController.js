@@ -2,28 +2,41 @@ import Comment from "../models/commentModel.js";
 import CommentReaction from "../models/commentReactionModel.js";
 import Notification from "../models/notificationModel.js";
 import {
-  getPaginatedData,
+  isValidObjectId,
   makeErrorResponse,
   makeSuccessResponse,
 } from "../services/apiService.js";
+import { getListCommentReactions } from "../services/commentReactionService.js";
 
 const createCommentReaction = async (req, res) => {
   try {
-    const { commentId } = req.body;
+    const { comment } = req.body;
     const { user } = req;
-    const comment = Comment.findById(commentId).populate("user");
-    if (!comment) {
-      return makeErrorResponse({ res, message: "Comment not found" });
+    if (!isValidObjectId(comment)) {
+      return makeErrorResponse({ res, message: "Invalid comment" });
     }
+    const getComment = await Comment.findById(comment);
     await CommentReaction.create({
       user: user._id,
-      comment: comment._id,
-      reaction,
+      comment,
     });
-    if (!user._id.equals(comment.user._id)) {
+    if (!user._id.equals(getComment.user)) {
       await Notification.create({
-        user: comment.user._id,
-        message: `${user.displayName} đã thả tim bình luận "${comment.content}"`,
+        user: getComment.user,
+        data: {
+          post: {
+            _id: getComment.post,
+          },
+          comment: {
+            _id: getComment._id,
+          },
+          user: {
+            _id: user._id,
+            displayName: user.displayName,
+            avatarUrl: user.avatarUrl,
+          },
+        },
+        message: `${user.displayName} đã thả tim tin nhắn của bạn"`,
       });
     }
     return makeSuccessResponse({
@@ -57,13 +70,7 @@ const deleteCommentReaction = async (req, res) => {
 
 const getCommentReactions = async (req, res) => {
   try {
-    const result = await getPaginatedData({
-      model: CommentReaction,
-      req,
-      populateOptions: [
-        { path: "user", populate: { path: "role", select: "-permissions" } },
-      ],
-    });
+    const result = await getListCommentReactions(req);
     return makeSuccessResponse({
       res,
       data: result,

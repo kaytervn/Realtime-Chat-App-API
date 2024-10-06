@@ -1,8 +1,5 @@
 import mongoose from "mongoose";
-import {
-  addDateGetters,
-  schemaOptions,
-} from "../configurations/schemaConfig.js";
+import { schemaOptions } from "../configurations/schemaConfig.js";
 import CommentReaction from "./commentReactionModel.js";
 
 const CommentSchema = new mongoose.Schema(
@@ -33,8 +30,6 @@ const CommentSchema = new mongoose.Schema(
   },
   schemaOptions
 );
-
-addDateGetters(CommentSchema);
 
 CommentSchema.pre(
   "deleteOne",

@@ -1,8 +1,5 @@
 import mongoose from "mongoose";
-import {
-  addDateGetters,
-  schemaOptions,
-} from "../configurations/schemaConfig.js";
+import { schemaOptions } from "../configurations/schemaConfig.js";
 
 const PermissionSchema = new mongoose.Schema(
   {
@@ -21,8 +18,6 @@ const PermissionSchema = new mongoose.Schema(
   },
   schemaOptions
 );
-
-addDateGetters(PermissionSchema);
 
 const Permission = mongoose.model("Permission", PermissionSchema);
 export default Permission;

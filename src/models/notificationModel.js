@@ -1,8 +1,5 @@
-import mongoose from "mongoose";
-import {
-  addDateGetters,
-  schemaOptions,
-} from "../configurations/schemaConfig.js";
+import mongoose, { Schema } from "mongoose";
+import { schemaOptions } from "../configurations/schemaConfig.js";
 
 const NotificationSchema = new mongoose.Schema(
   {
@@ -10,6 +7,16 @@ const NotificationSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+    },
+    data: {
+      type: Schema.Types.Mixed,
+      required: false,
+      default: null,
+    },
+    kind: {
+      type: Number,
+      enum: [1, 2, 3], // 1: info, 2: success, 3: fail
+      default: 1,
     },
     message: {
       type: String,
@@ -23,8 +30,6 @@ const NotificationSchema = new mongoose.Schema(
   },
   schemaOptions
 );
-
-addDateGetters(NotificationSchema);
 
 const Notification = mongoose.model("Notification", NotificationSchema);
 export default Notification;

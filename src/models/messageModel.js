@@ -1,8 +1,5 @@
 import mongoose from "mongoose";
-import {
-  addDateGetters,
-  schemaOptions,
-} from "../configurations/schemaConfig.js";
+import { schemaOptions } from "../configurations/schemaConfig.js";
 import MessageReaction from "./messageReactionModel.js";
 import { deleteFileByUrl } from "../services/apiService.js";
 
@@ -34,8 +31,6 @@ const MessageSchema = new mongoose.Schema(
   },
   schemaOptions
 );
-
-addDateGetters(MessageSchema);
 
 MessageSchema.pre(
   "deleteOne",

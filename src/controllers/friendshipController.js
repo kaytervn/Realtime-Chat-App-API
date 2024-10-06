@@ -30,8 +30,6 @@ const sendFriendRequest = async (req, res) => {
       data: {
         user: {
           _id: currentUser._id,
-          displayName: currentUser.displayName,
-          avatarUrl: currentUser.avatarUrl,
         },
         friendship: {
           _id: friendship._id,
@@ -72,8 +70,6 @@ const acceptFriendRequest = async (req, res) => {
       data: {
         user: {
           _id: currentUser._id,
-          displayName: currentUser.displayName,
-          avatarUrl: currentUser.avatarUrl,
         },
         friendship: {
           _id: getFriendship._id,
@@ -121,8 +117,6 @@ const rejectFriendRequest = async (req, res) => {
       data: {
         user: {
           _id: currentUser._id,
-          displayName: currentUser.displayName,
-          avatarUrl: currentUser.avatarUrl,
         },
         friendship: {
           _id: getFriendship._id,

@@ -29,8 +29,6 @@ const createPostReaction = async (req, res) => {
           },
           user: {
             _id: user._id,
-            displayName: user.displayName,
-            avatarUrl: user.avatarUrl,
           },
         },
         message: `${user.displayName} đã thả tim bài đăng của bạn"`,

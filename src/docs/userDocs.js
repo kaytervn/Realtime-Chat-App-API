@@ -2,16 +2,17 @@
  * @swagger
  * tags:
  *   name: User
- *   description: Quản lý người dùng và xác thực
+ *   description: User management and authentication
  */
 
 /**
  * @swagger
  * /v1/user/login:
  *   post:
- *     summary: Đăng nhập người dùng
+ *     summary: User login
  *     tags: [User]
  *     requestBody:
+ *       required: true
  *       content:
  *         application/json:
  *           schema:
@@ -19,21 +20,48 @@
  *             properties:
  *               username:
  *                 type: string
- *                 example: "string, bắt buộc, có thể là email/phone/studentId"
- *                 required: true
+ *                 description: User's email, phone, or studentId
  *               password:
  *                 type: string
- *                 example: "string, bắt buộc"
- *                 required: true
+ *                 description: User's password
+ */
+
+/**
+ * @swagger
+ * /v1/user/verify-token:
+ *   post:
+ *     summary: Verify user token
+ *     tags: [User]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               accessToken:
+ *                 type: string
+ *                 description: User's access token
+ */
+
+/**
+ * @swagger
+ * /v1/user/profile:
+ *   get:
+ *     summary: Get user profile
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
  */
 
 /**
  * @swagger
  * /v1/user/register:
  *   post:
- *     summary: Đăng ký tài khoản mới
+ *     summary: Register a new user
  *     tags: [User]
  *     requestBody:
+ *       required: true
  *       content:
  *         application/json:
  *           schema:
@@ -41,46 +69,21 @@
  *             properties:
  *               displayName:
  *                 type: string
- *                 example: "string, bắt buộc"
  *               email:
  *                 type: string
- *                 example: "string, bắt buộc, chuẩn hóa email"
  *               password:
  *                 type: string
- *                 example: "string, bắt buộc"
  *               phone:
  *                 type: string
- *                 example: "string, bắt buộc, chuẩn hóa (10 số, bắt đầu bằng đầu 03/05/07)"
  *               studentId:
  *                 type: string
- *                 example: "string, bắt buộc, chuẩn hóa (8 số)"
  */
 
 /**
  * @swagger
  * /v1/user/verify:
  *   post:
- *     summary: Xác thực tài khoản
- *     tags: [User]
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               email:
- *                 type: string
- *                 example: "string, bắt buộc"
- *               otp:
- *                 type: string
- *                 example: "string, bắt buộc, chuẩn hóa (6 số)"
- */
-
-/**
- * @swagger
- * /v1/user/forgot-password:
- *   post:
- *     summary: Gửi yêu cầu quên mật khẩu
+ *     summary: Verify user account
  *     tags: [User]
  *     requestBody:
  *       required: true
@@ -91,7 +94,8 @@
  *             properties:
  *               email:
  *                 type: string
- *                 example: "string, bắt buộc"
+ *               otp:
+ *                 type: string
  */
 
 /**
@@ -109,34 +113,39 @@
  *             properties:
  *               email:
  *                 type: string
- *                 example: "string, bắt buộc"
  *               newPassword:
  *                 type: string
- *                 example: "string, bắt buộc, chuẩn hóa (ít nhất 6 ký tự)"
  *               otp:
  *                 type: string
- *                 example: "string, bắt buộc, chuẩn hóa (6 số)"
  */
 
 /**
  * @swagger
- * /v1/user/profile:
- *   get:
- *     summary: Lấy thông tin hồ sơ cá nhân
+ * /v1/user/forgot-password:
+ *   post:
+ *     summary: Request password reset
  *     tags: [User]
- *     security:
- *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
  */
 
 /**
  * @swagger
  * /v1/user/update-profile:
  *   put:
- *     summary: Cập nhật hồ sơ cá nhân
+ *     summary: Update user profile
  *     tags: [User]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
+ *       required: true
  *       content:
  *         application/json:
  *           schema:
@@ -144,78 +153,40 @@
  *             properties:
  *               displayName:
  *                 type: string
- *                 example: "string, bắt buộc"
  *               birthDate:
  *                 type: string
- *                 example: "string, bắt buộc, chuẩn hóa (dd/mm/yyyy hh:mm:ss)"
+ *                 format: date
  *               bio:
  *                 type: string
- *                 example: "string, không bắt buộc"
  *               avatarUrl:
  *                 type: string
- *                 example: "string, không bắt buộc, là đường dẫn ảnh lấy từ API POST /v1/file/upload"
  *               currentPassword:
  *                 type: string
- *                 example: "string, không bắt buộc, chỉ truyền khi muốn đổi mật khẩu"
  *               newPassword:
  *                 type: string
- *                 example: "string, không bắt buộc, chỉ truyền khi muốn đổi mật khẩu"
  */
 
 /**
  * @swagger
- * /v1/user/request-key-change:
- *   put:
- *     summary: Yêu cầu cập nhật thông tin quan trọng
+ * /v1/user/delete/{id}:
+ *   delete:
+ *     summary: Delete user
  *     tags: [User]
  *     security:
  *       - bearerAuth: []
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               email:
- *                 type: string
- *                 example: "string, bắt buộc, có thể truyền email hiện có hoặc email mới"
- *               password:
- *                 type: string
- *                 example: "string, bắt buộc, password hiện tại"
- */
-
-/**
- * @swagger
- * /v1/user/verify-key-change:
- *   post:
- *     summary: Xác thực cập nhật thông tin quan trọng
- *     tags: [User]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               email:
- *                 type: string
- *                 example: "string, bắt buộc, email hiện tại hoặc mới, chuẩn hóa email"
- *               studentId:
- *                 type: string
- *                 example: "string, bắt buộc, studentId hiện tại hoặc mới, chuẩn hóa (8 số)"
- *               phone:
- *                 type: string
- *                 example: "string, bắt buộc, phone hiện tại hoặc mới, chuẩn hóa (10 số, bắt đầu bằng đầu 03/05/07)"
- *               otp:
- *                 example: "string, bắt buộc, otp xác thực từ mail, chuẩn hóa (6 số)"
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
  */
 
 /**
  * @swagger
  * /v1/user/list:
  *   get:
- *     summary: Xem danh sách người dùng
+ *     summary: Get list of users
  *     tags: [User]
  *     security:
  *       - bearerAuth: []
@@ -239,27 +210,34 @@
  *       - in: query
  *         name: status
  *         schema:
- *           type: Number
+ *           type: number
  *       - in: query
  *         name: role
  *         schema:
- *           type: ObjectId
- *           example: ObjectId
+ *           type: string
  *       - in: query
  *         name: page
  *         schema:
- *           type: Number
+ *           type: number
  *       - in: query
  *         name: size
  *         schema:
- *           type: Number
+ *           type: number
+ *       - in: query
+ *         name: ignoreFriendship
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: ignoreConversation
+ *         schema:
+ *           type: string
  */
 
 /**
  * @swagger
  * /v1/user/get/{id}:
  *   get:
- *     summary: Get a user by ID
+ *     summary: Get user by ID
  *     tags: [User]
  *     security:
  *       - bearerAuth: []
@@ -290,14 +268,15 @@
  *                 type: string
  *               email:
  *                 type: string
- *               studentId:
- *                 type: string
  *               password:
  *                 type: string
  *               phone:
  *                 type: string
+ *               studentId:
+ *                 type: string
  *               birthDate:
  *                 type: string
+ *                 format: date
  *               bio:
  *                 type: string
  *               avatarUrl:
@@ -312,7 +291,7 @@
  * @swagger
  * /v1/user/update:
  *   put:
- *     summary: Update a user (admin only)
+ *     summary: Update user (admin only)
  *     tags: [User]
  *     security:
  *       - bearerAuth: []
@@ -335,40 +314,24 @@
  *                 type: string
  *               birthDate:
  *                 type: string
+ *                 format: date
  *               bio:
  *                 type: string
  *               avatarUrl:
  *                 type: string
- *               role:
- *                 type: string
- *                 example: ObjectId
  *               status:
  *                 type: number
+ *               role:
+ *                 type: string
  *               password:
  *                 type: string
  */
 
 /**
  * @swagger
- * /v1/user/delete/{id}:
- *   delete:
- *     summary: Delete a user (admin only)
- *     tags: [User]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- */
-
-/**
- * @swagger
  * /v1/user/login-admin:
  *   post:
- *     summary: Login as admin
+ *     summary: Admin login
  *     tags: [User]
  *     requestBody:
  *       required: true
@@ -380,5 +343,51 @@
  *               username:
  *                 type: string
  *               password:
+ *                 type: string
+ */
+
+/**
+ * @swagger
+ * /v1/user/request-key-change:
+ *   put:
+ *     summary: Request to change key information
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ */
+
+/**
+ * @swagger
+ * /v1/user/verify-key-change:
+ *   post:
+ *     summary: Verify key information change
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               studentId:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *               otp:
  *                 type: string
  */

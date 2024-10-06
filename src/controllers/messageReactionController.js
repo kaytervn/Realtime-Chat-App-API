@@ -32,8 +32,6 @@ const createMessageReaction = async (req, res) => {
           },
           user: {
             _id: user._id,
-            displayName: user.displayName,
-            avatarUrl: user.avatarUrl,
           },
         },
         message: `${user.displayName} đã thả tim tin nhắn của bạn"`,

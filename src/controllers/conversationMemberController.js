@@ -33,8 +33,6 @@ const addMember = async (req, res) => {
     const notificationData = {
       user: {
         _id: currentUser._id,
-        displayName: currentUser.displayName,
-        avatarUrl: currentUser.avatarUrl,
       },
       conversation: {
         _id: conversation,
@@ -86,8 +84,6 @@ const removeMember = async (req, res) => {
       data: {
         user: {
           _id: currentUser._id,
-          displayName: currentUser.displayName,
-          avatarUrl: currentUser.avatarUrl,
         },
       },
       kind: 3,
@@ -154,8 +150,6 @@ const grantPermissionForMember = async (req, res) => {
         },
         user: {
           _id: currentUser._id,
-          displayName: currentUser.displayName,
-          avatarUrl: currentUser.avatarUrl,
         },
       },
     });

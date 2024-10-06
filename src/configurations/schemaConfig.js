@@ -6,6 +6,10 @@ const formatDate = (val) => {
   return val ? dayjs(val).format("DD/MM/YYYY HH:mm:ss") : null;
 };
 
+const formatBirthDate = (val) => {
+  return val ? dayjs(val).format("DD/MM/YYYY") : null;
+};
+
 const formatDistanceToNow = (val) => {
   return val
     ? formatDistanceToNowStrict(val, {
@@ -37,4 +41,5 @@ export {
   schemaOptions,
   formatDistanceToNow,
   addDistanceToNowGetters,
+  formatBirthDate,
 };

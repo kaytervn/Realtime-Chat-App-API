@@ -51,8 +51,6 @@ const createComment = async (req, res) => {
           },
           user: {
             _id: currenttUser._id,
-            displayName: currenttUser.displayName,
-            avatarUrl: currenttUser.avatarUrl,
           },
         },
         message: `${currenttUser.displayName} đã trả lời bình luận của bạn`,
@@ -70,8 +68,6 @@ const createComment = async (req, res) => {
           },
           user: {
             _id: currenttUser._id,
-            displayName: currenttUser.displayName,
-            avatarUrl: currenttUser.avatarUrl,
           },
         },
         message: `${currenttUser.displayName} đã bình luận vào bài viết của bạn`,

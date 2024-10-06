@@ -4,6 +4,8 @@ import dayjs from "dayjs";
 import User from "../models/userModel.js";
 import utc from "dayjs/plugin/utc.js";
 import timezone from "dayjs/plugin/timezone.js";
+import Friendship from "../models/friendshipModel.js";
+import Conversation from "../models/conversationModel.js";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -25,20 +27,50 @@ const birthDateNotification = async () => {
       ],
     },
   });
-
   if (users.length > 0) {
-    const notifications = users.map((user) => ({
+    const userNotifications = users.map((user) => ({
       user: user._id,
       message: `Chúc mừng sinh nhật ${user.displayName}! 🎉`,
     }));
-
-    await Notification.insertMany(notifications);
+    await Notification.insertMany(userNotifications);
+    let allFriendNotifications = [];
+    for (const user of users) {
+      const friendships = await Friendship.find({
+        $or: [{ sender: user._id }, { receiver: user._id }],
+        status: 2,
+      });
+      for (const friendship of friendships) {
+        const friendId = friendship.sender.equals(user._id)
+          ? friendship.receiver
+          : friendship.sender;
+        const conversation = await Conversation.findOne({
+          friendshipId: friendship._id,
+        });
+        allFriendNotifications.push({
+          user: friendId,
+          data: {
+            user: {
+              _id: user._id,
+            },
+            friendship: {
+              _id: friendship._id,
+            },
+            conversation: conversation ? { _id: conversation._id } : null,
+          },
+          message: `Hôm nay là sinh nhật của ${user.displayName}! 🎉`,
+        });
+      }
+    }
+    if (allFriendNotifications.length > 0) {
+      await Notification.insertMany(allFriendNotifications);
+    }
     const superAdmin = await User.findOne({ isSuperAdmin: 1 });
-
-    await Notification.create({
-      user: superAdmin._id,
-      message: `Hệ thống đã gửi thông báo sinh nhật cho ${users.length} người dùng!`,
-    });
+    if (superAdmin) {
+      await Notification.create({
+        user: superAdmin._id,
+        message: `Hệ thống đã gửi thông báo sinh nhật cho ${users.length} người dùng!`,
+      });
+    }
   }
 };
 

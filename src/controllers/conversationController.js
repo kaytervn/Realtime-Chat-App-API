@@ -51,8 +51,6 @@ const createConversation = async (req, res) => {
           },
           user: {
             _id: currentUser._id,
-            displayName: currentUser.displayName,
-            avatarUrl: currentUser.avatarUrl,
           },
         },
         user: member,
@@ -96,8 +94,6 @@ const updateConversation = async (req, res) => {
           },
           user: {
             _id: currentUser._id,
-            displayName: currentUser.displayName,
-            avatarUrl: currentUser.avatarUrl,
           },
         },
         user: member.user,
@@ -128,8 +124,6 @@ const deleteConversation = async (req, res) => {
         data: {
           user: {
             _id: currentUser._id,
-            displayName: currentUser.displayName,
-            avatarUrl: currentUser.avatarUrl,
           },
         },
         user: member.user,

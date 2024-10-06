@@ -27,8 +27,7 @@ const loginUser = async (req, res) => {
     const user = await User.findOne({
       $or: [{ studentId: username }, { phone: username }, { email: username }],
     });
-    const isPasswordValid = await comparePassword(password, user.password);
-    if (!user || !isPasswordValid) {
+    if (!user || !(await comparePassword(password, user.password))) {
       return makeErrorResponse({ res, message: "Sai tài khoản hoặc mật khẩu" });
     }
     if (user.status !== 1) {
@@ -37,10 +36,11 @@ const loginUser = async (req, res) => {
         message: "Tài khoản chưa được kích hoạt",
       });
     }
+    const accessToken = createToken(user._id);
     return makeSuccessResponse({
       res,
       message: "Login success",
-      data: { accessToken: createToken(user._id) },
+      data: { accessToken },
     });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
@@ -94,6 +94,7 @@ const registerUser = async (req, res) => {
       password: await encodePassword(password),
       phone,
       otp,
+      studentId,
       status: 0,
       secretKey,
       role: await Role.findOne({ kind: 1 }),
@@ -113,7 +114,7 @@ const verifyUser = async (req, res) => {
   try {
     const user = await User.findOne({ email });
     if (!user) {
-      return makeErrorResponse({ res, message: "User not found" });
+      return makeErrorResponse({ res, message: "Tài khoản không tồn tại" });
     }
     if (user.otp !== otp) {
       return makeErrorResponse({ res, message: "Sai mã xác thực OTP" });
@@ -124,8 +125,6 @@ const verifyUser = async (req, res) => {
       data: {
         user: {
           _id: user._id,
-          displayName: user.displayName,
-          avatarUrl: user.avatarUrl,
         },
       },
       message: `Mừng thành viên mới, ${user.displayName}!`,
@@ -210,8 +209,6 @@ const verifyChangeUserKeyInformation = async (req, res) => {
       data: {
         user: {
           _id: user._id,
-          displayName: user.displayName,
-          avatarUrl: user.avatarUrl,
         },
       },
       kind: 2,
@@ -290,8 +287,6 @@ const updateUserProfile = async (req, res) => {
         data: {
           user: {
             _id: user._id,
-            displayName: user.displayName,
-            avatarUrl: user.avatarUrl,
           },
         },
         kind: 2,
@@ -492,8 +487,6 @@ const updateUser = async (req, res) => {
         data: {
           user: {
             _id: updateUser._id,
-            displayName: updateUser.displayName,
-            avatarUrl: updateUser.avatarUrl,
           },
         },
         message: "Thông tin của bạn đã được quản trị viên cập nhật",
@@ -511,8 +504,7 @@ const loginAdmin = async (req, res) => {
     const user = await User.findOne({
       $or: [{ studentId: username }, { phone: username }, { email: username }],
     });
-    const isPasswordValid = await comparePassword(password, user.password);
-    if (!user || !isPasswordValid) {
+    if (!user || !(await comparePassword(password, user.password))) {
       return makeErrorResponse({ res, message: "Sai tài khoản hoặc mật khẩu" });
     }
     if (user.status !== 1) {
@@ -528,10 +520,11 @@ const loginAdmin = async (req, res) => {
         message: "Bạn không được phép đăng nhập vào trang này",
       });
     }
+    const accessToken = createToken(user._id);
     return makeSuccessResponse({
       res,
       message: "Login success!",
-      data: { accessToken: createToken(user._id) },
+      data: { accessToken },
     });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });

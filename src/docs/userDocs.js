@@ -2,92 +2,38 @@
  * @swagger
  * tags:
  *   name: User
- *   description: User management and authentication
+ *   description: Quản lý người dùng và xác thực
  */
 
 /**
  * @swagger
  * /v1/user/login:
  *   post:
- *     summary: Login user
+ *     summary: Đăng nhập người dùng
  *     tags: [User]
  *     requestBody:
- *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
  *             properties:
- *               email:
+ *               username:
  *                 type: string
+ *                 example: "string, bắt buộc, có thể là email/phone/studentId"
+ *                 required: true
  *               password:
  *                 type: string
- *     responses:
- *       200:
- *         description: Login successful
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 result:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 data:
- *                   type: object
- *                   properties:
- *                     accessToken:
- *                       type: string
- *       400:
- *         description: Bad request
- */
-
-/**
- * @swagger
- * /v1/user/verify-token:
- *   post:
- *     summary: Verify JWT token
- *     tags: [User]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               accessToken:
- *                 type: string
- *     responses:
- *       200:
- *         description: Token verified successfully
- *       400:
- *         description: Bad request
- */
-
-/**
- * @swagger
- * /v1/user/profile:
- *   get:
- *     summary: Get user profile
- *     tags: [User]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: User profile
- *       400:
- *         description: Bad request
+ *                 example: "string, bắt buộc"
+ *                 required: true
  */
 
 /**
  * @swagger
  * /v1/user/register:
  *   post:
- *     summary: Register a new user
+ *     summary: Đăng ký tài khoản mới
  *     tags: [User]
  *     requestBody:
- *       required: true
  *       content:
  *         application/json:
  *           schema:
@@ -95,24 +41,46 @@
  *             properties:
  *               displayName:
  *                 type: string
+ *                 example: "string, bắt buộc"
  *               email:
  *                 type: string
+ *                 example: "string, bắt buộc, chuẩn hóa email"
  *               password:
  *                 type: string
+ *                 example: "string, bắt buộc"
  *               phone:
  *                 type: string
- *     responses:
- *       200:
- *         description: Registration successful
- *       400:
- *         description: Bad request
+ *                 example: "string, bắt buộc, chuẩn hóa (10 số, bắt đầu bằng đầu 03/05/07)"
+ *               studentId:
+ *                 type: string
+ *                 example: "string, bắt buộc, chuẩn hóa (8 số)"
  */
 
 /**
  * @swagger
  * /v1/user/verify:
  *   post:
- *     summary: Verify user account
+ *     summary: Xác thực tài khoản
+ *     tags: [User]
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: "string, bắt buộc"
+ *               otp:
+ *                 type: string
+ *                 example: "string, bắt buộc, chuẩn hóa (6 số)"
+ */
+
+/**
+ * @swagger
+ * /v1/user/forgot-password:
+ *   post:
+ *     summary: Gửi yêu cầu quên mật khẩu
  *     tags: [User]
  *     requestBody:
  *       required: true
@@ -123,13 +91,7 @@
  *             properties:
  *               email:
  *                 type: string
- *               otp:
- *                 type: string
- *     responses:
- *       200:
- *         description: Verification successful
- *       400:
- *         description: Bad request
+ *                 example: "string, bắt buộc"
  */
 
 /**
@@ -147,75 +109,34 @@
  *             properties:
  *               email:
  *                 type: string
+ *                 example: "string, bắt buộc"
  *               newPassword:
  *                 type: string
+ *                 example: "string, bắt buộc, chuẩn hóa (ít nhất 6 ký tự)"
  *               otp:
  *                 type: string
- *     responses:
- *       200:
- *         description: Password reset successful
- *       400:
- *         description: Bad request
+ *                 example: "string, bắt buộc, chuẩn hóa (6 số)"
  */
 
 /**
  * @swagger
- * /v1/user/forgot-password:
- *   post:
- *     summary: Request password reset
- *     tags: [User]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               email:
- *                 type: string
- *     responses:
- *       200:
- *         description: Password reset request successful
- *       400:
- *         description: Bad request
- */
-
-/**
- * @swagger
- * /v1/user/change-password:
- *   post:
- *     summary: Change user password
+ * /v1/user/profile:
+ *   get:
+ *     summary: Lấy thông tin hồ sơ cá nhân
  *     tags: [User]
  *     security:
  *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               currentPassword:
- *                 type: string
- *               newPassword:
- *                 type: string
- *     responses:
- *       200:
- *         description: Password changed successfully
- *       400:
- *         description: Bad request
  */
 
 /**
  * @swagger
  * /v1/user/update-profile:
  *   put:
- *     summary: Update user profile
+ *     summary: Cập nhật hồ sơ cá nhân
  *     tags: [User]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
- *       required: true
  *       content:
  *         application/json:
  *           schema:
@@ -223,83 +144,115 @@
  *             properties:
  *               displayName:
  *                 type: string
+ *                 example: "string, bắt buộc"
  *               birthDate:
  *                 type: string
+ *                 example: "string, bắt buộc, chuẩn hóa (dd/mm/yyyy hh:mm:ss)"
  *               bio:
  *                 type: string
+ *                 example: "string, không bắt buộc"
  *               avatarUrl:
  *                 type: string
- *     responses:
- *       200:
- *         description: Profile updated successfully
- *       400:
- *         description: Bad request
+ *                 example: "string, không bắt buộc, là đường dẫn ảnh lấy từ API POST /v1/file/upload"
+ *               currentPassword:
+ *                 type: string
+ *                 example: "string, không bắt buộc, chỉ truyền khi muốn đổi mật khẩu"
+ *               newPassword:
+ *                 type: string
+ *                 example: "string, không bắt buộc, chỉ truyền khi muốn đổi mật khẩu"
  */
 
 /**
  * @swagger
- * /v1/user/delete/{id}:
- *   delete:
- *     summary: Delete a user
- *     tags: [User]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: User deleted successfully
- *       400:
- *         description: Bad request
- */
-
-/**
- * @swagger
- * /v1/user/change-status/{id}:
+ * /v1/user/request-key-change:
  *   put:
- *     summary: Change user status
+ *     summary: Yêu cầu cập nhật thông tin quan trọng
  *     tags: [User]
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
  *     requestBody:
- *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
  *             properties:
- *               newStatus:
- *                 type: number
- *     responses:
- *       200:
- *         description: User status changed successfully
- *       400:
- *         description: Bad request
+ *               email:
+ *                 type: string
+ *                 example: "string, bắt buộc, có thể truyền email hiện có hoặc email mới"
+ *               password:
+ *                 type: string
+ *                 example: "string, bắt buộc, password hiện tại"
+ */
+
+/**
+ * @swagger
+ * /v1/user/verify-key-change:
+ *   post:
+ *     summary: Xác thực cập nhật thông tin quan trọng
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: "string, bắt buộc, email hiện tại hoặc mới, chuẩn hóa email"
+ *               studentId:
+ *                 type: string
+ *                 example: "string, bắt buộc, studentId hiện tại hoặc mới, chuẩn hóa (8 số)"
+ *               phone:
+ *                 type: string
+ *                 example: "string, bắt buộc, phone hiện tại hoặc mới, chuẩn hóa (10 số, bắt đầu bằng đầu 03/05/07)"
+ *               otp:
+ *                 example: "string, bắt buộc, otp xác thực từ mail, chuẩn hóa (6 số)"
  */
 
 /**
  * @swagger
  * /v1/user/list:
- *   put:
- *     summary: Get list of users
+ *   get:
+ *     summary: Xem danh sách người dùng
  *     tags: [User]
  *     security:
  *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: List of users retrieved successfully
- *       400:
- *         description: Bad request
+ *     parameters:
+ *       - in: query
+ *         name: displayName
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: email
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: phone
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: studentId
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: Number
+ *       - in: query
+ *         name: role
+ *         schema:
+ *           type: ObjectId
+ *           example: ObjectId
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: Number
+ *       - in: query
+ *         name: size
+ *         schema:
+ *           type: Number
  */
 
 /**
@@ -316,9 +269,116 @@
  *         required: true
  *         schema:
  *           type: string
- *     responses:
- *       200:
- *         description: User retrieved successfully
- *       400:
- *         description: Bad request
+ */
+
+/**
+ * @swagger
+ * /v1/user/create:
+ *   post:
+ *     summary: Create a new user (admin only)
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               displayName:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               studentId:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *               birthDate:
+ *                 type: string
+ *               bio:
+ *                 type: string
+ *               avatarUrl:
+ *                 type: string
+ *               status:
+ *                 type: number
+ *               role:
+ *                 type: string
+ */
+
+/**
+ * @swagger
+ * /v1/user/update:
+ *   put:
+ *     summary: Update a user (admin only)
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               id:
+ *                 type: string
+ *               displayName:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *               studentId:
+ *                 type: string
+ *               birthDate:
+ *                 type: string
+ *               bio:
+ *                 type: string
+ *               avatarUrl:
+ *                 type: string
+ *               role:
+ *                 type: string
+ *                 example: ObjectId
+ *               status:
+ *                 type: number
+ *               password:
+ *                 type: string
+ */
+
+/**
+ * @swagger
+ * /v1/user/delete/{id}:
+ *   delete:
+ *     summary: Delete a user (admin only)
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ */
+
+/**
+ * @swagger
+ * /v1/user/login-admin:
+ *   post:
+ *     summary: Login as admin
+ *     tags: [User]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *               password:
+ *                 type: string
  */

@@ -11,15 +11,15 @@ import Notification from "../models/notificationModel.js";
 
 const formatUserData = async (user) => {
   const notifications = await Notification.find({
-    user: currentUser._id,
+    user: user._id,
     status: 1,
   });
   const friendRequestsSent = await Friendship.find({
-    sender: currentUser._id,
+    sender: user._id,
     status: 1,
   });
   const friendRequestsReceived = await Friendship.find({
-    receiver: currentUser._id,
+    receiver: user._id,
     status: 1,
   });
   user.totalUnreadNotifications = notifications.length;

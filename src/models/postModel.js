@@ -3,6 +3,7 @@ import { schemaOptions } from "../configurations/schemaConfig.js";
 import PostReaction from "./postReactionModel.js";
 import Comment from "./commentModel.js";
 import { deleteFileByUrl } from "../services/apiService.js";
+import Notification from "./notificationModel.js";
 
 const PostSchema = new mongoose.Schema(
   {
@@ -50,6 +51,9 @@ PostSchema.pre(
       for (const comment of comments) {
         await comment.deleteOne();
       }
+      await Notification.deleteMany({
+        "data.post._id": this._id,
+      });
       await PostReaction.deleteMany({ post: this._id });
       next();
     } catch (error) {

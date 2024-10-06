@@ -113,6 +113,9 @@ UserSchema.pre(
       for (const friendship of friendships) {
         await friendship.deleteOne();
       }
+      await Notification.deleteMany({
+        "data.user._id": this._id,
+      });
       await Notification.deleteMany({ user: this._id });
       await ConversationMember.deleteMany({ user: this._id });
       await MessageReaction.deleteMany({ user: this._id });

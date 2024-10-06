@@ -1,17 +1,22 @@
-import { formatDistanceToNowStrict } from "date-fns";
-import { vi } from "date-fns/locale";
 import Notification from "../models/notificationModel.js";
+import { formatDistanceToNow } from "../configurations/schemaConfig.js";
+import User from "../models/userModel.js";
 
-const formatNotificationData = (notification) => {
+const formatNotificationData = async (notification) => {
+  let formattedData = { ...notification.data };
+  if (formattedData.user) {
+    const user = await User.findById(formattedData.user._id);
+    if (user) {
+      formattedData.user.displayName = user.displayName;
+      formattedData.user.avatarUrl = user.avatarUrl;
+    }
+  }
   return {
     _id: notification._id,
     status: notification.status,
     kind: notification.kind,
-    data: notification.data,
-    createdAt: formatDistanceToNowStrict(notification.createdAt, {
-      addSuffix: true,
-      locale: vi,
-    }),
+    data: formattedData,
+    createdAt: formatDistanceToNow(notification.createdAt),
   };
 };
 
@@ -47,9 +52,11 @@ const getListNotifications = async (req) => {
 
   const totalPages = Math.ceil(totalElements / limit);
 
-  const result = notifications.map((notification) => {
-    return formatNotificationData(notification);
-  });
+  const result = await Promise.all(
+    notifications.map(async (notification) => {
+      return await formatNotificationData(notification);
+    })
+  );
 
   return {
     content: result,

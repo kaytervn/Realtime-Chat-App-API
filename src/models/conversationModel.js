@@ -4,6 +4,7 @@ import ConversationMember from "./conversationMemberModel.js";
 import Message from "./messageModel.js";
 import { deleteFileByUrl } from "../services/apiService.js";
 import Friendship from "./friendshipModel.js";
+import Notification from "./notificationModel.js";
 
 const ConversationSchema = new mongoose.Schema(
   {
@@ -51,6 +52,9 @@ ConversationSchema.pre(
       for (const message of messages) {
         await message.deleteOne();
       }
+      await Notification.deleteMany({
+        "data.conversation._id": this._id,
+      });
       next();
     } catch (error) {
       next(error);

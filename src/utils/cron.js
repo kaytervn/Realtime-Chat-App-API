@@ -57,7 +57,7 @@ const birthDateNotification = async () => {
             },
             conversation: conversation ? { _id: conversation._id } : null,
           },
-          message: `Hôm nay là sinh nhật của ${user.displayName}! 🎉`,
+          message: `Hôm nay là sinh nhật của ${user.displayName}. Gửi lời chúc tốt đẹp nhé!`,
         });
       }
     }

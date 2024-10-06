@@ -412,6 +412,7 @@ const createUser = async (req, res) => {
       otp,
       status,
       secretKey,
+      studentId,
       bio,
       avatarUrl: isValidUrl(avatarUrl) ? avatarUrl : null,
       birthDate: parsedBirthDate,

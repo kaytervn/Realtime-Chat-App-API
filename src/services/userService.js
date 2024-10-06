@@ -91,7 +91,7 @@ const getListUsers = async (req) => {
     );
     userQuery._id = {
       $in: friendIdsMapped,
-      $nin: conversationMemberIdsMapped,
+      $nin: [...conversationMemberIdsMapped, currentUser._id],
     };
   } else if (ignoreFriendship === "1") {
     const friendRelationIds = await Friendship.find({
@@ -103,7 +103,7 @@ const getListUsers = async (req) => {
         : friendship.sender
     );
     userQuery._id = {
-      $nin: friendRelationIdsMapped,
+      $nin: [...friendRelationIdsMapped, currentUser._id],
     };
   }
 

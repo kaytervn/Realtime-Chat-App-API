@@ -34,7 +34,7 @@ router.get("/get/:id", auth("USER_V"), getUser);
 router.post("/create", auth("USER_C"), createUser);
 router.put("/update", auth("USER_U"), updateUser);
 router.post("/login-admin", loginAdmin);
-router.put("/request-key-change", auth(""), requestChangeUserKeyInformation);
+router.post("/request-key-change", auth(""), requestChangeUserKeyInformation);
 router.post("/verify-key-change", auth(""), verifyChangeUserKeyInformation);
 
 export { router as userRouter };

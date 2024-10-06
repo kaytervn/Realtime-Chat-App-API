@@ -349,7 +349,7 @@
 /**
  * @swagger
  * /v1/user/request-key-change:
- *   put:
+ *   post:
  *     summary: Request to change key information
  *     tags: [User]
  *     security:

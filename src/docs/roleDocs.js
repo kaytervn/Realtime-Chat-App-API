@@ -22,15 +22,15 @@
  *             properties:
  *               name:
  *                 type: string
+ *                 description: Name of the role
  *               permissions:
  *                 type: array
  *                 items:
  *                   type: string
- *     responses:
- *       200:
- *         description: Role created successfully
- *       400:
- *         description: Bad request
+ *                 description: Array of permission IDs
+ *               kind:
+ *                 type: number
+ *                 enum: [1, 2, 3]
  */
 
 /**
@@ -50,17 +50,18 @@
  *             properties:
  *               id:
  *                 type: string
+ *                 description: ID of the role to update
  *               name:
  *                 type: string
+ *                 description: New name for the role
  *               permissions:
  *                 type: array
  *                 items:
  *                   type: string
- *     responses:
- *       200:
- *         description: Role updated successfully
- *       400:
- *         description: Bad request
+ *                 description: Updated array of permission IDs
+ *               kind:
+ *                 type: number
+ *                 enum: [1, 2, 3]
  */
 
 /**
@@ -77,11 +78,7 @@
  *         required: true
  *         schema:
  *           type: string
- *     responses:
- *       200:
- *         description: Role details
- *       400:
- *         description: Bad request
+ *         description: ID of the role to retrieve
  */
 
 /**
@@ -94,20 +91,28 @@
  *       - bearerAuth: []
  *     parameters:
  *       - in: query
+ *         name: name
+ *         schema:
+ *           type: string
+ *         description: Filter roles by name (case-insensitive regex)
+ *       - in: query
+ *         name: kind
+ *         schema:
+ *           type: number
+ *         description: Filter roles by kind
+ *       - in: query
+ *         name: isPaged
+ *         schema:
+ *           type: string
+ *         description: Set to "0" for unpaged results
+ *       - in: query
  *         name: page
  *         schema:
- *           type: integer
+ *           type: number
+ *         description: Page number for pagination
  *       - in: query
  *         name: size
  *         schema:
- *           type: integer
- *       - in: query
- *         name: sort
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: List of roles
- *       400:
- *         description: Bad request
+ *           type: number
+ *         description: Number of items per page
  */

@@ -15,6 +15,6 @@ router.put("/update", auth("POST_U"), updatePost);
 router.get("/get/:id", auth("POST_V"), getPost);
 router.delete("/delete/:id", auth("POST_D"), deletePost);
 router.get("/list", auth("POST_L"), getPosts);
-router.get("/change-state/:id", auth("POST_C_S"), changeStatusPost);
+router.put("/change-state", auth("POST_C_S"), changeStatusPost);
 
 export { router as postRouter };

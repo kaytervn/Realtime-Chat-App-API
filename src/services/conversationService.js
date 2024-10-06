@@ -9,10 +9,8 @@ const formatConversationData = async (conversation, currentUser) => {
   })
     .populate("user")
     .sort({ createdAt: -1 });
-
   conversation.isOwner = currentUser._id.equals(conversation.owner) ? 1 : 0;
   conversation.lastMessage = lastMessage;
-
   if (conversation.kind === 2) {
     const isSender = conversation.friendship.sender._id.equals(currentUser._id);
     conversation.avatarUrl = isSender
@@ -25,19 +23,19 @@ const formatConversationData = async (conversation, currentUser) => {
       ? conversation.friendship.receiver.lastLogin
       : conversation.friendship.sender.lastLogin;
   }
-
   const currentMember = await ConversationMember.findOne({
     conversation: conversation._id,
     user: currentUser._id,
   });
-
+  const totalMembers = await ConversationMember.countDocuments({
+    conversation: conversation._id,
+  });
   const totalUnreadMessages = await Message.countDocuments({
     conversation: conversation._id,
     createdAt: {
       $gt: currentMember?.lastReadMessage?.createdAt || new Date(0),
     },
   });
-
   return {
     _id: conversation._id,
     name: conversation.name,
@@ -69,6 +67,7 @@ const formatConversationData = async (conversation, currentUser) => {
         }
       : null,
     totalUnreadMessages: totalUnreadMessages,
+    totalMembers: totalMembers,
   };
 };
 

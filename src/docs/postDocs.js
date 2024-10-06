@@ -22,13 +22,16 @@
  *             properties:
  *               content:
  *                 type: string
- *               imageUrl:
- *                 type: string
- *     responses:
- *       200:
- *         description: Post created successfully
- *       400:
- *         description: Bad request
+ *               imageUrls:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               status:
+ *                 type: number
+ *                 enum: [1, 2, 3]
+ *               kind:
+ *                 type: number
+ *                 enum: [1, 2, 3]
  */
 
 /**
@@ -50,13 +53,13 @@
  *                 type: string
  *               content:
  *                 type: string
- *               imageUrl:
- *                 type: string
- *     responses:
- *       200:
- *         description: Post updated successfully
- *       400:
- *         description: Bad request
+ *               imageUrls:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               kind:
+ *                 type: number
+ *                 enum: [1, 2, 3]
  */
 
 /**
@@ -73,11 +76,6 @@
  *         required: true
  *         schema:
  *           type: string
- *     responses:
- *       200:
- *         description: Post retrieved successfully
- *       400:
- *         description: Bad request
  */
 
 /**
@@ -94,11 +92,14 @@
  *         required: true
  *         schema:
  *           type: string
- *     responses:
- *       200:
- *         description: Post deleted successfully
- *       400:
- *         description: Bad request
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               reason:
+ *                 type: string
  */
 
 /**
@@ -109,9 +110,65 @@
  *     tags: [Post]
  *     security:
  *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: List of posts retrieved successfully
- *       400:
- *         description: Bad request
+ *     parameters:
+ *       - in: query
+ *         name: content
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: number
+ *       - in: query
+ *         name: user
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: kind
+ *         schema:
+ *           type: number
+ *       - in: query
+ *         name: isPaged
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: number
+ *       - in: query
+ *         name: getListKind
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: size
+ *         schema:
+ *           type: number
+ */
+
+/**
+ * @swagger
+ * /v1/post/change-state:
+ *   put:
+ *     summary: Change post status
+ *     tags: [Post]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                 type: number
+ *                 enum: [1, 2, 3]
+ *               reason:
+ *                 type: string
  */

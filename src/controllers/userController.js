@@ -249,6 +249,7 @@ const updateUserProfile = async (req, res) => {
       displayName,
       birthDate,
       bio,
+      email,
       avatarUrl,
       currentPassword,
       newPassword,
@@ -261,6 +262,8 @@ const updateUserProfile = async (req, res) => {
     const updateData = {
       displayName,
       bio,
+      email,
+      otpConfirmEmail: null,
       avatarUrl: isValidUrl(avatarUrl) ? avatarUrl : null,
       birthDate: parsedBirthDate,
     };
@@ -281,6 +284,17 @@ const updateUserProfile = async (req, res) => {
           message: "Mật khẩu mới không được trùng với mật khẩu hiện tại",
         });
       }
+
+      if (email != user.email) {
+        if (await User.findOne({ email })) {
+          return makeErrorResponse({ res, message: "Email đã được sử dụng" });
+        }
+        const otpConfirmEmail = createOtp();
+
+        updateData.otpConfirmEmail = otpConfirmEmail;
+        await sendEmail({ email, otp, subject: "XÁC NHẬN THAY ĐỔI EMAIL" });
+      }
+
       updateData.password = await encodePassword(newPassword);
       await Notification.create({
         user: user._id,
@@ -297,6 +311,18 @@ const updateUserProfile = async (req, res) => {
     return makeSuccessResponse({ res, message: "Update user profile success" });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
+  }
+};
+
+const confirmEmail = async (req, res) => {
+  const { otpConfirmEmail, newEmail } = req.body;
+  const { user } = req;
+
+  if (user.otpConfirmEmail === otpConfirmEmail) {
+    await user.updateOne({ email: newEmail });
+    return makeSuccessResponse({ res, message: "Xác nhận email thành công" });
+  } else {
+    return makeErrorResponse({ res, message: "Mã OTP không chính xác" });
   }
 };
 
@@ -541,6 +567,7 @@ export {
   verifyUser,
   requestChangeUserKeyInformation,
   updateUserProfile,
+  confirmEmail,
   verifyToken,
   deleteUser,
   getUsers,

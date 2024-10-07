@@ -254,7 +254,7 @@ const updateUserProfile = async (req, res) => {
       currentPassword,
       newPassword,
     } = req.body;
-    consolo.log(req.body);
+    console.log(req.body);
     const { user } = req;
     if (avatarUrl != user.avatarUrl) {
       await deleteFileByUrl(user.avatarUrl);

@@ -2,6 +2,7 @@ import Comment from "../models/commentModel.js";
 import Notification from "../models/notificationModel.js";
 import Post from "../models/postModel.js";
 import {
+  deleteFileByUrl,
   isValidObjectId,
   isValidUrl,
   makeErrorResponse,
@@ -127,7 +128,7 @@ const getComment = async (req, res) => {
     if (!isValidObjectId(id)) {
       return makeErrorResponse({ res, message: "Invalid id" });
     }
-    const comment = await Comment.findById(id);
+    const comment = await Comment.findById(id).populate("user");
     return makeSuccessResponse({
       res,
       data: await formatCommentData(comment, currentUser),

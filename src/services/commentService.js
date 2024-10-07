@@ -38,7 +38,7 @@ const formatCommentData = async (comment, currentUser) => {
     isReacted: comment.isReacted,
     isChildren: comment.isChildren,
     ...(comment.isChildren === 1
-      ? { parent: comment.parent }
+      ? { parent: { _id: comment.parent } }
       : { totalChildren: comment.totalChildren }),
     totalReactions: comment.totalReactions,
   };
@@ -91,8 +91,8 @@ const getListComments = async (req) => {
   const [totalElements, comments] = await Promise.all([
     Comment.countDocuments(query),
     Comment.find(query)
-      .populate("user parent")
-      .sort({ createdAt: -1 })
+      .populate("user")
+      .sort(ignoreChildren === "1" ? { createdAt: -1 } : { createdAt: 1 })
       .skip(offset)
       .limit(limit),
   ]);

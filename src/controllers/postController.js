@@ -1,7 +1,5 @@
-import Comment from "../models/commentModel.js";
 import Notification from "../models/notificationModel.js";
 import Post from "../models/postModel.js";
-import PostReaction from "../models/postReactionModel.js";
 import {
   deleteFileByUrl,
   isValidUrl,

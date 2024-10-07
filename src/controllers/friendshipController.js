@@ -81,6 +81,7 @@ const acceptFriendRequest = async (req, res) => {
 
     const conversation = await Conversation.create({
       friendship: getFriendship,
+      kind: 2,
     });
     const conversationMembers = [
       { conversation: conversation._id, user: getFriendship.sender._id },

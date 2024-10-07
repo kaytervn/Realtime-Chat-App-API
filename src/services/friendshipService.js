@@ -12,29 +12,31 @@ const getFriendships = async (friendshipQuery) => {
 
 const formatFriendshipData = (friendship, user, conversation) => ({
   _id: friendship._id,
-  sender: {
-    _id: friendship.sender._id,
-    displayName: friendship.sender.displayName,
-    avatarUrl: friendship.sender.avatarUrl,
-  },
   status: friendship.status,
-  receiver: {
-    _id: friendship.receiver._id,
-    displayName: friendship.receiver.displayName,
-    avatarUrl: friendship.receiver.avatarUrl,
-  },
-  ...(friendship.status === 2 &&
-    conversation && {
-      friend: {
-        _id: user._id,
-        displayName: user.displayName,
-        avatarUrl: user.avatarUrl,
-        lastLogin: formatDistanceToNow(user.lastLogin),
-      },
-      conversation: {
-        _id: conversation?._id,
-      },
-    }),
+  ...(friendship.status === 2 && conversation
+    ? {
+        friend: {
+          _id: user._id,
+          displayName: user.displayName,
+          avatarUrl: user.avatarUrl,
+          lastLogin: formatDistanceToNow(user.lastLogin),
+        },
+        conversation: {
+          _id: conversation?._id,
+        },
+      }
+    : {
+        sender: {
+          _id: friendship.sender._id,
+          displayName: friendship.sender.displayName,
+          avatarUrl: friendship.sender.avatarUrl,
+        },
+        receiver: {
+          _id: friendship.receiver._id,
+          displayName: friendship.receiver.displayName,
+          avatarUrl: friendship.receiver.avatarUrl,
+        },
+      }),
 });
 
 const getFriends = async (req) => {

@@ -8,23 +8,39 @@ import Friendship from "../models/friendshipModel.js";
 import { isValidObjectId } from "./apiService.js";
 import ConversationMember from "../models/conversationMemberModel.js";
 import Notification from "../models/notificationModel.js";
+import Message from "../models/messageModel.js";
 
 const formatUserData = async (user) => {
-  const notifications = await Notification.find({
-    user: user._id,
-    status: 1,
-  });
-  const friendRequestsSent = await Friendship.find({
-    sender: user._id,
-    status: 1,
-  });
-  const friendRequestsReceived = await Friendship.find({
-    receiver: user._id,
-    status: 1,
-  });
-  user.totalUnreadNotifications = notifications.length;
-  user.totalFriendRequestsSent = friendRequestsSent.length;
-  user.totalFriendRequestsReceived = friendRequestsReceived.length;
+  const [
+    notifications,
+    totalFriends,
+    friendRequestsSent,
+    friendRequestsReceived,
+    userConversations,
+  ] = await Promise.all([
+    Notification.find({ user: user._id, status: 1 }),
+    Friendship.find({
+      $or: [{ sender: user._id }, { receiver: user._id }],
+      status: 2,
+    }),
+    Friendship.find({ sender: user._id, status: 1 }),
+    Friendship.find({ receiver: user._id, status: 1 }),
+    ConversationMember.find({ user: user._id }).populate("lastReadMessage"),
+  ]);
+  const totalUnreadMessages = await Promise.all(
+    userConversations.map(async (member) => {
+      return Message.countDocuments({
+        conversation: member.conversation,
+        createdAt: {
+          $gt: member.lastReadMessage?.createdAt || new Date(0),
+        },
+      });
+    })
+  );
+  const totalUnreadMessagesCount = totalUnreadMessages.reduce(
+    (acc, count) => acc + count,
+    0
+  );
   return {
     _id: user._id,
     displayName: user.displayName,
@@ -44,9 +60,11 @@ const formatUserData = async (user) => {
     isSuperAdmin: user.isSuperAdmin,
     createdAt: formatDate(user.createdAt),
     lastLogin: formatDistanceToNow(user.lastLogin),
-    totalUnreadNotifications: user.totalUnreadNotifications,
-    totalFriendRequestsSent: user.totalFriendRequestsSent,
-    totalFriendRequestsReceived: user.totalFriendRequestsReceived,
+    totalFriends: totalFriends.length,
+    totalFriendRequestsSent: friendRequestsSent.length,
+    totalFriendRequestsReceived: friendRequestsReceived.length,
+    totalUnreadMessages: totalUnreadMessagesCount,
+    totalUnreadNotifications: notifications.length,
   };
 };
 

@@ -3,6 +3,7 @@ import Notification from "../models/notificationModel.js";
 import Post from "../models/postModel.js";
 import {
   isValidObjectId,
+  isValidUrl,
   makeErrorResponse,
   makeSuccessResponse,
 } from "../services/apiService.js";

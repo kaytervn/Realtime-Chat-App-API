@@ -22,13 +22,7 @@
  *             properties:
  *               post:
  *                 type: string
- *               reaction:
- *                 type: string
- *     responses:
- *       200:
- *         description: Post reaction created successfully
- *       400:
- *         description: Bad request
+ *                 description: ID of the post to react to
  */
 
 /**
@@ -45,11 +39,7 @@
  *         required: true
  *         schema:
  *           type: string
- *     responses:
- *       200:
- *         description: Post reaction deleted successfully
- *       400:
- *         description: Bad request
+ *         description: ID of the post to remove reaction from
  */
 
 /**
@@ -60,9 +50,25 @@
  *     tags: [PostReaction]
  *     security:
  *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: List of post reactions retrieved successfully
- *       400:
- *         description: Bad request
+ *     parameters:
+ *       - in: query
+ *         name: post
+ *         schema:
+ *           type: string
+ *         description: ID of the post to get reactions for
+ *       - in: query
+ *         name: isPaged
+ *         schema:
+ *           type: string
+ *         description: Set to "0" for unpaged results
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: number
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: size
+ *         schema:
+ *           type: number
+ *         description: Number of items per page
  */

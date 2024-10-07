@@ -42,21 +42,23 @@ const createComment = async (req, res) => {
       parent: parentComment ? parentComment._id : null,
     });
     if (parentComment) {
-      await Notification.create({
-        user: parentComment.user._id,
-        data: {
-          post: {
-            _id: getPost._id,
+      if (!currenttUser._id.equals(parentComment.user._id)) {
+        await Notification.create({
+          user: parentComment.user._id,
+          data: {
+            post: {
+              _id: getPost._id,
+            },
+            comment: {
+              _id: parentComment._id,
+            },
+            user: {
+              _id: currenttUser._id,
+            },
           },
-          comment: {
-            _id: parentComment._id,
-          },
-          user: {
-            _id: currenttUser._id,
-          },
-        },
-        message: `${currenttUser.displayName} đã trả lời bình luận của bạn`,
-      });
+          message: `${currenttUser.displayName} đã trả lời bình luận của bạn`,
+        });
+      }
     }
     if (!currenttUser._id.equals(getPost.user._id)) {
       await Notification.create({

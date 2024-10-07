@@ -129,7 +129,6 @@ const getListUsers = async (req) => {
       $or: [{ sender: currentUser._id }, { receiver: currentUser._id }],
       status: 2,
     });
-
     const friendIds = friendships.map((friendship) =>
       friendship.sender.equals(currentUser._id)
         ? friendship.receiver

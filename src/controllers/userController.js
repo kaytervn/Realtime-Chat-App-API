@@ -254,6 +254,7 @@ const updateUserProfile = async (req, res) => {
       currentPassword,
       newPassword,
     } = req.body;
+    consolo.log(req.body);
     const { user } = req;
     if (avatarUrl != user.avatarUrl) {
       await deleteFileByUrl(user.avatarUrl);
@@ -273,6 +274,7 @@ const updateUserProfile = async (req, res) => {
         return makeErrorResponse({ res, message: "Email đã được sử dụng" });
       }
       const otpConfirmEmail = createOtp();
+      console.log(otpConfirmEmail);
       updateData.otpConfirmEmail = otpConfirmEmail;
       await sendEmail({
         email,

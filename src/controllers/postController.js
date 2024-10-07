@@ -53,6 +53,7 @@ const updatePost = async (req, res) => {
     await post.updateOne({
       content,
       kind,
+      status: post.status === 3 ? 1 : post.status,
       isUpdated: 1,
       imageUrls: imageUrls
         ? imageUrls

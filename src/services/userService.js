@@ -80,6 +80,7 @@ const getListUsers = async (req) => {
     page = 0,
     ignoreFriendship = "0",
     ignoreConversation,
+    getFriends = "0",
     size = isPaged === "0" ? Number.MAX_SAFE_INTEGER : 10,
   } = req.query;
   const currentUser = req.user;
@@ -122,6 +123,20 @@ const getListUsers = async (req) => {
     );
     userQuery._id = {
       $nin: [...friendRelationIdsMapped, currentUser._id],
+    };
+  } else if (getFriends === "1") {
+    const friendships = await Friendship.find({
+      $or: [{ sender: currentUser._id }, { receiver: currentUser._id }],
+      status: 2,
+    });
+
+    const friendIds = friendships.map((friendship) =>
+      friendship.sender.equals(currentUser._id)
+        ? friendship.receiver
+        : friendship.sender
+    );
+    userQuery._id = {
+      $nin: [...friendIds, currentUser._id],
     };
   }
 

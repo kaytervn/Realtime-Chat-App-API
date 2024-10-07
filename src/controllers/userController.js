@@ -263,7 +263,6 @@ const updateUserProfile = async (req, res) => {
     const updateData = {
       displayName,
       bio,
-      email,
       otpConfirmEmail: null,
       avatarUrl: isValidUrl(avatarUrl) ? avatarUrl : null,
       birthDate: parsedBirthDate,
@@ -321,11 +320,11 @@ const updateUserProfile = async (req, res) => {
 };
 
 const confirmEmail = async (req, res) => {
-  const { otpConfirmEmail, newEmail } = req.body;
+  const { otpConfirmEmail, email } = req.body;
   const { user } = req;
 
   if (user.otpConfirmEmail === otpConfirmEmail) {
-    await user.updateOne({ email: newEmail });
+    await user.updateOne({ email: email, otpConfirmEmail: null });
     return makeSuccessResponse({ res, message: "Xác nhận email thành công" });
   } else {
     return makeErrorResponse({ res, message: "Mã OTP không chính xác" });

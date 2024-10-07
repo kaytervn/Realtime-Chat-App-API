@@ -267,6 +267,20 @@ const updateUserProfile = async (req, res) => {
       avatarUrl: isValidUrl(avatarUrl) ? avatarUrl : null,
       birthDate: parsedBirthDate,
     };
+    if (email !== user.email) {
+      const emailExists = await User.findOne({ email });
+      if (emailExists) {
+        return makeErrorResponse({ res, message: "Email đã được sử dụng" });
+      }
+      const otpConfirmEmail = createOtp();
+      updateData.otpConfirmEmail = otpConfirmEmail;
+      await sendEmail({
+        email,
+        otp: otpConfirmEmail,
+        subject: "XÁC NHẬN THAY ĐỔI EMAIL",
+      });
+    }
+
     if (currentPassword && newPassword) {
       const isPasswordValid = await comparePassword(
         currentPassword,
@@ -283,16 +297,6 @@ const updateUserProfile = async (req, res) => {
           res,
           message: "Mật khẩu mới không được trùng với mật khẩu hiện tại",
         });
-      }
-
-      if (email != user.email) {
-        if (await User.findOne({ email })) {
-          return makeErrorResponse({ res, message: "Email đã được sử dụng" });
-        }
-        const otpConfirmEmail = createOtp();
-
-        updateData.otpConfirmEmail = otpConfirmEmail;
-        await sendEmail({ email, otp, subject: "XÁC NHẬN THAY ĐỔI EMAIL" });
       }
 
       updateData.password = await encodePassword(newPassword);

@@ -249,12 +249,10 @@ const updateUserProfile = async (req, res) => {
       displayName,
       birthDate,
       bio,
-      email,
       avatarUrl,
       currentPassword,
       newPassword,
     } = req.body;
-    console.log(req.body);
     const { user } = req;
     if (avatarUrl != user.avatarUrl) {
       await deleteFileByUrl(user.avatarUrl);
@@ -267,21 +265,6 @@ const updateUserProfile = async (req, res) => {
       avatarUrl: isValidUrl(avatarUrl) ? avatarUrl : null,
       birthDate: parsedBirthDate,
     };
-    if (email !== user.email) {
-      const emailExists = await User.findOne({ email });
-      if (emailExists) {
-        return makeErrorResponse({ res, message: "Email đã được sử dụng" });
-      }
-      const otpConfirmEmail = createOtp();
-      console.log(otpConfirmEmail);
-      updateData.otpConfirmEmail = otpConfirmEmail;
-      await sendEmail({
-        email,
-        otp: otpConfirmEmail,
-        subject: "XÁC NHẬN THAY ĐỔI EMAIL",
-      });
-    }
-
     if (currentPassword && newPassword) {
       const isPasswordValid = await comparePassword(
         currentPassword,
@@ -299,7 +282,6 @@ const updateUserProfile = async (req, res) => {
           message: "Mật khẩu mới không được trùng với mật khẩu hiện tại",
         });
       }
-
       updateData.password = await encodePassword(newPassword);
       await Notification.create({
         user: user._id,
@@ -316,18 +298,6 @@ const updateUserProfile = async (req, res) => {
     return makeSuccessResponse({ res, message: "Update user profile success" });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
-  }
-};
-
-const confirmEmail = async (req, res) => {
-  const { otpConfirmEmail, email } = req.body;
-  const { user } = req;
-
-  if (user.otpConfirmEmail === otpConfirmEmail) {
-    await user.updateOne({ email: email, otpConfirmEmail: null });
-    return makeSuccessResponse({ res, message: "Xác nhận email thành công" });
-  } else {
-    return makeErrorResponse({ res, message: "Mã OTP không chính xác" });
   }
 };
 
@@ -572,7 +542,6 @@ export {
   verifyUser,
   requestChangeUserKeyInformation,
   updateUserProfile,
-  confirmEmail,
   verifyToken,
   deleteUser,
   getUsers,

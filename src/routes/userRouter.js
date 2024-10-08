@@ -16,7 +16,6 @@ import {
   getUsers,
   requestChangeUserKeyInformation,
   verifyChangeUserKeyInformation,
-  confirmEmail,
 } from "../controllers/userController.js";
 import auth from "../middlewares/authentication.js";
 const router = express.Router();
@@ -29,7 +28,6 @@ router.post("/verify", verifyUser);
 router.post("/reset-password", resetUserPassword);
 router.post("/forgot-password", forgotUserPassword);
 router.put("/update-profile", auth(""), updateUserProfile);
-router.post("/confirm-email-otp", auth(""), confirmEmail);
 router.delete("/delete/:id", auth("USER_D"), deleteUser);
 router.get("/list", auth("USER_L"), getUsers);
 router.get("/get/:id", auth("USER_V"), getUser);

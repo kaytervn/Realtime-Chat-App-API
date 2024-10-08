@@ -25,6 +25,7 @@ const createConversation = async (req, res) => {
     }
     const conversation = await Conversation.create({
       name,
+      kind: 1,
       avatarUrl: isValidUrl(avatarUrl) ? avatarUrl : null,
       owner: currentUser._id,
     });
@@ -59,7 +60,6 @@ const createConversation = async (req, res) => {
     return makeSuccessResponse({
       res,
       message: "Create conversation success",
-      data: conversation,
     });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });

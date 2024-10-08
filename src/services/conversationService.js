@@ -2,15 +2,11 @@ import Message from "../models/messageModel.js";
 import Conversation from "../models/conversationModel.js";
 import { formatDistanceToNow } from "../configurations/schemaConfig.js";
 import ConversationMember from "../models/conversationMemberModel.js";
+import Friendship from "../models/friendshipModel.js";
 
 const formatConversationData = async (conversation, currentUser) => {
-  const lastMessage = await Message.findOne({
-    conversation: conversation._id,
-  })
-    .populate("user")
-    .sort({ createdAt: -1 });
   conversation.isOwner = currentUser._id.equals(conversation.owner) ? 1 : 0;
-  conversation.lastMessage = lastMessage;
+  const lastMessage = conversation.lastMessage;
   if (conversation.kind === 2) {
     const isSender = conversation.friendship.sender._id.equals(currentUser._id);
     conversation.avatarUrl = isSender
@@ -84,75 +80,55 @@ const getListConversations = async (req) => {
   const offset = parseInt(page, 10) * parseInt(size, 10);
   const limit = parseInt(size, 10);
 
+  const friendships = await Friendship.find({
+    $or: [{ sender: currentUser._id }, { receiver: currentUser._id }],
+    status: 2,
+  }).populate("sender receiver");
+  const members = await ConversationMember.find({ user: currentUser._id });
   let query = {
-    $or: [],
+    _id: { $in: members.map((m) => m.conversation) },
+    $or: [
+      { kind: 1 },
+      { kind: 2, friendship: { $in: friendships.map((f) => f._id) } },
+    ],
   };
-
   if (name) {
-    query.$or.push(
-      { name: { $regex: name, $options: "i" } },
-      {
-        $and: [
-          {
-            "friendship.sender.displayName": { $regex: name, $options: "i" },
-          },
-          { "friendship.sender._id": { $ne: currentUser._id } },
-        ],
-      },
-      {
-        $and: [
-          {
-            "friendship.receiver.displayName": { $regex: name, $options: "i" },
-          },
-          { "friendship.receiver._id": { $ne: currentUser._id } },
-        ],
-      }
-    );
+    query.$or = [{ name: { $regex: name, $options: "i" } }];
+    const matchingFriendships = friendships.filter((friendship) => {
+      const friend = friendship.sender._id.equals(currentUser._id)
+        ? friendship.receiver
+        : friendship.sender;
+      return friend.displayName.match(new RegExp(name, "i"));
+    });
+    const friendIds = matchingFriendships.map((friendship) => friendship._id);
+    query.$or.push({ friendship: { $in: friendIds } });
   }
   if (kind) {
     query.kind = Number(kind);
   }
 
-  const conversations = await Conversation.find(query).populate({
-    path: "friendship",
-    populate: {
-      path: "sender receiver",
-    },
-  });
-
-  const conversationsWithMessages = await Promise.all(
-    conversations.map(async (conversation) => {
-      const lastMessage = await Message.findOne({
-        conversation: conversation._id,
+  const [totalElements, conversations] = await Promise.all([
+    Conversation.countDocuments(query),
+    Conversation.find(query)
+      .populate({
+        path: "friendship",
+        populate: {
+          path: "sender receiver",
+        },
       })
-        .populate("user")
-        .sort({ createdAt: -1 });
+      .populate("lastMessage")
+      .sort({ "lastMessage.createdAt": -1, createdAt: -1 })
+      .skip(offset)
+      .limit(limit),
+  ]);
 
-      return { conversation, lastMessage };
-    })
-  );
-
-  const sortedConversations = conversationsWithMessages
-    .filter(({ lastMessage }) => lastMessage)
-    .sort((a, b) => b.lastMessage.createdAt - a.lastMessage.createdAt)
-    .map(({ conversation, lastMessage }) => ({
-      ...conversation.toObject(),
-      lastMessage,
-    }));
-
-  const paginatedConversations = sortedConversations.slice(
-    offset,
-    offset + limit
-  );
+  const totalPages = Math.ceil(totalElements / limit);
 
   const result = await Promise.all(
-    paginatedConversations.map((conversation) =>
-      formatConversationData(conversation, currentUser)
-    )
+    conversations.map(async (conversation) => {
+      return await formatConversationData(conversation, currentUser);
+    })
   );
-
-  const totalElements = await Conversation.countDocuments(query);
-  const totalPages = Math.ceil(totalElements / limit);
 
   return {
     content: result,

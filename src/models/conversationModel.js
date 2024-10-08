@@ -33,6 +33,11 @@ const ConversationSchema = new mongoose.Schema(
       required: false, // for group chats
       default: null,
     },
+    lastMessage: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Message",
+      default: null,
+    },
   },
   schemaOptions
 );
@@ -44,10 +49,12 @@ ConversationSchema.pre(
     try {
       await deleteFileByUrl(this.avatarUrl);
       await ConversationMember.deleteMany({ conversation: this._id });
-      const friendship = await Friendship.findOne({
-        _id: this.friendship,
-      });
-      friendship.deleteOne();
+      if (this.friendship && this.kind === 2) {
+        const friendship = await Friendship.findOne({
+          _id: this.friendship,
+        });
+        friendship.deleteOne();
+      }
       const messages = await Message.find({ conversation: this._id });
       for (const message of messages) {
         await message.deleteOne();

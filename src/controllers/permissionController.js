@@ -10,7 +10,7 @@ const createPermission = async (req, res) => {
     if (await Permission.findOne({ permissionCode })) {
       return makeErrorResponse({ res, message: "Permission code existed" });
     }
-    const newPermission = await Permission.create({
+    await Permission.create({
       name,
       permissionCode,
       groupName,
@@ -18,7 +18,6 @@ const createPermission = async (req, res) => {
     return makeSuccessResponse({
       res,
       message: "Permission created",
-      data: newPermission,
     });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });

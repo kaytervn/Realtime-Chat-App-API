@@ -33,12 +33,15 @@ const createMessage = async (req, res) => {
     if (!getConversation) {
       return makeErrorResponse({ res, message: "Conversation not found" });
     }
-    await Message.create({
+    const message = await Message.create({
       conversation: getConversation._id,
       user: currrentUser._id,
       content,
       imageUrl: isValidUrl(imageUrl) ? imageUrl : null,
       parent: parentMessage ? parentMessage._id : null,
+    });
+    await getConversation.updateOne({
+      lastMessage: message._id,
     });
     return makeSuccessResponse({
       res,
@@ -75,8 +78,28 @@ const deleteMessage = async (req, res) => {
     if (!isValidObjectId(id)) {
       return makeErrorResponse({ res, message: "Invalid id" });
     }
-    const message = await Message.findById(id);
+    const message = await Message.findById(id).populate({
+      path: "conversation",
+      populate: {
+        path: "lastMessage",
+      },
+    });
+    if (!message) {
+      return makeErrorResponse({ res, message: "Message not found" });
+    }
     await message.deleteOne();
+    if (message.conversation.lastMessage._id.equals(message._id)) {
+      const previousMessage = await Message.findOne({
+        conversation: message.conversation._id,
+        createdAt: { $lt: message.createdAt },
+      })
+        .sort({ createdAt: -1 })
+        .populate("user");
+      message.conversation.lastMessage = previousMessage
+        ? previousMessage._id
+        : null;
+      await message.conversation.save();
+    }
     return makeSuccessResponse({
       res,
       message: "Delete message success",

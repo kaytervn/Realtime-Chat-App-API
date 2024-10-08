@@ -142,12 +142,14 @@ const getConversation = async (req, res) => {
   try {
     const id = req.params.id;
     const currentUser = req.user;
-    const conversation = await Conversation.findById(id).populate({
-      path: "friendship",
-      populate: {
-        path: "sender receiver",
-      },
-    });
+    const conversation = await Conversation.findById(id)
+      .populate({
+        path: "friendship",
+        populate: {
+          path: "sender receiver",
+        },
+      })
+      .populate("lastMessage");
     if (!conversation) {
       return makeErrorResponse({ res, message: "Conversation not found" });
     }

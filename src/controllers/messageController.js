@@ -1,3 +1,4 @@
+import ConversationMember from "../models/conversationMemberModel.js";
 import Conversation from "../models/conversationModel.js";
 import Message from "../models/messageModel.js";
 import {
@@ -15,7 +16,7 @@ import {
 const createMessage = async (req, res) => {
   try {
     const { conversation, content, parent, imageUrl } = req.body;
-    const currrentUser = req.user;
+    const currentUser = req.user;
     let parentMessage;
     if (isValidObjectId(parent)) {
       parentMessage = await Message.findById(parent);
@@ -35,7 +36,7 @@ const createMessage = async (req, res) => {
     }
     const message = await Message.create({
       conversation: getConversation._id,
-      user: currrentUser._id,
+      user: currentUser._id,
       content,
       imageUrl: isValidUrl(imageUrl) ? imageUrl : null,
       parent: parentMessage ? parentMessage._id : null,
@@ -43,6 +44,15 @@ const createMessage = async (req, res) => {
     await getConversation.updateOne({
       lastMessage: message._id,
     });
+    await ConversationMember.findOneAndUpdate(
+      {
+        conversation: getConversation._id,
+        user: currentUser._id,
+      },
+      {
+        lastReadMessage: message._id,
+      }
+    );
     return makeSuccessResponse({
       res,
       message: "Create message success",
@@ -78,28 +88,11 @@ const deleteMessage = async (req, res) => {
     if (!isValidObjectId(id)) {
       return makeErrorResponse({ res, message: "Invalid id" });
     }
-    const message = await Message.findById(id).populate({
-      path: "conversation",
-      populate: {
-        path: "lastMessage",
-      },
-    });
+    const message = await Message.findById(id);
     if (!message) {
       return makeErrorResponse({ res, message: "Message not found" });
     }
     await message.deleteOne();
-    if (message.conversation.lastMessage._id.equals(message._id)) {
-      const previousMessage = await Message.findOne({
-        conversation: message.conversation._id,
-        createdAt: { $lt: message.createdAt },
-      })
-        .sort({ createdAt: -1 })
-        .populate("user");
-      message.conversation.lastMessage = previousMessage
-        ? previousMessage._id
-        : null;
-      await message.conversation.save();
-    }
     return makeSuccessResponse({
       res,
       message: "Delete message success",

@@ -22,7 +22,7 @@ const formatConversationData = async (conversation, currentUser) => {
   const currentMember = await ConversationMember.findOne({
     conversation: conversation._id,
     user: currentUser._id,
-  });
+  }).populate("lastReadMessage");
   const totalMembers = await ConversationMember.countDocuments({
     conversation: conversation._id,
   });

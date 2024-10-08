@@ -80,12 +80,17 @@ const getListPosts = async (req) => {
     postQuery.user = currentUser._id;
   } else if (getListKind === "2") {
     // Get my friends' posts
-    postQuery.user = { $in: friendIds };
-    postQuery.kind = { $in: [1, 2] };
+    postQuery.$or = [
+      { kind: 1, user: { $in: [...friendIds, currentUser._id] } },
+      { kind: 2, user: { $in: [...friendIds, currentUser._id] } },
+    ];
     postQuery.status = 2;
   } else if (getListKind === "1") {
     // Get all posts
-    postQuery.$or = [{ kind: 1 }, { kind: 2, user: { $in: [...friendIds, currentUser._id] } }];
+    postQuery.$or = [
+      { kind: 1 },
+      { kind: 2, user: { $in: [...friendIds, currentUser._id] } },
+    ];
     postQuery.status = 2;
   }
   if (content) {

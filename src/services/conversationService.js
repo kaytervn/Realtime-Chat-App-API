@@ -37,19 +37,6 @@ const formatConversationData = async (conversation, currentUser) => {
     name: conversation.name,
     kind: conversation.kind,
     avatarUrl: conversation.avatarUrl,
-    ...(conversation.kind === 2
-      ? {
-          lastLogin: formatDistanceToNow(conversation.lastLogin),
-        }
-      : {
-          isOwner: conversation.isOwner,
-          owner: {
-            _id: conversation.owner,
-          },
-          canMessage: currentMember.canMessage,
-          canUpdate: currentMember.canUpdate,
-          canAddMember: currentMember.canAddMember,
-        }),
     lastMessage: lastMessage
       ? {
           _id: lastMessage._id,
@@ -62,8 +49,21 @@ const formatConversationData = async (conversation, currentUser) => {
           createdAt: formatDistanceToNow(lastMessage.createdAt),
         }
       : null,
+    ...(conversation.kind === 2
+      ? {
+          lastLogin: formatDistanceToNow(conversation.lastLogin),
+        }
+      : {
+          isOwner: conversation.isOwner,
+          owner: {
+            _id: conversation.owner,
+          },
+          canMessage: currentMember.canMessage,
+          canUpdate: currentMember.canUpdate,
+          canAddMember: currentMember.canAddMember,
+          totalMembers: totalMembers,
+        }),
     totalUnreadMessages: totalUnreadMessages,
-    totalMembers: totalMembers,
   };
 };
 

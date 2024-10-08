@@ -65,21 +65,15 @@ const addMember = async (req, res) => {
 
 const removeMember = async (req, res) => {
   try {
-    const { conversation, user } = req.body;
+    const id = req.params.id;
     const currentUser = req.user;
-    if (!isValidObjectId(conversation) || !isValidObjectId(user)) {
+    if (!isValidObjectId(id)) {
       return makeErrorResponse({ res, message: "Invalid id" });
     }
-    const memberToRemove = await User.findById(user);
-    if (!memberToRemove) {
-      return makeErrorResponse({ res, message: "User not found" });
-    }
-    await ConversationMember.deleteOne({
-      conversation,
-      user: memberToRemove._id,
-    });
+    const conversationMember = await ConversationMember.findById(id);
+    await conversationMember.deleteOne();
     await Notification.create({
-      user: memberToRemove._id,
+      user: conversationMember.user,
       message: `${currentUser.displayName} đã xóa bạn khỏi cuộc trò chuyện`,
       data: {
         user: {
@@ -119,20 +113,17 @@ const removeMember = async (req, res) => {
 
 const grantPermissionForMember = async (req, res) => {
   try {
-    const { conversation, user, canMessage, canUpdate, canAddMember } =
+    const { conversationMember, canMessage, canUpdate, canAddMember } =
       req.body;
     const currentUser = req.user;
-    if (!isValidObjectId(conversation) || !isValidObjectId(user)) {
+    if (!isValidObjectId(conversationMember)) {
       return makeErrorResponse({ res, message: "Invalid id" });
     }
-    const member = await ConversationMember.findOne({
-      conversation,
-      user,
-    });
+    const member = await ConversationMember.findById(conversationMember);
     if (!member) {
       return makeErrorResponse({
         res,
-        message: "Member not found in the conversation",
+        message: "Conversation member not found",
       });
     }
     member.canMessage =

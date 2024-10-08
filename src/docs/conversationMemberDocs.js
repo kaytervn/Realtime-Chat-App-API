@@ -35,25 +35,19 @@
 
 /**
  * @swagger
- * /v1/conversation-member/remove:
- *   put:
+ * /v1/conversation-member/remove/{id}:
+ *   delete:
  *     summary: Remove a member from a conversation
  *     tags: [ConversationMember]
  *     security:
  *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               conversation:
- *                 type: string
- *                 description: ID of the conversation
- *               user:
- *                 type: string
- *                 description: ID of the user to be removed
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the conversation member to remove
  *     responses:
  *       200:
  *         description: Member removed from conversation successfully
@@ -112,12 +106,9 @@
  *           schema:
  *             type: object
  *             properties:
- *               conversation:
+ *               conversationMember:
  *                 type: string
- *                 description: ID of the conversation
- *               user:
- *                 type: string
- *                 description: ID of the user to grant permissions
+ *                 description: ID of the conversation member
  *               canMessage:
  *                 type: number
  *                 enum: [0, 1]

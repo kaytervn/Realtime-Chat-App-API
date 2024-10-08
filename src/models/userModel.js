@@ -60,10 +60,6 @@ const UserSchema = new mongoose.Schema(
       enum: [0, 1], // 0: inactive, 1: active
       default: 0,
     },
-    otpConfirmEmail: {
-      type: String,
-      default: null,
-    },
     secretKey: {
       type: String,
       default: null,

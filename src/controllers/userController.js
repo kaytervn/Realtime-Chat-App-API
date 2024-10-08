@@ -261,7 +261,6 @@ const updateUserProfile = async (req, res) => {
     const updateData = {
       displayName,
       bio,
-      otpConfirmEmail: null,
       avatarUrl: isValidUrl(avatarUrl) ? avatarUrl : null,
       birthDate: parsedBirthDate,
     };

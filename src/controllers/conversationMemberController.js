@@ -70,7 +70,9 @@ const removeMember = async (req, res) => {
     if (!isValidObjectId(id)) {
       return makeErrorResponse({ res, message: "Invalid id" });
     }
-    const conversationMember = await ConversationMember.findById(id);
+    const conversationMember = await ConversationMember.findById(id).populate(
+      "user"
+    );
     await conversationMember.deleteOne();
     await Notification.create({
       user: conversationMember.user,
@@ -83,12 +85,12 @@ const removeMember = async (req, res) => {
       kind: 3,
     });
     const conversationMembers = await ConversationMember.find({
-      conversation,
-      user: { $nin: [currentUser._id, memberToRemove._id] },
+      conversation: conversationMember.conversation,
+      user: { $nin: [currentUser._id, conversationMember.user._id] },
     });
     await Notification.create(
       conversationMembers.map((member) => ({
-        message: `${currentUser.displayName} đã xóa ${memberToRemove.displayName} khỏi cuộc trò chuyện`,
+        message: `${currentUser.displayName} đã xóa ${conversationMember.user.displayName} khỏi cuộc trò chuyện`,
         data: {
           user: {
             _id: currentUser._id,
@@ -96,7 +98,7 @@ const removeMember = async (req, res) => {
             avatarUrl: currentUser.avatarUrl,
           },
           conversation: {
-            _id: conversation,
+            _id: conversationMember.conversation,
           },
         },
         user: member.user,
@@ -137,7 +139,7 @@ const grantPermissionForMember = async (req, res) => {
       message: `${currentUser.displayName} đã cập nhật quyền cho bạn trong cuộc trò chuyện`,
       data: {
         conversation: {
-          _id: conversation,
+          _id: member.conversation,
         },
         user: {
           _id: currentUser._id,

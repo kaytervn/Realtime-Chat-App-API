@@ -10,7 +10,7 @@ const formatConversationMemberData = (conversationMember) => {
       avatarUrl: conversationMember.user.avatarUrl,
     },
     conversation: {
-      _id: conversationMember.conversation,
+      _id: conversationMember.conversation._id,
     },
     canMessage: conversationMember.canMessage,
     canUpdate: conversationMember.canUpdate,
@@ -42,7 +42,7 @@ const getListConversationMembers = async (req) => {
   const [totalElements, conversationMembers] = await Promise.all([
     ConversationMember.countDocuments(query),
     ConversationMember.find(query)
-      .populate("user")
+      .populate("user conversation")
       .sort({ createdAt: 1 })
       .skip(offset)
       .limit(limit),

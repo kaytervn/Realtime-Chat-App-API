@@ -1,6 +1,7 @@
 import ConversationMember from "../models/conversationMemberModel.js";
 import Conversation from "../models/conversationModel.js";
 import Message from "../models/messageModel.js";
+import Notification from "../models/notificationModel.js";
 import {
   deleteFileByUrl,
   isValidObjectId,
@@ -85,6 +86,7 @@ const updateMessage = async (req, res) => {
 const deleteMessage = async (req, res) => {
   try {
     const id = req.params.id;
+    const currentUser = req.user;
     if (!isValidObjectId(id)) {
       return makeErrorResponse({ res, message: "Invalid id" });
     }
@@ -92,7 +94,25 @@ const deleteMessage = async (req, res) => {
     if (!message) {
       return makeErrorResponse({ res, message: "Message not found" });
     }
+    const conversationMembers = await ConversationMember.find({
+      conversation: message.conversation,
+      user: { $ne: currentUser._id },
+    });
     await message.deleteOne();
+    await Notification.create(
+      conversationMembers.map((member) => ({
+        message: `${currentUser.displayName} đã đã thu hồi tin nhắn`,
+        data: {
+          user: {
+            _id: currentUser._id,
+          },
+          conversation: {
+            _id: member.conversation,
+          },
+        },
+        user: member.user,
+      }))
+    );
     return makeSuccessResponse({
       res,
       message: "Delete message success",

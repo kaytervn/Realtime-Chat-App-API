@@ -94,8 +94,6 @@ const removeMember = async (req, res) => {
         data: {
           user: {
             _id: currentUser._id,
-            displayName: currentUser.displayName,
-            avatarUrl: currentUser.avatarUrl,
           },
           conversation: {
             _id: conversationMember.conversation,

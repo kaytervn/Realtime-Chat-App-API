@@ -1,3 +1,4 @@
+import Friendship from "../models/friendshipModel.js";
 import Notification from "../models/notificationModel.js";
 import Post from "../models/postModel.js";
 import {
@@ -10,21 +11,38 @@ import { formatPostData, getListPosts } from "../services/postService.js";
 
 const createPost = async (req, res) => {
   try {
-    const { content, imageUrls, status, kind } = req.body;
+    const { content, imageUrls, status = 1, kind } = req.body;
     const { user } = req;
-
-    await Post.create({
+    const validImageUrls =
+      imageUrls?.map((url) => (isValidUrl(url) ? url : null)).filter(Boolean) ||
+      [];
+    const post = await Post.create({
       user: user._id,
       content,
-      imageUrls: imageUrls
-        ? imageUrls
-            .map((imageUrl) => (isValidUrl(imageUrl) ? imageUrl : null))
-            .filter((url) => url !== null)
-        : [],
-      status: status ? status : 1,
+      imageUrls: validImageUrls,
+      status,
       kind,
     });
-
+    const friendships = await Friendship.find({
+      $or: [{ sender: user._id }, { receiver: user._id }],
+      status: 2,
+    });
+    const allFriendNotifications = friendships.map((friendship) => {
+      const friendId = friendship.sender.equals(user._id)
+        ? friendship.receiver
+        : friendship.sender;
+      return {
+        user: friendId,
+        data: {
+          user: { _id: user._id },
+          post: { _id: post._id },
+        },
+        message: `${user.displayName} đã đăng bài viết mới`,
+      };
+    });
+    if (allFriendNotifications.length > 0) {
+      await Notification.insertMany(allFriendNotifications);
+    }
     return makeSuccessResponse({
       res,
       message: "Create post success",

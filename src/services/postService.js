@@ -1,10 +1,9 @@
 import mongoose from "mongoose";
 import Friendship from "../models/friendshipModel.js";
-import { formatDistanceToNowStrict } from "date-fns";
 import Post from "../models/postModel.js";
 import Comment from "../models/commentModel.js";
 import PostReaction from "../models/postReactionModel.js";
-import { vi } from "date-fns/locale";
+import { formatDistanceToNow } from "../configurations/schemaConfig.js";
 
 const formatPostData = async (post, currentUser) => {
   const comments = await Comment.find({ post: post._id });
@@ -35,10 +34,7 @@ const formatPostData = async (post, currentUser) => {
     content: post.content,
     imageUrls: post.imageUrls,
     status: post.status,
-    createdAt: formatDistanceToNowStrict(post.createdAt, {
-      addSuffix: true,
-      locale: vi,
-    }),
+    createdAt: formatDistanceToNow(post.createdAt),
     totalComments: post.totalComments,
     totalReactions: post.totalReactions,
     isOwner: post.isOwner,

@@ -1,9 +1,15 @@
 import { formatDistanceToNowStrict } from "date-fns";
 import { vi } from "date-fns/locale";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc.js";
+import timezone from "dayjs/plugin/timezone.js";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const formatDate = (val) => {
-  return val ? dayjs(val).format("DD/MM/YYYY HH:mm:ss") : null;
+  if (!val) return null;
+  return dayjs(val).tz("Asia/Ho_Chi_Minh").format("DD/MM/YYYY HH:mm:ss");
 };
 
 const formatBirthDate = (val) => {
@@ -11,12 +17,12 @@ const formatBirthDate = (val) => {
 };
 
 const formatDistanceToNow = (val) => {
-  return val
-    ? formatDistanceToNowStrict(val, {
-        addSuffix: true,
-        locale: vi,
-      })
-    : null;
+  if (!val) return null;
+  const vietnamTime = dayjs(val).tz("Asia/Ho_Chi_Minh").toDate();
+  return formatDistanceToNowStrict(vietnamTime, {
+    addSuffix: true,
+    locale: vi,
+  });
 };
 
 const schemaOptions = {

@@ -6,6 +6,7 @@ import utc from "dayjs/plugin/utc.js";
 import timezone from "dayjs/plugin/timezone.js";
 import Friendship from "../models/friendshipModel.js";
 import Conversation from "../models/conversationModel.js";
+import Story from "../models/storyModel.js";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -74,13 +75,31 @@ const birthDateNotification = async () => {
   }
 };
 
+const deleteExpiredStories = async () => {
+  const cutoffDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const stories = await Story.find({
+    createdAt: { $lt: cutoffDate },
+  });
+  for (const story of stories) {
+    await story.deleteOne();
+  }
+  if (stories.length > 0) {
+    const superAdmin = await User.findOne({ isSuperAdmin: 1 });
+    if (superAdmin) {
+      await Notification.create({
+        user: superAdmin._id,
+        message: `Hệ thống đã xóa ${stories.length} bản tin đã hết hạn 24 giờ`,
+      });
+    }
+  }
+};
+
 const job = new cron.CronJob("0 0 * * *", async function () {
   try {
     await birthDateNotification();
-    const cutoffDate = dayjs()
-      .tz("Asia/Ho_Chi_Minh")
-      .subtract(7, "day")
-      .toDate();
+    await deleteExpiredStories();
+
+    const cutoffDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
     const { deletedCount } = await Notification.deleteMany({
       createdAt: { $lt: cutoffDate },

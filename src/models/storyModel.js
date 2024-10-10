@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 import { schemaOptions } from "../configurations/schemaConfig.js";
 import { deleteFileByUrl } from "../services/apiService.js";
+import StoryView from "./storyViewModel.js";
+import Notification from "./notificationModel.js";
 
 const StorySchema = new mongoose.Schema(
   {
@@ -11,11 +13,7 @@ const StorySchema = new mongoose.Schema(
     },
     imageUrl: {
       type: String,
-      default: null,
-    },
-    musicUrl: {
-      type: String,
-      default: null,
+      required: true,
     },
   },
   schemaOptions
@@ -27,7 +25,10 @@ StorySchema.pre(
   async function (next) {
     try {
       await deleteFileByUrl(this.imageUrl);
-      await deleteFileByUrl(this.musicUrl);
+      await StoryView.deleteMany({ story: this._id });
+      await Notification.deleteMany({
+        "data.story._id": this._id,
+      });
       next();
     } catch (error) {
       next(error);

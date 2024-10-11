@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import StoryView from "../models/storyViewModel.js";
+import { formatDistanceToNow } from "../configurations/schemaConfig.js";
 
 const formatStoryViewData = (storyView) => {
   return {
@@ -12,6 +13,7 @@ const formatStoryViewData = (storyView) => {
     story: {
       _id: storyView.story,
     },
+    createdAt: formatDistanceToNow(storyView.createdAt),
   };
 };
 

@@ -117,10 +117,21 @@ const getListConversations = async (req) => {
         },
       })
       .populate("lastMessage")
-      .sort({ "lastMessage.createdAt": -1, createdAt: -1 })
+      .sort({ createdAt: -1 })
       .skip(offset)
       .limit(limit),
   ]);
+
+  conversations.sort((a, b) => {
+    if (a.lastMessage && b.lastMessage) {
+      return (
+        new Date(b.lastMessage.createdAt) - new Date(a.lastMessage.createdAt)
+      );
+    }
+    if (a.lastMessage) return -1;
+    if (b.lastMessage) return 1;
+    return new Date(b.createdAt) - new Date(a.createdAt);
+  });
 
   const totalPages = Math.ceil(totalElements / limit);
 

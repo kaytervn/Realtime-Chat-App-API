@@ -135,7 +135,7 @@ const getListUsers = async (req) => {
         : friendship.sender
     );
     userQuery._id = {
-      $nin: [...friendIds, currentUser._id],
+      $in: [...friendIds],
     };
   }
 

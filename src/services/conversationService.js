@@ -116,7 +116,12 @@ const getListConversations = async (req) => {
           path: "sender receiver",
         },
       })
-      .populate("lastMessage")
+      .populate({
+        path: "lastMessage",
+        populate: {
+          path: "user",
+        },
+      })
       .sort({ createdAt: -1 })
       .skip(offset)
       .limit(limit),

@@ -149,7 +149,12 @@ const getConversation = async (req, res) => {
           path: "sender receiver",
         },
       })
-      .populate("lastMessage");
+      .populate({
+        path: "lastMessage",
+        populate: {
+          path: "user",
+        },
+      });
     if (!conversation) {
       return makeErrorResponse({ res, message: "Conversation not found" });
     }

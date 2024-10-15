@@ -9,7 +9,7 @@
  * @swagger
  * /v1/user/login:
  *   post:
- *     summary: Login user
+ *     summary: User login
  *     tags: [User]
  *     requestBody:
  *       required: true
@@ -18,36 +18,19 @@
  *           schema:
  *             type: object
  *             properties:
- *               email:
+ *               username:
  *                 type: string
+ *                 description: User's email, phone, or studentId
  *               password:
  *                 type: string
- *     responses:
- *       200:
- *         description: Login successful
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 result:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 data:
- *                   type: object
- *                   properties:
- *                     accessToken:
- *                       type: string
- *       400:
- *         description: Bad request
+ *                 description: User's password
  */
 
 /**
  * @swagger
  * /v1/user/verify-token:
  *   post:
- *     summary: Verify JWT token
+ *     summary: Verify user token
  *     tags: [User]
  *     requestBody:
  *       required: true
@@ -58,11 +41,7 @@
  *             properties:
  *               accessToken:
  *                 type: string
- *     responses:
- *       200:
- *         description: Token verified successfully
- *       400:
- *         description: Bad request
+ *                 description: User's access token
  */
 
 /**
@@ -73,11 +52,6 @@
  *     tags: [User]
  *     security:
  *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: User profile
- *       400:
- *         description: Bad request
  */
 
 /**
@@ -101,11 +75,8 @@
  *                 type: string
  *               phone:
  *                 type: string
- *     responses:
- *       200:
- *         description: Registration successful
- *       400:
- *         description: Bad request
+ *               studentId:
+ *                 type: string
  */
 
 /**
@@ -125,11 +96,6 @@
  *                 type: string
  *               otp:
  *                 type: string
- *     responses:
- *       200:
- *         description: Verification successful
- *       400:
- *         description: Bad request
  */
 
 /**
@@ -151,11 +117,6 @@
  *                 type: string
  *               otp:
  *                 type: string
- *     responses:
- *       200:
- *         description: Password reset successful
- *       400:
- *         description: Bad request
  */
 
 /**
@@ -173,37 +134,6 @@
  *             properties:
  *               email:
  *                 type: string
- *     responses:
- *       200:
- *         description: Password reset request successful
- *       400:
- *         description: Bad request
- */
-
-/**
- * @swagger
- * /v1/user/change-password:
- *   post:
- *     summary: Change user password
- *     tags: [User]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               currentPassword:
- *                 type: string
- *               newPassword:
- *                 type: string
- *     responses:
- *       200:
- *         description: Password changed successfully
- *       400:
- *         description: Bad request
  */
 
 /**
@@ -225,22 +155,22 @@
  *                 type: string
  *               birthDate:
  *                 type: string
+ *                 format: date
  *               bio:
  *                 type: string
  *               avatarUrl:
  *                 type: string
- *     responses:
- *       200:
- *         description: Profile updated successfully
- *       400:
- *         description: Bad request
+ *               currentPassword:
+ *                 type: string
+ *               newPassword:
+ *                 type: string
  */
 
 /**
  * @swagger
  * /v1/user/delete/{id}:
  *   delete:
- *     summary: Delete a user
+ *     summary: Delete user
  *     tags: [User]
  *     security:
  *       - bearerAuth: []
@@ -250,18 +180,64 @@
  *         required: true
  *         schema:
  *           type: string
- *     responses:
- *       200:
- *         description: User deleted successfully
- *       400:
- *         description: Bad request
  */
 
 /**
  * @swagger
- * /v1/user/change-status/{id}:
- *   put:
- *     summary: Change user status
+ * /v1/user/list:
+ *   get:
+ *     summary: Get list of users
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: displayName
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: email
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: phone
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: studentId
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: number
+ *       - in: query
+ *         name: role
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: number
+ *       - in: query
+ *         name: size
+ *         schema:
+ *           type: number
+ *       - in: query
+ *         name: ignoreFriendship
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: ignoreConversation
+ *         schema:
+ *           type: string
+ */
+
+/**
+ * @swagger
+ * /v1/user/get/{id}:
+ *   get:
+ *     summary: Get user by ID
  *     tags: [User]
  *     security:
  *       - bearerAuth: []
@@ -271,6 +247,16 @@
  *         required: true
  *         schema:
  *           type: string
+ */
+
+/**
+ * @swagger
+ * /v1/user/create:
+ *   post:
+ *     summary: Create a new user (admin only)
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -278,47 +264,130 @@
  *           schema:
  *             type: object
  *             properties:
- *               newStatus:
+ *               displayName:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *               studentId:
+ *                 type: string
+ *               birthDate:
+ *                 type: string
+ *                 format: date
+ *               bio:
+ *                 type: string
+ *               avatarUrl:
+ *                 type: string
+ *               status:
  *                 type: number
- *     responses:
- *       200:
- *         description: User status changed successfully
- *       400:
- *         description: Bad request
+ *               role:
+ *                 type: string
  */
 
 /**
  * @swagger
- * /v1/user/list:
+ * /v1/user/update:
  *   put:
- *     summary: Get list of users
+ *     summary: Update user (admin only)
  *     tags: [User]
  *     security:
  *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: List of users retrieved successfully
- *       400:
- *         description: Bad request
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               id:
+ *                 type: string
+ *               displayName:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *               studentId:
+ *                 type: string
+ *               birthDate:
+ *                 type: string
+ *                 format: date
+ *               bio:
+ *                 type: string
+ *               avatarUrl:
+ *                 type: string
+ *               status:
+ *                 type: number
+ *               role:
+ *                 type: string
+ *               password:
+ *                 type: string
  */
 
 /**
  * @swagger
- * /v1/user/get/{id}:
- *   get:
- *     summary: Get a user by ID
+ * /v1/user/login-admin:
+ *   post:
+ *     summary: Admin login
+ *     tags: [User]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *               password:
+ *                 type: string
+ */
+
+/**
+ * @swagger
+ * /v1/user/request-key-change:
+ *   post:
+ *     summary: Request to change key information
  *     tags: [User]
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: User retrieved successfully
- *       400:
- *         description: Bad request
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ */
+
+/**
+ * @swagger
+ * /v1/user/verify-key-change:
+ *   post:
+ *     summary: Verify key information change
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               studentId:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *               otp:
+ *                 type: string
  */

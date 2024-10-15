@@ -3,39 +3,43 @@ import Conversation from "../models/conversationModel.js";
 import Friendship from "../models/friendshipModel.js";
 import Notification from "../models/notificationModel.js";
 import {
+  isValidObjectId,
   makeErrorResponse,
   makeSuccessResponse,
 } from "../services/apiService.js";
+import {
+  getFriends,
+  getReceivedFriendRequests,
+  getSentFriendRequests,
+} from "../services/friendshipService.js";
 
 const sendFriendRequest = async (req, res) => {
   try {
-    const { receiverId } = req.body;
-    const { user } = req;
-    const checkExistedFriendship = await Friendship.find({
-      $or: [
-        { sender: user._id, receiver: receiverId },
-        { sender: receiverId, receiver: user._id },
-      ],
-    });
-    if (checkExistedFriendship.length > 0) {
-      return makeErrorResponse({
-        res,
-        message: "Friend request already sent or received",
-      });
+    const { user } = req.body;
+    const currentUser = req.user;
+    if (!isValidObjectId(user)) {
+      return makeErrorResponse({ res, message: "Invalid user" });
     }
     const friendship = await Friendship.create({
-      sender: user._id,
-      receiver: receiverId,
+      sender: currentUser._id,
+      receiver: user,
       status: 1, // pending
     });
     await Notification.create({
-      user: receiverId,
-      message: `${user.displayName} đã gửi lời mời kết bạn`,
+      user,
+      data: {
+        user: {
+          _id: currentUser._id,
+        },
+        friendship: {
+          _id: friendship._id,
+        },
+      },
+      message: `${currentUser.displayName} đã gửi lời mời kết bạn`,
     });
     return makeSuccessResponse({
       res,
       message: "Friend request sent",
-      data: friendship,
     });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
@@ -44,29 +48,54 @@ const sendFriendRequest = async (req, res) => {
 
 const acceptFriendRequest = async (req, res) => {
   try {
-    const { friendshipId } = req.params;
-    const friendship = await Friendship.findByIdAndUpdate(
-      friendshipId,
-      { status: 2 }, // accepted
+    const { friendship } = req.body;
+    const currentUser = req.user;
+
+    if (!isValidObjectId(friendship)) {
+      return makeErrorResponse({ res, message: "Invalid friendship" });
+    }
+
+    const getFriendship = await Friendship.findByIdAndUpdate(
+      friendship,
+      { status: 2 },
       { new: true }
     ).populate("sender receiver");
-    await Notification.create({
-      user: friendship.receiver._id,
-      message: `${friendship.receiver.displayName} đã chấp nhận lời mời kết bạn`,
+
+    if (!getFriendship) {
+      return makeErrorResponse({ res, message: "Friendship not found" });
+    }
+
+    const notificationData = {
+      user: getFriendship.sender._id,
+      data: {
+        user: {
+          _id: currentUser._id,
+        },
+        friendship: {
+          _id: getFriendship._id,
+        },
+      },
+      kind: 2,
+      message: `${currentUser.displayName} đã chấp nhận lời mời kết bạn`,
+    };
+
+    const conversation = await Conversation.create({
+      friendship: getFriendship,
+      kind: 2,
     });
-    const conversation = await Conversation.create({ kind: 2 });
-    await ConversationMember.create({
-      conversation: conversation._id,
-      user: friendship.sender._id,
-    });
-    await ConversationMember.create({
-      conversation: conversation._id,
-      user: friendship.receiver._id,
-    });
+    const conversationMembers = [
+      { conversation: conversation._id, user: getFriendship.sender._id },
+      { conversation: conversation._id, user: getFriendship.receiver._id },
+    ];
+
+    await Promise.all([
+      Notification.create(notificationData),
+      ConversationMember.insertMany(conversationMembers),
+    ]);
+
     return makeSuccessResponse({
       res,
       message: "Friend request accepted",
-      data: friendship,
     });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
@@ -75,19 +104,31 @@ const acceptFriendRequest = async (req, res) => {
 
 const rejectFriendRequest = async (req, res) => {
   try {
-    const { friendshipId } = req.params;
-    const friendship = await Friendship.findById(friendshipId).populate(
-      "receiver"
+    const { friendship } = req.body;
+    const currentUser = req.user;
+    if (!isValidObjectId(friendship)) {
+      return makeErrorResponse({ res, message: "Invalid friendship" });
+    }
+    const getFriendship = await Friendship.findById(friendship).populate(
+      "sender receiver"
     );
+    await getFriendship.deleteOne();
     await Notification.create({
-      user: friendship.receiver._id,
-      message: `${friendship.receiver.displayName} đã từ chối lời mời kết bạn`,
+      user: getFriendship.sender._id,
+      data: {
+        user: {
+          _id: currentUser._id,
+        },
+        friendship: {
+          _id: getFriendship._id,
+        },
+      },
+      kind: 3,
+      message: `${currentUser.displayName} đã từ chối lời mời kết bạn`,
     });
-    await friendship.deleteOne();
     return makeSuccessResponse({
       res,
       message: "Friend request rejected",
-      data: friendship,
     });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
@@ -96,43 +137,15 @@ const rejectFriendRequest = async (req, res) => {
 
 const deleteFriendRequest = async (req, res) => {
   try {
-    const { friendshipId } = req.params;
-    const friendship = await Friendship.findById(friendshipId).populate(
-      "sender receiver"
-    );
-    if (!friendship) {
-      return makeErrorResponse({
-        res,
-        message: "Friendship not found",
-      });
+    const id = req.params.id;
+    if (!isValidObjectId(id)) {
+      return makeErrorResponse({ res, message: "Invalid friendship" });
     }
+    const friendship = await Friendship.findById(id);
     await friendship.deleteOne();
     return makeSuccessResponse({
       res,
       message: "Friend request deleted",
-      data: friendship,
-    });
-  } catch (error) {
-    return makeErrorResponse({ res, message: error.message });
-  }
-};
-
-const getFriendships = async (req, res) => {
-  try {
-    const { user } = req;
-    const friendships = await Friendship.find({
-      $or: [{ sender: user._id }, { receiver: user._id }],
-      status: 2, // accepted
-    }).populate([
-      { path: "sender", populate: { path: "role", select: "-permissions" } },
-      {
-        path: "receiver",
-        populate: { path: "role", select: "-permissions" },
-      },
-    ]);
-    return makeSuccessResponse({
-      res,
-      data: friendships,
     });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
@@ -141,19 +154,18 @@ const getFriendships = async (req, res) => {
 
 const getListFriendships = async (req, res) => {
   try {
-    const { user } = req;
-    const result = await getPaginatedData({
-      model: Friendship,
-      req,
-      queryOptions: { user: user._id },
-      populateOptions: [
-        { path: "sender", populate: { path: "role", select: "-permissions" } },
-        {
-          path: "receiver",
-          populate: { path: "role", select: "-permissions" },
-        },
-      ],
-    });
+    const { getListKind } = req.query;
+    let result = [];
+    if (getListKind === "1") {
+      // Get received friend requests
+      result = await getReceivedFriendRequests(req);
+    } else if (getListKind === "2") {
+      // Get sent friend requests
+      result = await getSentFriendRequests(req);
+    } else {
+      // Get friends
+      result = await getFriends(req);
+    }
     return makeSuccessResponse({
       res,
       data: result,
@@ -167,7 +179,6 @@ export {
   sendFriendRequest,
   acceptFriendRequest,
   rejectFriendRequest,
-  getFriendships,
   getListFriendships,
   deleteFriendRequest,
 };

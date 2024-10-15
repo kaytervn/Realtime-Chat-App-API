@@ -20,19 +20,18 @@
  *           schema:
  *             type: object
  *             properties:
- *               conversationId:
+ *               conversation:
  *                 type: string
+ *                 description: ID of the conversation
  *               content:
  *                 type: string
- *               kind:
- *                 type: number
- *               parentId:
+ *                 description: Content of the message
+ *               parent:
  *                 type: string
- *     responses:
- *       200:
- *         description: Message created successfully
- *       400:
- *         description: Bad request
+ *                 description: ID of the parent message (for replies)
+ *               imageUrl:
+ *                 type: string
+ *                 description: URL of the attached image
  */
 
 /**
@@ -52,13 +51,13 @@
  *             properties:
  *               id:
  *                 type: string
+ *                 description: ID of the message to update
  *               content:
  *                 type: string
- *     responses:
- *       200:
- *         description: Message updated successfully
- *       400:
- *         description: Bad request
+ *                 description: Updated content of the message
+ *               imageUrl:
+ *                 type: string
+ *                 description: Updated URL of the attached image
  */
 
 /**
@@ -75,11 +74,7 @@
  *         required: true
  *         schema:
  *           type: string
- *     responses:
- *       200:
- *         description: Message retrieved successfully
- *       400:
- *         description: Bad request
+ *         description: ID of the message to retrieve
  */
 
 /**
@@ -96,11 +91,7 @@
  *         required: true
  *         schema:
  *           type: string
- *     responses:
- *       200:
- *         description: Message deleted successfully
- *       400:
- *         description: Bad request
+ *         description: ID of the message to delete
  */
 
 /**
@@ -111,9 +102,35 @@
  *     tags: [Message]
  *     security:
  *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: List of messages retrieved successfully
- *       400:
- *         description: Bad request
+ *     parameters:
+ *       - in: query
+ *         name: content
+ *         schema:
+ *           type: string
+ *         description: Filter messages by content
+ *       - in: query
+ *         name: parent
+ *         schema:
+ *           type: string
+ *         description: Filter messages by parent message ID
+ *       - in: query
+ *         name: conversation
+ *         schema:
+ *           type: string
+ *         description: Filter messages by conversation ID
+ *       - in: query
+ *         name: isPaged
+ *         schema:
+ *           type: string
+ *         description: Set to "0" for unpaged results
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: number
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: size
+ *         schema:
+ *           type: number
+ *         description: Number of items per page
  */

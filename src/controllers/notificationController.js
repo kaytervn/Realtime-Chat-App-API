@@ -2,20 +2,12 @@ import Notification from "../models/notificationModel.js";
 import {
   makeErrorResponse,
   makeSuccessResponse,
-  getPaginatedData,
 } from "../services/apiService.js";
+import { getListNotifications } from "../services/notificationService.js";
 
-const getListNotifications = async (req, res) => {
+const getMyNotifications = async (req, res) => {
   try {
-    const { user } = req;
-    const { status } = req.query;
-    const query = { user };
-    if (status === "1" || status === "2") {
-      query.status = status;
-    }
-    const result = await Notification.find(query).sort({
-      createdAt: -1,
-    });
+    const result = await getListNotifications(req);
     return makeSuccessResponse({
       res,
       data: result,
@@ -37,9 +29,7 @@ const readNotification = async (req, res) => {
     if (!notification) {
       return makeErrorResponse({ res, message: "Notification not found" });
     }
-    const result = await Notification.find({ user: user._id }).sort({
-      createdAt: -1,
-    });
+    const result = await Notification.find({ user: user._id });
     return makeSuccessResponse({
       res,
       message: "Notification marked as read",
@@ -54,9 +44,7 @@ const readAllNotifications = async (req, res) => {
   try {
     const { user } = req;
     await Notification.updateMany({ user: user._id, status: 1 }, { status: 2 });
-    const result = await Notification.find({ user: user._id }).sort({
-      createdAt: -1,
-    });
+    const result = await Notification.find({ user: user._id });
     return makeSuccessResponse({
       res,
       data: result,
@@ -78,9 +66,7 @@ const deleteNotification = async (req, res) => {
     if (!notification) {
       return makeErrorResponse({ res, message: "Notification not found" });
     }
-    const result = await Notification.find({ user: user._id }).sort({
-      createdAt: -1,
-    });
+    const result = await Notification.find({ user: user._id });
     return makeSuccessResponse({
       res,
       data: result,
@@ -95,9 +81,7 @@ const deleteAllNotifications = async (req, res) => {
   try {
     const { user } = req;
     await Notification.deleteMany({ user: user._id });
-    const result = await Notification.find({ user: user._id }).sort({
-      createdAt: -1,
-    });
+    const result = await Notification.find({ user: user._id });
     return makeSuccessResponse({
       res,
       data: result,
@@ -109,7 +93,7 @@ const deleteAllNotifications = async (req, res) => {
 };
 
 export {
-  getListNotifications,
+  getMyNotifications,
   readNotification,
   readAllNotifications,
   deleteNotification,

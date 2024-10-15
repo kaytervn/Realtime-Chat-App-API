@@ -22,13 +22,7 @@
  *             properties:
  *               message:
  *                 type: string
- *               reaction:
- *                 type: string
- *     responses:
- *       200:
- *         description: Message reaction created successfully
- *       400:
- *         description: Bad request
+ *                 description: ID of the message to react to
  */
 
 /**
@@ -45,11 +39,7 @@
  *         required: true
  *         schema:
  *           type: string
- *     responses:
- *       200:
- *         description: Message reaction deleted successfully
- *       400:
- *         description: Bad request
+ *         description: ID of the message to remove reaction from
  */
 
 /**
@@ -60,9 +50,25 @@
  *     tags: [MessageReaction]
  *     security:
  *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: List of message reactions retrieved successfully
- *       400:
- *         description: Bad request
+ *     parameters:
+ *       - in: query
+ *         name: message
+ *         schema:
+ *           type: string
+ *         description: ID of the message to get reactions for
+ *       - in: query
+ *         name: isPaged
+ *         schema:
+ *           type: string
+ *         description: Set to "0" for unpaged results
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: number
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: size
+ *         schema:
+ *           type: number
+ *         description: Number of items per page
  */

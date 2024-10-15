@@ -2,7 +2,7 @@
  * @swagger
  * tags:
  *   name: File
- *   description: File upload operations
+ *   description: File upload and delete operations
  */
 
 /**
@@ -42,4 +42,38 @@
  *                       type: string
  *       400:
  *         description: Bad request
+ *       401:
+ *         description: Unauthorized
+ *
+ * /v1/file/delete:
+ *   put:
+ *     summary: Delete a file
+ *     tags: [File]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               filePath:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: File deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 result:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Bad request
+ *       401:
+ *         description: Unauthorized
  */

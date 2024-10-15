@@ -1,24 +1,40 @@
 import Message from "../models/messageModel.js";
 import MessageReaction from "../models/messageReactionModel.js";
+import Notification from "../models/notificationModel.js";
 import {
-  getPaginatedData,
+  isValidObjectId,
   makeErrorResponse,
   makeSuccessResponse,
 } from "../services/apiService.js";
+import { getListMessageReactions } from "../services/messageReactionService.js";
 
 const createMessageReaction = async (req, res) => {
   try {
-    const { messageId } = req.body;
+    const { message } = req.body;
     const { user } = req;
-    const message = await Message.findById(messageId).populate("user");
+    if (!isValidObjectId(message)) {
+      return makeErrorResponse({ res, message: "Invalid message" });
+    }
+    const getMessage = await Message.findById(message);
     await MessageReaction.create({
       user: user._id,
       message,
     });
-    if (!user._id.equals(message.user._id)) {
+    if (!user._id.equals(getMessage.user)) {
       await Notification.create({
-        user: message.user._id,
-        message: `${user.displayName} đã thả tim tin nhắn của bạn`,
+        user: getMessage.user,
+        data: {
+          conversation: {
+            _id: getMessage.conversation,
+          },
+          message: {
+            _id: getMessage._id,
+          },
+          user: {
+            _id: user._id,
+          },
+        },
+        message: `${user.displayName} đã thả tim tin nhắn của bạn"`,
       });
     }
     return makeSuccessResponse({
@@ -32,8 +48,11 @@ const createMessageReaction = async (req, res) => {
 
 const deleteMessageReaction = async (req, res) => {
   try {
-    const id = req.params.id;
-    const messageReaction = await MessageReaction.findById(id);
+    const messageId = req.params.id;
+    const messageReaction = await MessageReaction.findOne({
+      message: messageId,
+      user: req.user._id,
+    });
     if (!messageReaction) {
       return makeErrorResponse({ res, message: "Message reaction not found" });
     }
@@ -49,20 +68,7 @@ const deleteMessageReaction = async (req, res) => {
 
 const getMessageReactions = async (req, res) => {
   try {
-    const result = await getPaginatedData({
-      model: MessageReaction,
-      req,
-      populateOptions: [
-        { path: "user", populate: { path: "role", select: "-permissions" } },
-        {
-          path: "message",
-          populate: {
-            path: "user",
-            populate: { path: "role", select: "-permissions" },
-          },
-        },
-      ],
-    });
+    const result = await getListMessageReactions(req);
     return makeSuccessResponse({
       res,
       data: result,

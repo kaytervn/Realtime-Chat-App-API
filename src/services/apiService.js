@@ -5,7 +5,6 @@ import cloudinary from "../utils/cloudinary.js";
 import otpGenerator from "otp-generator";
 import nodemailer from "nodemailer";
 import "dotenv/config.js";
-import { formatDate } from "../configurations/schemaConfig.js";
 
 const isValidObjectId = (id) => mongoose.isValidObjectId(id);
 
@@ -57,114 +56,12 @@ const ignoreFields = (obj, ignoreFields) => {
   return result;
 };
 
-const getPaginatedData = async ({
-  model,
-  queryOptions = {},
-  populateOptions = [],
-  customFields = [],
-  req,
-}) => {
+const isValidUrl = (url) => {
   try {
-    const {
-      page = 0,
-      size = 10,
-      sort = "createdAt,desc",
-      ...criteria
-    } = req.query;
-
-    const offset = parseInt(page, 10) * parseInt(size, 10);
-    const limit = parseInt(size, 10);
-    const [sortField, sortDirection] = sort.split(",");
-
-    const query = {};
-    for (const [key, value] of Object.entries(criteria)) {
-      if (mongoose.isValidObjectId(value)) {
-        query[key] = new mongoose.Types.ObjectId(value);
-      } else if (!isNaN(value) && key !== "phone") {
-        query[key] = Number(value);
-      } else if (value) {
-        query[key] = new RegExp(value, "i");
-      }
-    }
-
-    let aggregationPipeline = [{ $match: { ...query, ...queryOptions } }];
-
-    if (customFields.includes("totalComments")) {
-      aggregationPipeline.push({
-        $lookup: {
-          from: "comments",
-          localField: "_id",
-          foreignField: "post",
-          as: "comments",
-        },
-      });
-      aggregationPipeline.push({
-        $addFields: {
-          totalComments: { $size: "$comments" },
-        },
-      });
-      aggregationPipeline.push({
-        $project: {
-          comments: 0,
-        },
-      });
-    }
-
-    if (customFields.includes("totalReactions")) {
-      aggregationPipeline.push({
-        $lookup: {
-          from: "postreactions",
-          localField: "_id",
-          foreignField: "post",
-          as: "reactions",
-        },
-      });
-      aggregationPipeline.push({
-        $addFields: {
-          totalReactions: { $size: "$reactions" },
-        },
-      });
-      aggregationPipeline.push({
-        $project: {
-          reactions: 0,
-        },
-      });
-    }
-
-    aggregationPipeline.push(
-      {
-        $sort: { [sortField]: sortDirection.toLowerCase() === "desc" ? -1 : 1 },
-      },
-      { $skip: offset },
-      { $limit: limit }
-    );
-
-    let data = await model.aggregate(aggregationPipeline);
-
-    data = data.map((item) => {
-      if (item.createdAt) item.createdAt = formatDate(item.createdAt);
-      if (item.updatedAt) item.updatedAt = formatDate(item.updatedAt);
-      if (item.birthDate) item.birthDate = formatDate(item.birthDate);
-      return item;
-    });
-
-    if (populateOptions && populateOptions.length) {
-      data = await model.populate(data, populateOptions);
-    }
-
-    const totalElements = await model.countDocuments({
-      ...query,
-      ...queryOptions,
-    });
-    const totalPages = Math.ceil(totalElements / limit);
-
-    return {
-      content: data,
-      totalPages,
-      totalElements,
-    };
-  } catch (error) {
-    throw new Error(error.message);
+    new URL(url);
+    return true;
+  } catch (e) {
+    return false;
   }
 };
 
@@ -236,11 +133,11 @@ export {
   comparePassword,
   removeNullValues,
   isValidObjectId,
-  getPaginatedData,
   extractIdFromFilePath,
   deleteFileByUrl,
   sendEmail,
   createSecretKey,
   createOtp,
   parseDate,
+  isValidUrl,
 };

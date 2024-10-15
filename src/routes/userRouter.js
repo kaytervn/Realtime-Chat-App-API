@@ -6,16 +6,16 @@ import {
   forgotUserPassword,
   registerUser,
   verifyUser,
-  changeUserPassword,
   updateUserProfile,
   verifyToken,
   deleteUser,
-  changeStatusUser,
-  getListUsers,
   getUser,
   createUser,
   updateUser,
   loginAdmin,
+  getUsers,
+  requestChangeUserKeyInformation,
+  verifyChangeUserKeyInformation,
 } from "../controllers/userController.js";
 import auth from "../middlewares/authentication.js";
 const router = express.Router();
@@ -27,14 +27,14 @@ router.post("/register", registerUser);
 router.post("/verify", verifyUser);
 router.post("/reset-password", resetUserPassword);
 router.post("/forgot-password", forgotUserPassword);
-router.post("/change-password", auth(""), changeUserPassword);
 router.put("/update-profile", auth(""), updateUserProfile);
 router.delete("/delete/:id", auth("USER_D"), deleteUser);
-router.put("/change-status/:id", auth("USER_C_S"), changeStatusUser);
-router.get("/list", auth("USER_L"), getListUsers);
+router.get("/list", auth("USER_L"), getUsers);
 router.get("/get/:id", auth("USER_V"), getUser);
 router.post("/create", auth("USER_C"), createUser);
 router.put("/update", auth("USER_U"), updateUser);
 router.post("/login-admin", loginAdmin);
+router.post("/request-key-change", auth(""), requestChangeUserKeyInformation);
+router.post("/verify-key-change", auth(""), verifyChangeUserKeyInformation);
 
 export { router as userRouter };

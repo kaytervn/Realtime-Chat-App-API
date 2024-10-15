@@ -9,50 +9,50 @@ import {
   createOtp,
   deleteFileByUrl,
   parseDate,
-  getPaginatedData,
+  isValidUrl,
 } from "../services/apiService.js";
 import User from "../models/userModel.js";
 import Role from "../models/roleModel.js";
 import "dotenv/config.js";
 import jwt from "jsonwebtoken";
 import Notification from "../models/notificationModel.js";
+import { formatUserData, getListUsers } from "../services/userService.js";
 
-// Login User
 const loginUser = async (req, res) => {
   try {
-    const { email, password } = req.body;
-    const user = await User.findOne({ email });
-    if (!user) {
-      return makeErrorResponse({ res, message: "Tài khoản không tồn tại" });
+    const { username, password } = req.body;
+    if (!username || !password) {
+      return makeErrorResponse({ res, message: "Invalid form data" });
     }
-    const isPasswordValid = await comparePassword(password, user.password);
-    if (!isPasswordValid) {
-      return makeErrorResponse({ res, message: "Sai mật khẩu" });
+    const user = await User.findOne({
+      $or: [{ studentId: username }, { phone: username }, { email: username }],
+    });
+    if (!user || !(await comparePassword(password, user.password))) {
+      return makeErrorResponse({ res, message: "Sai tài khoản hoặc mật khẩu" });
     }
-    if (user.status != 1) {
+    if (user.status !== 1) {
       return makeErrorResponse({
         res,
         message: "Tài khoản chưa được kích hoạt",
       });
     }
+    const accessToken = createToken(user._id);
     return makeSuccessResponse({
       res,
-      message: "Login success!",
-      data: { accessToken: createToken(user._id) },
+      message: "Login success",
+      data: { accessToken },
     });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
   }
 };
 
-// Get user profile
-
 const getUserProfile = async (req, res) => {
   try {
     const { user } = req;
     return makeSuccessResponse({
       res,
-      data: user,
+      data: await formatUserData(user),
     });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
@@ -61,7 +61,16 @@ const getUserProfile = async (req, res) => {
 
 const registerUser = async (req, res) => {
   try {
-    const { displayName, email, password, phone } = req.body;
+    const { displayName, email, password, phone, studentId } = req.body;
+    if (!displayName || !email || !password || !phone || !studentId) {
+      return makeErrorResponse({ res, message: "Invalid form data" });
+    }
+    if (await User.findOne({ studentId })) {
+      return makeErrorResponse({
+        res,
+        message: "Mã sinh viên đã được sử dụng",
+      });
+    }
     if (await User.findOne({ email })) {
       return makeErrorResponse({ res, message: "Email đã được sử dụng" });
     }
@@ -85,9 +94,10 @@ const registerUser = async (req, res) => {
       password: await encodePassword(password),
       phone,
       otp,
+      studentId,
       status: 0,
       secretKey,
-      role: await Role.findById("66df92539c35ca0c7c2bacbb"),
+      role: await Role.findOne({ kind: 1 }),
     });
     await sendEmail({ email, otp, subject: "XÁC MINH TÀI KHOẢN" });
     return makeSuccessResponse({
@@ -104,7 +114,7 @@ const verifyUser = async (req, res) => {
   try {
     const user = await User.findOne({ email });
     if (!user) {
-      return makeErrorResponse({ res, message: "User not found" });
+      return makeErrorResponse({ res, message: "Tài khoản không tồn tại" });
     }
     if (user.otp !== otp) {
       return makeErrorResponse({ res, message: "Sai mã xác thực OTP" });
@@ -112,6 +122,11 @@ const verifyUser = async (req, res) => {
     await user.updateOne({ status: 1 });
     await Notification.create({
       user: user._id,
+      data: {
+        user: {
+          _id: user._id,
+        },
+      },
       message: `Mừng thành viên mới, ${user.displayName}!`,
     });
     return makeSuccessResponse({ res, message: "Verify success" });
@@ -139,7 +154,6 @@ const forgotUserPassword = async (req, res) => {
   }
 };
 
-// Reset Password
 const resetUserPassword = async (req, res) => {
   try {
     const { email, newPassword, otp } = req.body;
@@ -150,12 +164,9 @@ const resetUserPassword = async (req, res) => {
     if (user.otp !== otp) {
       return makeErrorResponse({ res, message: "Sai mã xác thực OTP" });
     }
-
     user.password = await encodePassword(newPassword);
     user.otp = null;
-
     await user.save();
-
     return makeSuccessResponse({
       res,
       message: "Reset password success",
@@ -165,30 +176,67 @@ const resetUserPassword = async (req, res) => {
   }
 };
 
-const changeUserPassword = async (req, res) => {
+const verifyChangeUserKeyInformation = async (req, res) => {
   try {
-    const { currentPassword, newPassword } = req.body;
+    const { email, studentId, phone, otp } = req.body;
     const { user } = req;
-    const isPasswordValid = await comparePassword(
-      currentPassword,
-      user.password
-    );
-    if (!isPasswordValid) {
+    if (user.otp !== otp) {
+      return makeErrorResponse({ res, message: "Sai mã xác thực OTP" });
+    }
+    if (user.email != email && (await User.findOne({ email }))) {
+      return makeErrorResponse({ res, message: "Email đã được sử dụng" });
+    }
+    if (user.phone != phone && (await User.findOne({ phone }))) {
       return makeErrorResponse({
         res,
-        message: "Mật khẩu hiện tại không chính xác",
+        message: "Số điện thoại đã được sử dụng",
       });
     }
-    if (currentPassword == newPassword) {
+    if (user.studentId != studentId && (await User.findOne({ studentId }))) {
       return makeErrorResponse({
         res,
-        message: "Mật khẩu mới không được trùng với mật khẩu hiện tại",
+        message: "Mã sinh viên đã được sử dụng",
       });
     }
-    await user.updateOne({ password: await encodePassword(newPassword) });
+    await user.updateOne({
+      email,
+      phone,
+      studentId,
+      otp: null,
+    });
+    await Notification.create({
+      user: user._id,
+      data: {
+        user: {
+          _id: user._id,
+        },
+      },
+      kind: 2,
+      message: "Xác thực cập nhật thông tin thành công",
+    });
     return makeSuccessResponse({
       res,
-      message: "Change password success",
+      message: "Change key information success",
+    });
+  } catch (error) {
+    return makeErrorResponse({ res, message: error.message });
+  }
+};
+
+const requestChangeUserKeyInformation = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const { user } = req;
+    const isPasswordValid = await comparePassword(password, user.password);
+    if (!isPasswordValid) {
+      return makeErrorResponse({ res, message: "Sai mật khẩu" });
+    }
+    const otp = createOtp();
+    await user.updateOne({ otp });
+    await sendEmail({ email, otp, subject: "CẬP NHẬT THÔNG TIN" });
+    return makeSuccessResponse({
+      res,
+      message: "Request success, please check your email",
     });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
@@ -197,22 +245,56 @@ const changeUserPassword = async (req, res) => {
 
 const updateUserProfile = async (req, res) => {
   try {
-    const { displayName, birthDate, bio, avatarUrl } = req.body;
+    const {
+      displayName,
+      birthDate,
+      bio,
+      avatarUrl,
+      currentPassword,
+      newPassword,
+    } = req.body;
     const { user } = req;
     if (avatarUrl != user.avatarUrl) {
       await deleteFileByUrl(user.avatarUrl);
     }
     const parsedBirthDate = birthDate ? parseDate(birthDate) : null;
-    await user.updateOne({
+    const updateData = {
       displayName,
-      birthDate: parsedBirthDate,
       bio,
-      avatarUrl,
-    });
-    return makeSuccessResponse({
-      res,
-      message: "Update profile success",
-    });
+      avatarUrl: isValidUrl(avatarUrl) ? avatarUrl : null,
+      birthDate: parsedBirthDate,
+    };
+    if (currentPassword && newPassword) {
+      const isPasswordValid = await comparePassword(
+        currentPassword,
+        user.password
+      );
+      if (!isPasswordValid) {
+        return makeErrorResponse({
+          res,
+          message: "Mật khẩu hiện tại không chính xác",
+        });
+      }
+      if (currentPassword === newPassword) {
+        return makeErrorResponse({
+          res,
+          message: "Mật khẩu mới không được trùng với mật khẩu hiện tại",
+        });
+      }
+      updateData.password = await encodePassword(newPassword);
+      await Notification.create({
+        user: user._id,
+        data: {
+          user: {
+            _id: user._id,
+          },
+        },
+        kind: 2,
+        message: "Thay đổi mật khẩu thành công",
+      });
+    }
+    await user.updateOne(updateData);
+    return makeSuccessResponse({ res, message: "Update user profile success" });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
   }
@@ -221,23 +303,20 @@ const updateUserProfile = async (req, res) => {
 const verifyToken = async (req, res) => {
   try {
     const { accessToken } = req.body;
-    jwt.verify(accessToken, process.env.JWT_SECRET);
+    const { userId } = jwt.verify(accessToken, process.env.JWT_SECRET);
+    const user = await User.findById(userId);
+    if (!user) {
+      return makeErrorResponse({ res, message: "Tài khoản không tồn tại" });
+    }
+    if (user.status === 0) {
+      return makeErrorResponse({
+        res,
+        message: "Tài khoản chưa được kích hoạt",
+      });
+    }
     return makeSuccessResponse({
       res,
       message: "Verify token success",
-    });
-  } catch (error) {
-    return makeErrorResponse({ res, message: error.message });
-  }
-};
-
-const changeStatusUser = async (req, res) => {
-  try {
-    const { id, newStatus } = req.body;
-    await User.updateOne({ _id: id }, { status: newStatus });
-    return makeSuccessResponse({
-      res,
-      message: "Change user status success",
     });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
@@ -261,31 +340,9 @@ const deleteUser = async (req, res) => {
   }
 };
 
-const getListUsers = async (req, res) => {
+const getUsers = async (req, res) => {
   try {
-    const { isPaged } = req.query;
-    let result;
-    if (isPaged === "0") {
-      result = await User.find()
-        .populate({
-          path: "role",
-          select: "-permissions",
-        })
-        .sort({
-          displayName: 1,
-        });
-    } else {
-      result = await getPaginatedData({
-        model: User,
-        req,
-        populateOptions: [
-          {
-            path: "role",
-            select: "-permissions",
-          },
-        ],
-      });
-    }
+    const result = await getListUsers(req);
     return makeSuccessResponse({
       res,
       data: result,
@@ -313,16 +370,23 @@ const createUser = async (req, res) => {
     const {
       displayName,
       email,
+      studentId,
       password,
       phone,
       birthDate,
       bio,
       avatarUrl,
       status,
-      roleId,
+      role,
     } = req.body;
     const parsedBirthDate = birthDate ? parseDate(birthDate) : null;
-    const role = await Role.findById(roleId);
+    const getRole = await Role.findById(role);
+    if (await User.findOne({ studentId })) {
+      return makeErrorResponse({
+        res,
+        message: "Mã sinh viên đã được sử dụng",
+      });
+    }
     if (await User.findOne({ email })) {
       return makeErrorResponse({ res, message: "Email đã được sử dụng" });
     }
@@ -348,10 +412,11 @@ const createUser = async (req, res) => {
       otp,
       status,
       secretKey,
+      studentId,
       bio,
-      avatarUrl,
+      avatarUrl: isValidUrl(avatarUrl) ? avatarUrl : null,
       birthDate: parsedBirthDate,
-      role,
+      role: getRole,
     });
     return makeSuccessResponse({ res, message: "Create user success" });
   } catch (error) {
@@ -366,10 +431,11 @@ const updateUser = async (req, res) => {
       displayName,
       email,
       phone,
+      studentId,
       birthDate,
       bio,
       avatarUrl,
-      roleId,
+      role,
       status,
       password,
     } = req.body;
@@ -382,7 +448,7 @@ const updateUser = async (req, res) => {
       await deleteFileByUrl(updateUser.avatarUrl);
     }
     const parsedBirthDate = birthDate ? parseDate(birthDate) : null;
-    const role = await Role.findById(roleId);
+    const getRole = await Role.findById(role);
     if (updateUser.email != email && (await User.findOne({ email }))) {
       return makeErrorResponse({ res, message: "Email đã được sử dụng" });
     }
@@ -392,15 +458,25 @@ const updateUser = async (req, res) => {
         message: "Số điện thoại đã được sử dụng",
       });
     }
+    if (
+      updateUser.studentId != studentId &&
+      (await User.findOne({ studentId }))
+    ) {
+      return makeErrorResponse({
+        res,
+        message: "Mã sinh viên đã được sử dụng",
+      });
+    }
     const updateData = {
       displayName,
       email,
       phone,
       status,
+      studentId,
       bio,
-      avatarUrl,
+      avatarUrl: isValidUrl(avatarUrl) ? avatarUrl : null,
       birthDate: parsedBirthDate,
-      role,
+      role: getRole,
     };
     if (password) {
       updateData.password = await encodePassword(password);
@@ -409,6 +485,11 @@ const updateUser = async (req, res) => {
     if (!updateUser._id.equals(user._id)) {
       await Notification.create({
         user: updateUser._id,
+        data: {
+          user: {
+            _id: updateUser._id,
+          },
+        },
         message: "Thông tin của bạn đã được quản trị viên cập nhật",
       });
     }
@@ -420,35 +501,31 @@ const updateUser = async (req, res) => {
 
 const loginAdmin = async (req, res) => {
   try {
-    const { email, password } = req.body;
-    const user = await User.findOne({ email });
-    if (!user) {
-      return makeErrorResponse({ res, message: "Tài khoản không tồn tại" });
+    const { username, password } = req.body;
+    const user = await User.findOne({
+      $or: [{ studentId: username }, { phone: username }, { email: username }],
+    });
+    if (!user || !(await comparePassword(password, user.password))) {
+      return makeErrorResponse({ res, message: "Sai tài khoản hoặc mật khẩu" });
     }
-    const isPasswordValid = await comparePassword(password, user.password);
-    if (!isPasswordValid) {
-      return makeErrorResponse({ res, message: "Sai mật khẩu" });
-    }
-    if (user.status != 1) {
+    if (user.status !== 1) {
       return makeErrorResponse({
         res,
         message: "Tài khoản chưa được kích hoạt",
       });
     }
     const role = await Role.findById(user.role._id);
-    if (
-      !role.name.toLowerCase().includes("admin") &&
-      !role.name.toLowerCase().includes("quản trị")
-    ) {
+    if (role.kind === 1) {
       return makeErrorResponse({
         res,
-        message: "Bạn không phải quản trị viên",
+        message: "Bạn không được phép đăng nhập vào trang này",
       });
     }
+    const accessToken = createToken(user._id);
     return makeSuccessResponse({
       res,
       message: "Login success!",
-      data: { accessToken: createToken(user._id) },
+      data: { accessToken },
     });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
@@ -462,14 +539,14 @@ export {
   resetUserPassword,
   registerUser,
   verifyUser,
-  changeUserPassword,
+  requestChangeUserKeyInformation,
   updateUserProfile,
   verifyToken,
-  changeStatusUser,
   deleteUser,
-  getListUsers,
+  getUsers,
   getUser,
   createUser,
   updateUser,
   loginAdmin,
+  verifyChangeUserKeyInformation,
 };

@@ -20,17 +20,18 @@
  *           schema:
  *             type: object
  *             properties:
- *               postId:
+ *               post:
  *                 type: string
+ *                 description: ID of the post to comment on
  *               content:
  *                 type: string
- *               parentId:
+ *                 description: Content of the comment
+ *               parent:
  *                 type: string
- *     responses:
- *       200:
- *         description: Comment created successfully
- *       400:
- *         description: Bad request
+ *                 description: ID of the parent comment (for replies)
+ *               imageUrl:
+ *                 type: string
+ *                 description: URL of the attached image
  */
 
 /**
@@ -50,13 +51,13 @@
  *             properties:
  *               id:
  *                 type: string
+ *                 description: ID of the comment to update
  *               content:
  *                 type: string
- *     responses:
- *       200:
- *         description: Comment updated successfully
- *       400:
- *         description: Bad request
+ *                 description: Updated content of the comment
+ *               imageUrl:
+ *                 type: string
+ *                 description: Updated URL of the attached image
  */
 
 /**
@@ -73,11 +74,7 @@
  *         required: true
  *         schema:
  *           type: string
- *     responses:
- *       200:
- *         description: Comment retrieved successfully
- *       400:
- *         description: Bad request
+ *         description: ID of the comment to retrieve
  */
 
 /**
@@ -94,51 +91,51 @@
  *         required: true
  *         schema:
  *           type: string
- *     responses:
- *       200:
- *         description: Comment deleted successfully
- *       400:
- *         description: Bad request
+ *         description: ID of the comment to delete
  */
 
 /**
  * @swagger
- * /v1/comment/list/post/{postId}:
+ * /v1/comment/list:
  *   get:
- *     summary: Get list of comments for a post
+ *     summary: Get list of comments
  *     tags: [Comment]
  *     security:
  *       - bearerAuth: []
  *     parameters:
- *       - in: path
- *         name: postId
- *         required: true
+ *       - in: query
+ *         name: content
  *         schema:
  *           type: string
- *     responses:
- *       200:
- *         description: List of comments retrieved successfully
- *       400:
- *         description: Bad request
- */
-
-/**
- * @swagger
- * /v1/comment/list/parent/{parentId}:
- *   get:
- *     summary: Get list of child comments for a parent comment
- *     tags: [Comment]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: parentId
- *         required: true
+ *         description: Filter comments by content
+ *       - in: query
+ *         name: post
  *         schema:
  *           type: string
- *     responses:
- *       200:
- *         description: List of child comments retrieved successfully
- *       400:
- *         description: Bad request
+ *         description: Filter comments by post ID
+ *       - in: query
+ *         name: parent
+ *         schema:
+ *           type: string
+ *         description: Filter comments by parent comment ID
+ *       - in: query
+ *         name: isPaged
+ *         schema:
+ *           type: string
+ *         description: Set to "0" for unpaged results
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: number
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: ignoreChildren
+ *         schema:
+ *           type: string
+ *         description: Set to "1" to ignore child comments
+ *       - in: query
+ *         name: size
+ *         schema:
+ *           type: number
+ *         description: Number of items per page
  */

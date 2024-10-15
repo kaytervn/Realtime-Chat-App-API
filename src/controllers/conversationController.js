@@ -1,17 +1,23 @@
 import Conversation from "../models/conversationModel.js";
 import ConversationMember from "../models/conversationMemberModel.js";
 import {
-  getPaginatedData,
+  deleteFileByUrl,
+  isValidObjectId,
+  isValidUrl,
   makeErrorResponse,
   makeSuccessResponse,
 } from "../services/apiService.js";
 import Notification from "../models/notificationModel.js";
+import {
+  formatConversationData,
+  getListConversations,
+} from "../services/conversationService.js";
 
 const createConversation = async (req, res) => {
   try {
-    const { name, avatarUrl, memberIds } = req.body;
-    const { user } = req;
-    if (memberIds.length < 2) {
+    const { name, avatarUrl, conversationMembers } = req.body;
+    const currentUser = req.user;
+    if (conversationMembers.length < 2) {
       return makeErrorResponse({
         res,
         message: "Number of members must be at least 2",
@@ -19,32 +25,41 @@ const createConversation = async (req, res) => {
     }
     const conversation = await Conversation.create({
       name,
-      avatarUrl,
       kind: 1,
-      owner: user._id,
+      avatarUrl: isValidUrl(avatarUrl) ? avatarUrl : null,
+      owner: currentUser._id,
     });
     // Add current user to conversation
     await ConversationMember.create({
       conversation: conversation._id,
-      user: user._id,
+      user: currentUser._id,
+      canAddMember: 1,
+      canUpdate: 1,
     });
     // Add members to conversation
     await ConversationMember.create(
-      memberIds.map((userId) => ({
+      conversationMembers.map((member) => ({
         conversation: conversation._id,
-        user: userId,
+        user: member,
       }))
     );
     await Notification.create(
-      memberIds.map((userId) => ({
-        message: `Bạn được ${user.displayName} thêm vào cuộc trò chuyện "${name}"`,
-        user: userId,
+      conversationMembers.map((member) => ({
+        message: `Bạn đã được ${currentUser.displayName} thêm vào cuộc trò chuyện "${conversation.name}"`,
+        data: {
+          conversation: {
+            _id: conversation._id,
+          },
+          user: {
+            _id: currentUser._id,
+          },
+        },
+        user: member,
       }))
     );
     return makeSuccessResponse({
       res,
       message: "Create conversation success",
-      data: conversation,
     });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
@@ -54,11 +69,36 @@ const createConversation = async (req, res) => {
 const updateConversation = async (req, res) => {
   try {
     const { id, name, avatarUrl } = req.body;
+    const currentUser = req.user;
+    if (!isValidObjectId(id)) {
+      return makeErrorResponse({ res, message: "Invalid id" });
+    }
     const conversation = await Conversation.findById(id);
     if (!conversation) {
       return makeErrorResponse({ res, message: "Conversation not found" });
     }
+    if (conversation.avatarUrl !== avatarUrl) {
+      await deleteFileByUrl(conversation.avatarUrl);
+    }
     await conversation.updateOne({ name, avatarUrl });
+    const conversationMembers = await ConversationMember.find({
+      conversation: id,
+      user: { $ne: currentUser._id },
+    });
+    await Notification.create(
+      conversationMembers.map((member) => ({
+        message: `${currentUser.displayName} đã cập nhật thông tin nhóm`,
+        data: {
+          conversation: {
+            _id: conversation._id,
+          },
+          user: {
+            _id: currentUser._id,
+          },
+        },
+        user: member.user,
+      }))
+    );
     return makeSuccessResponse({ res, message: "Conversation updated" });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
@@ -68,11 +108,27 @@ const updateConversation = async (req, res) => {
 const deleteConversation = async (req, res) => {
   try {
     const id = req.params.id;
-    const conversation = await Conversation.findById(id);
-    if (!conversation) {
-      return makeErrorResponse({ res, message: "Conversation not found" });
+    const currentUser = req.user;
+    if (!isValidObjectId(id)) {
+      return makeErrorResponse({ res, message: "Invalid id" });
     }
+    const conversation = await Conversation.findById(id);
+    const conversationMembers = await ConversationMember.find({
+      conversation,
+      user: { $ne: currentUser._id },
+    });
     await conversation.deleteOne();
+    await Notification.create(
+      conversationMembers.map((member) => ({
+        message: `${currentUser.displayName} đã xóa cuộc trò chuyện`,
+        data: {
+          user: {
+            _id: currentUser._id,
+          },
+        },
+        user: member.user,
+      }))
+    );
     return makeSuccessResponse({
       res,
       message: "Delete conversation success",
@@ -85,29 +141,35 @@ const deleteConversation = async (req, res) => {
 const getConversation = async (req, res) => {
   try {
     const id = req.params.id;
-    const conversation = await Conversation.findById(id).populate([
-      { path: "owner", populate: { path: "role", select: "-permissions" } },
-    ]);
+    const currentUser = req.user;
+    const conversation = await Conversation.findById(id)
+      .populate({
+        path: "friendship",
+        populate: {
+          path: "sender receiver",
+        },
+      })
+      .populate({
+        path: "lastMessage",
+        populate: {
+          path: "user",
+        },
+      });
     if (!conversation) {
       return makeErrorResponse({ res, message: "Conversation not found" });
     }
-    return makeSuccessResponse({ res, data: conversation });
+    return makeSuccessResponse({
+      res,
+      data: await formatConversationData(conversation, currentUser),
+    });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
   }
 };
 
-const getListConversations = async (req, res) => {
+const getConversations = async (req, res) => {
   try {
-    const { user } = req;
-    const result = await getPaginatedData({
-      model: ConversationMember,
-      req,
-      queryOptions: { user: user._id },
-      populateOptions: [
-        { path: "owner", populate: { path: "role", select: "-permissions" } },
-      ],
-    });
+    const result = await getListConversations(req);
     return makeSuccessResponse({
       res,
       data: result,
@@ -122,5 +184,5 @@ export {
   updateConversation,
   deleteConversation,
   getConversation,
-  getListConversations,
+  getConversations,
 };

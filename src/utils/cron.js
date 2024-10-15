@@ -2,21 +2,69 @@ import cron from "cron";
 import Notification from "../models/notificationModel.js";
 import dayjs from "dayjs";
 import User from "../models/userModel.js";
+import utc from "dayjs/plugin/utc.js";
+import timezone from "dayjs/plugin/timezone.js";
+import Friendship from "../models/friendshipModel.js";
+import Conversation from "../models/conversationModel.js";
+import Story from "../models/storyModel.js";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const birthDateNotification = async () => {
-  const today = dayjs().format("DD/MM");
+  const today = dayjs().tz("Asia/Ho_Chi_Minh").format("DD/MM");
   const users = await User.find({
     birthDate: { $ne: null },
     $expr: {
-      $eq: [{ $dateToString: { format: "%d/%m", date: "$birthDate" } }, today],
+      $eq: [
+        {
+          $dateToString: {
+            format: "%d/%m",
+            date: "$birthDate",
+            timezone: "Asia/Ho_Chi_Minh",
+          },
+        },
+        today,
+      ],
     },
   });
   if (users.length > 0) {
-    const notifications = users.map((user) => ({
+    const userNotifications = users.map((user) => ({
       user: user._id,
       message: `Chúc mừng sinh nhật ${user.displayName}! 🎉`,
     }));
-    await Notification.insertMany(notifications);
+    await Notification.insertMany(userNotifications);
+    let allFriendNotifications = [];
+    for (const user of users) {
+      const friendships = await Friendship.find({
+        $or: [{ sender: user._id }, { receiver: user._id }],
+        status: 2,
+      });
+      for (const friendship of friendships) {
+        const friendId = friendship.sender.equals(user._id)
+          ? friendship.receiver
+          : friendship.sender;
+        const conversation = await Conversation.findOne({
+          friendshipId: friendship._id,
+        });
+        allFriendNotifications.push({
+          user: friendId,
+          data: {
+            user: {
+              _id: user._id,
+            },
+            friendship: {
+              _id: friendship._id,
+            },
+            conversation: conversation ? { _id: conversation._id } : null,
+          },
+          message: `Hôm nay là sinh nhật của ${user.displayName}. Gửi lời chúc tốt đẹp nhé!`,
+        });
+      }
+    }
+    if (allFriendNotifications.length > 0) {
+      await Notification.insertMany(allFriendNotifications);
+    }
     const superAdmin = await User.findOne({ isSuperAdmin: 1 });
     if (superAdmin) {
       await Notification.create({
@@ -27,16 +75,38 @@ const birthDateNotification = async () => {
   }
 };
 
+const deleteExpiredStories = async () => {
+  const cutoffDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const stories = await Story.find({
+    createdAt: { $lt: cutoffDate },
+  });
+  for (const story of stories) {
+    await story.deleteOne();
+  }
+  if (stories.length > 0) {
+    const superAdmin = await User.findOne({ isSuperAdmin: 1 });
+    if (superAdmin) {
+      await Notification.create({
+        user: superAdmin._id,
+        message: `Hệ thống đã xóa ${stories.length} bản tin đã hết hạn 24 giờ`,
+      });
+    }
+  }
+};
+
 const job = new cron.CronJob("0 0 * * *", async function () {
   try {
     await birthDateNotification();
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - 7);
+    await deleteExpiredStories();
+
+    const cutoffDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
     const { deletedCount } = await Notification.deleteMany({
       createdAt: { $lt: cutoffDate },
     });
+
     const superAdmin = await User.findOne({ isSuperAdmin: 1 });
-    if (superAdmin && deletedCount > 0) {
+    if (deletedCount > 0) {
       await Notification.create({
         user: superAdmin._id,
         message: `Hệ thống đã xóa ${deletedCount} thông báo quá hạn 7 ngày!`,

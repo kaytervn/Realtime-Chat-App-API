@@ -1,4 +1,6 @@
 import {
+  deleteFileByUrl,
+  isValidUrl,
   makeErrorResponse,
   makeSuccessResponse,
 } from "../services/apiService.js";
@@ -33,4 +35,20 @@ const uploadFile = async (req, res) => {
   }
 };
 
-export { uploadFile };
+const deleteFile = async (req, res) => {
+  const { filePath } = req.body;
+  if (!filePath || !isValidUrl(filePath)) {
+    return makeErrorResponse({ res, message: "Invalid file path" });
+  }
+  try {
+    await deleteFileByUrl(filePath);
+    return makeSuccessResponse({
+      res,
+      message: "File deleted successfully",
+    });
+  } catch (error) {
+    return makeErrorResponse({ res, message: error.message });
+  }
+};
+
+export { uploadFile, deleteFile };

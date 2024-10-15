@@ -1,24 +1,37 @@
+import Notification from "../models/notificationModel.js";
 import Post from "../models/postModel.js";
 import PostReaction from "../models/postReactionModel.js";
 import {
-  getPaginatedData,
+  isValidObjectId,
   makeErrorResponse,
   makeSuccessResponse,
 } from "../services/apiService.js";
+import { getListPostReactions } from "../services/postReactionService.js";
 
 const createPostReaction = async (req, res) => {
   try {
-    const { postId } = req.body;
+    const { post } = req.body;
     const { user } = req;
-    const post = await Post.findById(postId).populate("user");
+    if (!isValidObjectId(post)) {
+      return makeErrorResponse({ res, message: "Invalid post" });
+    }
+    const getPost = await Post.findById(post);
     await PostReaction.create({
       user: user._id,
       post,
     });
-    if (!user._id.equals(post.user._id)) {
+    if (!user._id.equals(getPost.user)) {
       await Notification.create({
-        user: post.user._id,
-        message: `${user.displayName} đã thả tim bài đăng "${post.content}"`,
+        user: getPost.user,
+        data: {
+          post: {
+            _id: getPost._id,
+          },
+          user: {
+            _id: user._id,
+          },
+        },
+        message: `${user.displayName} đã thả tim bài đăng của bạn"`,
       });
     }
     return makeSuccessResponse({
@@ -32,8 +45,11 @@ const createPostReaction = async (req, res) => {
 
 const deletePostReaction = async (req, res) => {
   try {
-    const id = req.params.id;
-    const postReaction = await PostReaction.findById(id);
+    const postId = req.params.id;
+    const postReaction = await PostReaction.findOne({
+      post: postId,
+      user: req.user._id,
+    });
     if (!postReaction) {
       return makeErrorResponse({ res, message: "Post reaction not found" });
     }
@@ -49,20 +65,7 @@ const deletePostReaction = async (req, res) => {
 
 const getPostReactions = async (req, res) => {
   try {
-    const result = await getPaginatedData({
-      model: PostReaction,
-      req,
-      populateOptions: [
-        { path: "user", populate: { path: "role", select: "-permissions" } },
-        {
-          path: "post",
-          populate: {
-            path: "user",
-            populate: { path: "role", select: "-permissions" },
-          },
-        },
-      ],
-    });
+    const result = await getListPostReactions(req);
     return makeSuccessResponse({
       res,
       data: result,

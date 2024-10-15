@@ -1,8 +1,5 @@
 import mongoose from "mongoose";
-import {
-  addDateGetters,
-  schemaOptions,
-} from "../configurations/schemaConfig.js";
+import { schemaOptions } from "../configurations/schemaConfig.js";
 
 const RoleSchema = new mongoose.Schema(
   {
@@ -16,11 +13,14 @@ const RoleSchema = new mongoose.Schema(
         ref: "Permission",
       },
     ],
+    kind: {
+      type: Number,
+      enum: [1, 2, 3], // 1: user, 2: manager, 3: admin
+      default: 1,
+    },
   },
   schemaOptions
 );
-
-addDateGetters(RoleSchema);
 
 const Role = mongoose.model("Role", RoleSchema);
 export default Role;

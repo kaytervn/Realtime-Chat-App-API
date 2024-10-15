@@ -33,7 +33,8 @@ FriendshipSchema.pre(
   { document: true, query: false },
   async function (next) {
     try {
-      await Conversation.deleteMany({ friendship: this._id });
+      const conversation = Conversation.findOne({ friendship: this._id });
+      await conversation.deleteOne();
       next();
     } catch (error) {
       next(error);

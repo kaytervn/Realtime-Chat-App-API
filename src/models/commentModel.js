@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { schemaOptions } from "../configurations/schemaConfig.js";
 import CommentReaction from "./commentReactionModel.js";
+import { deleteFileByUrl } from "../services/apiService.js";
 
 const CommentSchema = new mongoose.Schema(
   {

@@ -58,9 +58,9 @@ const formatConversationData = async (conversation, currentUser) => {
           owner: {
             _id: conversation.owner,
           },
-          canMessage: currentMember.canMessage,
-          canUpdate: currentMember.canUpdate,
-          canAddMember: currentMember.canAddMember,
+          canMessage: conversation.canMessage,
+          canUpdate: conversation.canUpdate,
+          canAddMember: conversation.canAddMember,
           totalMembers: totalMembers,
         }),
     totalUnreadMessages: totalUnreadMessages,
@@ -153,4 +153,4 @@ const getListConversations = async (req) => {
   };
 };
 
-export { formatConversationData, getListConversations };
+export { formatConversationData, getListConversations};

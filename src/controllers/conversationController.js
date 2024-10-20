@@ -179,10 +179,59 @@ const getConversations = async (req, res) => {
   }
 };
 
+const updateConversationPermission = async (req, res) => {
+  try {
+    const { id, canMessage, canUpdate, canAddMember } = req.body;
+    const currentUser = req.user;
+    if (!isValidObjectId(id)) {
+      return makeErrorResponse({ res, message: "Invalid id" });
+    }
+    const conversation = await Conversation.findById(id);
+    if (!conversation) {
+      return makeErrorResponse({
+        res,
+        message: "Conversation not found",
+      });
+    }
+    conversation.canMessage =
+      canMessage !== undefined ? canMessage : conversation.canMessage;
+    conversation.canUpdate =
+      canUpdate !== undefined ? canUpdate : conversation.canUpdate;
+    conversation.canAddMember =
+      canAddMember !== undefined ? canAddMember : conversation.canAddMember;
+    await conversation.save();
+    const conversationMembers = await ConversationMember.find({
+      conversation: id,
+      user: { $ne: currentUser._id },
+    });
+    await Notification.create(
+      conversationMembers.map((member) => ({
+        message: `${currentUser.displayName} đã cập nhật quyền cho thành viên trong nhóm`,
+        data: {
+          conversation: {
+            _id: conversation._id,
+          },
+          user: {
+            _id: currentUser._id,
+          },
+        },
+        user: member.user,
+      }))
+    );
+    return makeSuccessResponse({
+      res,
+      message: "Permissions updated successfully",
+    });
+  } catch (error) {
+    return makeErrorResponse({ res, message: error.message });
+  }
+};
+
 export {
   createConversation,
   updateConversation,
   deleteConversation,
   getConversation,
   getConversations,
+  updateConversationPermission,
 };

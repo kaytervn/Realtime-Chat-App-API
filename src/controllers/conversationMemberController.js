@@ -111,48 +111,6 @@ const removeMember = async (req, res) => {
   }
 };
 
-const grantPermissionForMember = async (req, res) => {
-  try {
-    const { conversationMember, canMessage, canUpdate, canAddMember } =
-      req.body;
-    const currentUser = req.user;
-    if (!isValidObjectId(conversationMember)) {
-      return makeErrorResponse({ res, message: "Invalid id" });
-    }
-    const member = await ConversationMember.findById(conversationMember);
-    if (!member) {
-      return makeErrorResponse({
-        res,
-        message: "Conversation member not found",
-      });
-    }
-    member.canMessage =
-      canMessage !== undefined ? canMessage : member.canMessage;
-    member.canUpdate = canUpdate !== undefined ? canUpdate : member.canUpdate;
-    member.canAddMember =
-      canAddMember !== undefined ? canAddMember : member.canAddMember;
-    await member.save();
-    await Notification.create({
-      user: member.user,
-      message: `${currentUser.displayName} đã cập nhật quyền cho bạn trong cuộc trò chuyện`,
-      data: {
-        conversation: {
-          _id: member.conversation,
-        },
-        user: {
-          _id: currentUser._id,
-        },
-      },
-    });
-    return makeSuccessResponse({
-      res,
-      message: "Permissions updated successfully",
-    });
-  } catch (error) {
-    return makeErrorResponse({ res, message: error.message });
-  }
-};
-
 const getConversationMembers = async (req, res) => {
   try {
     const result = await getListConversationMembers(req);
@@ -169,5 +127,4 @@ export {
   addMember,
   removeMember,
   getConversationMembers,
-  grantPermissionForMember,
 };

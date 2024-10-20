@@ -12,9 +12,6 @@ const formatConversationMemberData = (conversationMember) => {
     conversation: {
       _id: conversationMember.conversation._id,
     },
-    canMessage: conversationMember.canMessage,
-    canUpdate: conversationMember.canUpdate,
-    canAddMember: conversationMember.canAddMember,
     isOwner: conversationMember.user._id.equals(
       conversationMember.conversation.owner
     )

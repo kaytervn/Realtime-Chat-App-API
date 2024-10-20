@@ -18,21 +18,6 @@ const ConversationMemberSchema = new mongoose.Schema(
       ref: "Message",
       default: null,
     },
-    canMessage: {
-      type: Number,
-      enum: [0, 1],
-      default: 1,
-    },
-    canUpdate: {
-      type: Number,
-      enum: [0, 1],
-      default: 0,
-    },
-    canAddMember: {
-      type: Number,
-      enum: [0, 1],
-      default: 0,
-    },
   },
   schemaOptions
 );

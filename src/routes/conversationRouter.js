@@ -6,6 +6,7 @@ import {
   deleteConversation,
   getConversation,
   getConversations,
+  updateConversationPermission,
 } from "../controllers/conversationController.js";
 const router = express.Router();
 
@@ -14,5 +15,6 @@ router.put("/update", auth("CON_U"), updateConversation);
 router.get("/get/:id", auth("CON_V"), getConversation);
 router.delete("/delete/:id", auth("CON_D"), deleteConversation);
 router.get("/list", auth("CON_L"), getConversations);
+router.put("/permission", auth("CON_P"), updateConversationPermission);
 
 export { router as conversationRouter };

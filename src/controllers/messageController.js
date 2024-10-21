@@ -76,13 +76,15 @@ const updateMessage = async (req, res) => {
       return makeErrorResponse({ res, message: "Invalid id" });
     }
     const message = await Message.findById(id);
-    if (message.imageUrl != imageUrl) {
+    if (!message) {
+      return makeErrorResponse({ res, message: "Message not found" });
+    }
+    if (message.imageUrl !== imageUrl) {
       await deleteFileByUrl(message.imageUrl);
     }
-    await message.updateOne({
-      content,
-      imageUrl: isValidUrl(imageUrl) ? imageUrl : null,
-    });
+    message.content = content;
+    message.imageUrl = isValidUrl(imageUrl) ? imageUrl : null;
+    await message.save();
     const populatedMessage = await message.populate("user parent");
     const formattedMessage = await formatMessageData(
       populatedMessage,

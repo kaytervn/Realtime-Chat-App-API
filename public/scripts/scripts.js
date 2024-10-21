@@ -40,7 +40,9 @@ function addMessageToDOM(message) {
 }
 
 function updateMessageInDOM(message) {
-  const existingMessage = document.getElementById(`message-${message._id}`);
+  const existingMessage = document.getElementById(
+    `message-${message._id.toString()}`
+  );
   if (existingMessage) {
     const updatedMessage = createMessageElement(message);
     existingMessage.replaceWith(updatedMessage);
@@ -57,7 +59,7 @@ function deleteMessageFromDOM(messageId) {
 function createMessageElement(message) {
   const messageElement = document.createElement("div");
   messageElement.className = "message";
-  messageElement.id = `message-${message._id}`;
+  messageElement.id = `message-${message._id.toString()}`;
   const avatarUrl = message.user.avatarUrl || "./styles/user_icon.png";
   messageElement.innerHTML = `
     <img class="avatar" src="${avatarUrl}" alt="${message.user.displayName}">

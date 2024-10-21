@@ -20,7 +20,7 @@ const setupSocketHandlers = (io) => {
       socket.leave(conversationId);
     });
     socket.on("disconnect", () => {
-      console.log("User disconnected");
+      console.log("A user disconnected");
     });
   });
 };

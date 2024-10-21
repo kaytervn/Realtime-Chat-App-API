@@ -9,9 +9,11 @@ import { secretKey } from "../static/constant.js";
 const formatConversationData = async (conversation, currentUser) => {
   conversation.isOwner = currentUser._id.equals(conversation.owner) ? 1 : 0;
   const lastMessage = conversation.lastMessage;
-  const userKey = currentUser.secretKey;
-  const decryptedContent = decrypt(lastMessage.content, secretKey);
-  lastMessage.content = encrypt(decryptedContent, userKey);
+  if (lastMessage) {
+    const userKey = currentUser.secretKey;
+    const decryptedContent = decrypt(lastMessage.content, secretKey);
+    lastMessage.content = encrypt(decryptedContent, userKey);
+  }
   if (conversation.kind === 2) {
     const isSender = conversation.friendship.sender._id.equals(currentUser._id);
     conversation.avatarUrl = isSender

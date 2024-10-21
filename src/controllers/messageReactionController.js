@@ -8,7 +8,6 @@ import {
   makeSuccessResponse,
 } from "../services/apiService.js";
 import { getListMessageReactions } from "../services/messageReactionService.js";
-import { formatMessageData } from "../services/messageService.js";
 
 const createMessageReaction = async (req, res) => {
   try {
@@ -39,11 +38,9 @@ const createMessageReaction = async (req, res) => {
         message: `${user.displayName} đã thả tim tin nhắn của bạn"`,
       });
     }
-    const populatedMessage = await getMessage.populate("user parent");
-    const formattedMessage = await formatMessageData(populatedMessage, user);
     io.to(getMessage.conversation.toString()).emit(
       "UPDATE_MESSAGE",
-      formattedMessage
+      getMessage._id
     );
     return makeSuccessResponse({
       res,
@@ -66,14 +63,8 @@ const deleteMessageReaction = async (req, res) => {
       return makeErrorResponse({ res, message: "Message reaction not found" });
     }
     await messageReaction.deleteOne();
-    const populatedMessage = await Message.findById(messageId).populate(
-      "user parent"
-    );
-    const formattedMessage = await formatMessageData(populatedMessage, user);
-    io.to(populatedMessage.conversation.toString()).emit(
-      "UPDATE_MESSAGE",
-      formattedMessage
-    );
+    const message = await Message.findById(messageId);
+    io.to(message.conversation.toString()).emit("UPDATE_MESSAGE", message._id);
     return makeSuccessResponse({
       res,
       message: "Delete message reaction success",

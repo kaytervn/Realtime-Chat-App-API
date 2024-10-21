@@ -52,15 +52,7 @@ const createMessage = async (req, res) => {
       },
       { lastReadMessage: message._id }
     );
-    const populatedMessage = await message.populate("user parent");
-    const formattedMessage = await formatMessageData(
-      populatedMessage,
-      currentUser
-    );
-    io.to(getConversation._id.toString()).emit(
-      "CREATE_MESSAGE",
-      formattedMessage
-    );
+    io.to(getConversation._id.toString()).emit("CREATE_MESSAGE", message._id);
     return makeSuccessResponse({
       res,
       message: "Create message success",
@@ -87,15 +79,7 @@ const updateMessage = async (req, res) => {
     message.content = encrypt(content, secretKey);
     message.imageUrl = isValidUrl(imageUrl) ? imageUrl : null;
     await message.save();
-    const populatedMessage = await message.populate("user parent");
-    const formattedMessage = await formatMessageData(
-      populatedMessage,
-      currentUser
-    );
-    io.to(message.conversation.toString()).emit(
-      "UPDATE_MESSAGE",
-      formattedMessage
-    );
+    io.to(message.conversation.toString()).emit("UPDATE_MESSAGE", message._id);
     return makeSuccessResponse({ res, message: "Message updated" });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });

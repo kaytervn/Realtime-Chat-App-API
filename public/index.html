@@ -11,7 +11,7 @@
   <body>
     <ul id="messages"></ul>
     <script>
-      const socket = io("http://localhost:7978");
+      const socket = io("https://realtime-chat-app-api-1.onrender.com");
       const conversationId = "6704f285ba2fa03664b3812a";
       socket.emit("JOIN_CONVERSATION", conversationId);
       socket.on("NEW_MESSAGE", (message) => {

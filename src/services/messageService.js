@@ -5,8 +5,13 @@ import Message from "../models/messageModel.js";
 import MessageReaction from "../models/messageReactionModel.js";
 import { isValidObjectId } from "./apiService.js";
 import ConversationMember from "../models/conversationMemberModel.js";
+import { decrypt, encrypt } from "../utils/utils.js";
+import { secretKey } from "../static/constant.js";
 
 const formatMessageData = async (message, currentUser) => {
+  const userKey = currentUser.secretKey;
+  const decryptedContent = decrypt(message.content, secretKey);
+  const encryptedContent = encrypt(decryptedContent, userKey);
   const reactions = await MessageReaction.find({ message: message._id });
   message.isOwner = message.user._id.equals(currentUser._id) ? 1 : 0;
   message.isUpdated =
@@ -30,7 +35,7 @@ const formatMessageData = async (message, currentUser) => {
       displayName: message.user.displayName,
       avatarUrl: message.user.avatarUrl,
     },
-    content: message.content,
+    content: encryptedContent,
     imageUrl: message.imageUrl,
     createdAt: formatDistanceToNowStrict(message.createdAt, {
       addSuffix: true,
@@ -73,9 +78,6 @@ const getListMessages = async (req) => {
   if (isValidObjectId(parent)) {
     query.parent = new mongoose.Types.ObjectId(parent);
   }
-  if (content) {
-    query.content = { $regex: content, $options: "i" };
-  }
   if (isValidObjectId(conversation)) {
     query.conversation = new mongoose.Types.ObjectId(conversation);
     const [lastMessage, conversationMembers] = await Promise.all([
@@ -98,19 +100,22 @@ const getListMessages = async (req) => {
     }
   }
 
-  const [totalElements, messages] = await Promise.all([
-    Message.countDocuments(query),
-    Message.find(query)
-      .populate("user parent")
-      .sort({ createdAt: -1 })
-      .skip(offset)
-      .limit(limit),
-  ]);
+  const messages = await Message.find(query)
+    .populate("user parent")
+    .sort({ createdAt: -1 });
 
-  const totalPages = Math.ceil(totalElements / limit);
+  let filteredMessages = messages;
+  if (content) {
+    filteredMessages = messages.filter((message) => {
+      const decryptedContent = decrypt(message.content, secretKey);
+      return decryptedContent.toLowerCase().includes(content.toLowerCase());
+    });
+  }
+  const pagedMessages = filteredMessages.slice(offset, offset + limit);
 
+  const totalPages = Math.ceil(filteredMessages.length / limit);
   const result = await Promise.all(
-    messages.map(async (message) => {
+    pagedMessages.map(async (message) => {
       return await formatMessageData(message, currentUser);
     })
   );
@@ -118,7 +123,7 @@ const getListMessages = async (req) => {
   return {
     content: result,
     totalPages,
-    totalElements,
+    totalElements: filteredMessages.length,
   };
 };
 

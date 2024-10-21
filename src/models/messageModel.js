@@ -55,7 +55,10 @@ MessageSchema.pre(
         .sort({ createdAt: -1 });
       const newLastMessageId = previousMessage ? previousMessage._id : null;
       const conversation = await Conversation.findById(this.conversation);
-      if (this._id.equals(conversation.lastMessage)) {
+      if (
+        conversation.lastMessage &&
+        this._id.equals(conversation.lastMessage)
+      ) {
         await conversation.updateOne({
           lastMessage: newLastMessageId,
         });

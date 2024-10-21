@@ -1,4 +1,4 @@
-import * as CryptoJS from "crypto-js";
+import CryptoJS from "crypto-js";
 import "dotenv/config.js";
 
 const encrypt = (value, secretKey) => {

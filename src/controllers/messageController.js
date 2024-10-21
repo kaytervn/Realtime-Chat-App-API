@@ -14,6 +14,8 @@ import {
   formatMessageData,
   getListMessages,
 } from "../services/messageService.js";
+import { secretKey } from "../static/constant.js";
+import { encrypt } from "../utils/utils.js";
 
 const createMessage = async (req, res) => {
   try {
@@ -36,7 +38,7 @@ const createMessage = async (req, res) => {
     const message = await Message.create({
       conversation: getConversation._id,
       user: currentUser._id,
-      content,
+      content: encrypt(content, secretKey),
       imageUrl: isValidUrl(imageUrl) ? imageUrl : null,
       parent: parentMessage ? parentMessage._id : null,
     });
@@ -82,7 +84,7 @@ const updateMessage = async (req, res) => {
     if (message.imageUrl !== imageUrl) {
       await deleteFileByUrl(message.imageUrl);
     }
-    message.content = content;
+    message.content = encrypt(content, secretKey);
     message.imageUrl = isValidUrl(imageUrl) ? imageUrl : null;
     await message.save();
     const populatedMessage = await message.populate("user parent");

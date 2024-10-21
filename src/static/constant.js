@@ -1,3 +1,5 @@
+import "dotenv/config.js";
+
 const PhonePattern = /^0[35789][0-9]{8}$/;
 
 const EmailPattern =
@@ -9,4 +11,6 @@ const corsOptions = {
   allowedHeaders: ["Content-Type", "Authorization"],
 };
 
-export { PhonePattern, EmailPattern, corsOptions };
+const secretKey = process.env.SERVER_SECRET;
+
+export { PhonePattern, EmailPattern, corsOptions, secretKey };

@@ -1,3 +1,4 @@
+import { io } from "../index.js";
 import ConversationMember from "../models/conversationMemberModel.js";
 import Conversation from "../models/conversationModel.js";
 import Message from "../models/messageModel.js";
@@ -18,7 +19,11 @@ const createMessage = async (req, res) => {
   try {
     const { conversation, content, parent, imageUrl } = req.body;
     const currentUser = req.user;
-    let parentMessage;
+    const getConversation = await Conversation.findById(conversation);
+    if (!getConversation) {
+      return makeErrorResponse({ res, message: "Conversation not found" });
+    }
+    let parentMessage = null;
     if (isValidObjectId(parent)) {
       parentMessage = await Message.findById(parent);
       if (!parentMessage) {
@@ -27,13 +32,6 @@ const createMessage = async (req, res) => {
           message: "Parent message not found",
         });
       }
-    }
-    if (!isValidObjectId(conversation)) {
-      return makeErrorResponse({ res, message: "Invalid conversation" });
-    }
-    const getConversation = await Conversation.findById(conversation);
-    if (!getConversation) {
-      return makeErrorResponse({ res, message: "Conversation not found" });
     }
     const message = await Message.create({
       conversation: getConversation._id,
@@ -50,10 +48,14 @@ const createMessage = async (req, res) => {
         conversation: getConversation._id,
         user: currentUser._id,
       },
-      {
-        lastReadMessage: message._id,
-      }
+      { lastReadMessage: message._id }
     );
+    const populatedMessage = await message.populate("user parent");
+    const formattedMessage = await formatMessageData(
+      populatedMessage,
+      currentUser
+    );
+    io.to(getConversation._id.toString()).emit("NEW_MESSAGE", formattedMessage);
     return makeSuccessResponse({
       res,
       message: "Create message success",

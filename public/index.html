@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Chat Test</title>
+    <script
+      src="https://cdn.socket.io/4.7.5/socket.io.min.js"
+      integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO"
+      crossorigin="anonymous"
+    ></script>
+  </head>
+  <body>
+    <ul id="messages"></ul>
+    <script>
+      const socket = io("http://localhost:7978");
+      const conversationId = "6704f285ba2fa03664b3812a";
+      socket.emit("JOIN_CONVERSATION", conversationId);
+      socket.on("NEW_MESSAGE", (message) => {
+        const li = document.createElement("li");
+        li.textContent = `${message.user.displayName}: ${message.content}`;
+        document.getElementById("messages").appendChild(li);
+      });
+    </script>
+  </body>
+</html>

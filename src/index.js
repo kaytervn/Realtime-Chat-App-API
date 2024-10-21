@@ -21,8 +21,17 @@ import { postReactionRouter } from "./routes/postReactionRouter.js";
 import { commentReactionRouter } from "./routes/commentReactionRouter.js";
 import { storyViewRouter } from "./routes/storyViewRouter.js";
 import { storyRouter } from "./routes/storyRouter.js";
+import { createServer } from "http";
+import { Server } from "socket.io";
+import path from "path";
+import { fileURLToPath } from "url";
+import { setupSocketHandlers } from "./utils/utils.js";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer);
 
 app.use(cors(corsOptions));
 app.use(express.json({ limit: "200mb" }));
@@ -45,10 +54,18 @@ app.use("/v1/comment-reaction", commentReactionRouter);
 app.use("/v1/story-view", storyViewRouter);
 app.use("/v1/story", storyRouter);
 
+app.use(express.static(path.join(__dirname, "../public")));
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/index.html"));
+});
+
 job.start();
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Listening on port ${PORT}`);
+httpServer.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
 dbConfig();
+setupSocketHandlers(io);
+
+export { io };

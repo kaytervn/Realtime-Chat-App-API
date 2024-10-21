@@ -55,7 +55,10 @@ const createMessage = async (req, res) => {
       populatedMessage,
       currentUser
     );
-    io.to(getConversation._id.toString()).emit("NEW_MESSAGE", formattedMessage);
+    io.to(getConversation._id.toString()).emit(
+      "CREATE_MESSAGE",
+      formattedMessage
+    );
     return makeSuccessResponse({
       res,
       message: "Create message success",
@@ -68,17 +71,27 @@ const createMessage = async (req, res) => {
 const updateMessage = async (req, res) => {
   try {
     const { id, content, imageUrl } = req.body;
+    const currentUser = req.user;
     if (!isValidObjectId(id)) {
       return makeErrorResponse({ res, message: "Invalid id" });
     }
     const message = await Message.findById(id);
-    if (message.imageUrl !== imageUrl) {
+    if (message.imageUrl != imageUrl) {
       await deleteFileByUrl(message.imageUrl);
     }
     await message.updateOne({
       content,
       imageUrl: isValidUrl(imageUrl) ? imageUrl : null,
     });
+    const populatedMessage = await message.populate("user parent");
+    const formattedMessage = await formatMessageData(
+      populatedMessage,
+      currentUser
+    );
+    io.to(message.conversation.toString()).emit(
+      "UPDATE_MESSAGE",
+      formattedMessage
+    );
     return makeSuccessResponse({ res, message: "Message updated" });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
@@ -115,6 +128,7 @@ const deleteMessage = async (req, res) => {
         user: member.user,
       }))
     );
+    io.to(message.conversation.toString()).emit("DELETE_MESSAGE", message._id);
     return makeSuccessResponse({
       res,
       message: "Delete message success",

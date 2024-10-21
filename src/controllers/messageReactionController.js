@@ -1,3 +1,4 @@
+import { io } from "../index.js";
 import Message from "../models/messageModel.js";
 import MessageReaction from "../models/messageReactionModel.js";
 import Notification from "../models/notificationModel.js";
@@ -7,6 +8,7 @@ import {
   makeSuccessResponse,
 } from "../services/apiService.js";
 import { getListMessageReactions } from "../services/messageReactionService.js";
+import { formatMessageData } from "../services/messageService.js";
 
 const createMessageReaction = async (req, res) => {
   try {
@@ -37,6 +39,12 @@ const createMessageReaction = async (req, res) => {
         message: `${user.displayName} đã thả tim tin nhắn của bạn"`,
       });
     }
+    const populatedMessage = await getMessage.populate("user parent");
+    const formattedMessage = await formatMessageData(populatedMessage, user);
+    io.to(getMessage.conversation.toString()).emit(
+      "UPDATE_MESSAGE",
+      formattedMessage
+    );
     return makeSuccessResponse({
       res,
       message: "Create message reaction success",
@@ -49,6 +57,7 @@ const createMessageReaction = async (req, res) => {
 const deleteMessageReaction = async (req, res) => {
   try {
     const messageId = req.params.id;
+    const { user } = req;
     const messageReaction = await MessageReaction.findOne({
       message: messageId,
       user: req.user._id,
@@ -57,6 +66,14 @@ const deleteMessageReaction = async (req, res) => {
       return makeErrorResponse({ res, message: "Message reaction not found" });
     }
     await messageReaction.deleteOne();
+    const populatedMessage = await Message.findById(messageId).populate(
+      "user parent"
+    );
+    const formattedMessage = await formatMessageData(populatedMessage, user);
+    io.to(populatedMessage.conversation.toString()).emit(
+      "UPDATE_MESSAGE",
+      formattedMessage
+    );
     return makeSuccessResponse({
       res,
       message: "Delete message reaction success",

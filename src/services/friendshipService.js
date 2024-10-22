@@ -19,6 +19,7 @@ const formatFriendshipData = (friendship, user, conversation) => ({
           _id: user._id,
           displayName: user.displayName,
           avatarUrl: user.avatarUrl,
+          birthDate: user.birthDate ? user.birthDate.slice(0, 10) : null,
           lastLogin: formatDistanceToNow(user.lastLogin),
         },
         conversation: {

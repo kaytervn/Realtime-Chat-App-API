@@ -8,7 +8,12 @@ import {
   makeErrorResponse,
   makeSuccessResponse,
 } from "../services/apiService.js";
-import { formatStoryData, getListStories } from "../services/storyService.js";
+import {
+  formatStoryData,
+  formattedGroupStory,
+  getGroupStories,
+  getListStories,
+} from "../services/storyService.js";
 
 const createStory = async (req, res) => {
   try {
@@ -75,15 +80,50 @@ const getStory = async (req, res) => {
     if (!story) {
       return makeErrorResponse({ res, message: "Story not found" });
     }
-    const storyViewExists = await StoryView.exists({
-      user: currentUser._id,
-      story: story._id,
-    });
-    if (!storyViewExists) {
-      await StoryView.create({ user: currentUser._id, story: story._id });
+    const groupedStoryList = await getGroupStories(currentUser);
+    for (const [groupIndex, group] of groupedStoryList.entries()) {
+      const stories = group.stories;
+      const storyIndex = stories.findIndex((s) => s.id === story.id);
+      if (storyIndex !== -1) {
+        const formattedStory = await formatStoryData(story, currentUser);
+        let previousStory = null;
+        let nextStory = null;
+        if (storyIndex > 0) {
+          previousStory = stories[storyIndex - 1]._id;
+        } else if (groupIndex > 0) {
+          const previousGroup = groupedStoryList[groupIndex - 1];
+          previousStory = previousGroup.stories[0]._id;
+        }
+        if (storyIndex < stories.length - 1) {
+          nextStory = stories[storyIndex + 1]._id;
+        } else if (groupIndex < groupedStoryList.length - 1) {
+          const nextGroup = groupedStoryList[groupIndex + 1];
+          nextStory = nextGroup.stories[0]._id;
+        }
+        const storyViewExists = await StoryView.exists({
+          user: currentUser._id,
+          story: story._id,
+        });
+
+        if (!storyViewExists) {
+          await StoryView.create({
+            user: currentUser._id,
+            story: story._id,
+          });
+        }
+        return makeSuccessResponse({
+          res,
+          data: {
+            ...formattedStory,
+            position: storyIndex,
+            totalStories: stories.length,
+            previousStory,
+            nextStory,
+          },
+        });
+      }
     }
-    const formattedStory = await formatStoryData(story, currentUser);
-    return makeSuccessResponse({ res, data: formattedStory });
+    return makeErrorResponse({ res, message: "Story not found" });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
   }

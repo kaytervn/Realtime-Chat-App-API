@@ -15,7 +15,7 @@ import {
   getListMessages,
 } from "../services/messageService.js";
 import { secretKey } from "../static/constant.js";
-import { encrypt } from "../utils/utils.js";
+import { decrypt, encrypt } from "../utils/utils.js";
 
 const createMessage = async (req, res) => {
   try {
@@ -35,10 +35,11 @@ const createMessage = async (req, res) => {
         });
       }
     }
+    const decryptedContent = decrypt(content, currentUser.secretKey);
     const message = await Message.create({
       conversation: getConversation._id,
       user: currentUser._id,
-      content: encrypt(content, secretKey),
+      content: encrypt(decryptedContent, secretKey),
       imageUrl: isValidUrl(imageUrl) ? imageUrl : null,
       parent: parentMessage ? parentMessage._id : null,
     });
@@ -76,7 +77,8 @@ const updateMessage = async (req, res) => {
     if (message.imageUrl !== imageUrl) {
       await deleteFileByUrl(message.imageUrl);
     }
-    message.content = encrypt(content, secretKey);
+    const decryptedContent = decrypt(content, currentUser.secretKey);
+    message.content = encrypt(decryptedContent, secretKey);
     message.imageUrl = isValidUrl(imageUrl) ? imageUrl : null;
     await message.save();
     io.to(message.conversation.toString()).emit("UPDATE_MESSAGE", message._id);

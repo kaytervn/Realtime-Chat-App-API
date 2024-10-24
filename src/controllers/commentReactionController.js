@@ -34,7 +34,7 @@ const createCommentReaction = async (req, res) => {
             _id: user._id,
           },
         },
-        message: `${user.displayName} đã thả tim tin nhắn của bạn"`,
+        message: `${user.displayName} đã thả tim tin nhắn của bạn`,
       });
     }
     return makeSuccessResponse({

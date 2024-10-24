@@ -31,7 +31,7 @@ const createPostReaction = async (req, res) => {
             _id: user._id,
           },
         },
-        message: `${user.displayName} đã thả tim bài đăng của bạn"`,
+        message: `${user.displayName} đã thả tim bài đăng của bạn`,
       });
     }
     return makeSuccessResponse({

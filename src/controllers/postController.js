@@ -11,16 +11,17 @@ import { formatPostData, getListPosts } from "../services/postService.js";
 
 const createPost = async (req, res) => {
   try {
-    const { content, imageUrls, status = 1, kind } = req.body;
+    const { content, imageUrls, kind } = req.body;
     const { user } = req;
     const validImageUrls =
       imageUrls?.map((url) => (isValidUrl(url) ? url : null)).filter(Boolean) ||
       [];
+    const newStatus = kind === 3 ? 2 : 1;
     const post = await Post.create({
       user: user._id,
       content,
       imageUrls: validImageUrls,
-      status,
+      status: newStatus,
       kind,
     });
     const friendships = await Friendship.find({

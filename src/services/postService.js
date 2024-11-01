@@ -52,6 +52,7 @@ const getListPosts = async (req) => {
     isPaged,
     page = 0,
     getListKind = "0",
+    sortKind = "0",
     size = isPaged === "0" ? Number.MAX_SAFE_INTEGER : 10,
   } = req.query;
   const currentUser = req.user;
@@ -102,6 +103,9 @@ const getListPosts = async (req) => {
     postQuery.user = new mongoose.Types.ObjectId(user);
   }
 
+  const sortCriteria =
+    sortKind === "1" ? { status: 1, createdAt: -1 } : { createdAt: -1 };
+
   const [totalElements, posts] = await Promise.all([
     Post.countDocuments(postQuery),
     Post.find(postQuery)
@@ -111,7 +115,7 @@ const getListPosts = async (req) => {
           path: "role",
         },
       })
-      .sort({ createdAt: -1 })
+      .sort(sortCriteria)
       .skip(offset)
       .limit(limit),
   ]);

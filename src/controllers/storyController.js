@@ -10,7 +10,6 @@ import {
 } from "../services/apiService.js";
 import {
   formatStoryData,
-  formattedGroupStory,
   getGroupStories,
   getListStories,
 } from "../services/storyService.js";

@@ -18,7 +18,7 @@ const ConversationSchema = new mongoose.Schema(
     },
     kind: {
       type: Number,
-      enum: [1, 2], // 1: group, 2: direct (personal chat)
+      enum: [1, 2], // 1: group, 2: private (personal chat)
       required: true,
     },
     friendship: {

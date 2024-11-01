@@ -25,4 +25,37 @@ const setupSocketHandlers = (io) => {
   });
 };
 
-export { encrypt, decrypt, setupSocketHandlers };
+const calculateAverageDailyCount = async (model, dateField) => {
+  const results = await model.aggregate([
+    {
+      $match: {
+        [dateField]: { $ne: null },
+      },
+    },
+    {
+      $group: {
+        _id: {
+          $dateToString: { format: "%Y-%m-%d", date: `$${dateField}` },
+        },
+        dailyCount: { $sum: 1 },
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        averageDailyCount: { $avg: "$dailyCount" },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        averageDailyCount: 1,
+      },
+    },
+  ]);
+  return results[0]?.averageDailyCount
+    ? +results[0].averageDailyCount.toFixed(2)
+    : 0;
+};
+
+export { encrypt, decrypt, setupSocketHandlers, calculateAverageDailyCount };

@@ -12,6 +12,7 @@ import {
   getReceivedFriendRequests,
   getSentFriendRequests,
 } from "../services/friendshipService.js";
+import { validateMaxFriendRequests } from "../services/settingService.js";
 
 const sendFriendRequest = async (req, res) => {
   try {
@@ -19,6 +20,13 @@ const sendFriendRequest = async (req, res) => {
     const currentUser = req.user;
     if (!isValidObjectId(user)) {
       return makeErrorResponse({ res, message: "Invalid user" });
+    }
+    const isAllowed = await validateMaxFriendRequests(currentUser);
+    if (!isAllowed) {
+      return makeErrorResponse({
+        res,
+        message: "Bạn đã đạt giới hạn gửi lời mời kết bạn",
+      });
     }
     const friendship = await Friendship.create({
       sender: currentUser._id,

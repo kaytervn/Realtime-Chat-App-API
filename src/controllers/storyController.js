@@ -8,6 +8,7 @@ import {
   makeErrorResponse,
   makeSuccessResponse,
 } from "../services/apiService.js";
+import { validateStoriesPerDay } from "../services/settingService.js";
 import {
   formatStoryData,
   getGroupStories,
@@ -18,6 +19,13 @@ const createStory = async (req, res) => {
   try {
     const { imageUrl } = req.body;
     const { user } = req;
+    const isAllowed = await validateStoriesPerDay(user);
+    if (!isAllowed) {
+      return makeErrorResponse({
+        res,
+        message: "Bạn đã đăng đủ bản tin cho hôm nay",
+      });
+    }
     const story = await Story.create({
       user: user._id,
       imageUrl: isValidUrl(imageUrl) ? imageUrl : null,

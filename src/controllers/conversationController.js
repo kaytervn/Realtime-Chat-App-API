@@ -12,11 +12,19 @@ import {
   formatConversationData,
   getListConversations,
 } from "../services/conversationService.js";
+import { validateMaxConversations } from "../services/settingService.js";
 
 const createConversation = async (req, res) => {
   try {
     const { name, avatarUrl, conversationMembers } = req.body;
     const currentUser = req.user;
+    const isAllowed = await validateMaxConversations(currentUser);
+    if (!isAllowed) {
+      return makeErrorResponse({
+        res,
+        message: "Bạn đã đạt giới hạn tạo nhóm hội thoại",
+      });
+    }
     if (conversationMembers.length < 2) {
       return makeErrorResponse({
         res,

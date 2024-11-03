@@ -27,6 +27,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { setupSocketHandlers } from "./utils/utils.js";
 import { statisticRouter } from "./routes/StatisticRouter.js";
+import { settingRouter } from "./routes/settingRouter.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -55,6 +56,7 @@ app.use("/v1/comment-reaction", commentReactionRouter);
 app.use("/v1/story-view", storyViewRouter);
 app.use("/v1/story", storyRouter);
 app.use("/v1/statistic", statisticRouter);
+app.use("/v1/setting", settingRouter);
 
 app.use(express.static(path.join(__dirname, "../public")));
 app.get("/", (req, res) => {

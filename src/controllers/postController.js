@@ -8,15 +8,26 @@ import {
   makeSuccessResponse,
 } from "../services/apiService.js";
 import { formatPostData, getListPosts } from "../services/postService.js";
+import {
+  validatePostsPerDay,
+  getValidPostStatus,
+} from "../services/settingService.js";
 
 const createPost = async (req, res) => {
   try {
     const { content, imageUrls, kind } = req.body;
     const { user } = req;
+    const isAllowed = await validatePostsPerDay(user);
+    if (!isAllowed) {
+      return makeErrorResponse({
+        res,
+        message: "Bạn đã đăng đủ bài viết cho hôm nay",
+      });
+    }
     const validImageUrls =
       imageUrls?.map((url) => (isValidUrl(url) ? url : null)).filter(Boolean) ||
       [];
-    const newStatus = kind === 3 ? 2 : 1;
+    const newStatus = await getValidPostStatus(kind, user.role.kind);
     const post = await Post.create({
       user: user._id,
       content,

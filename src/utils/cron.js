@@ -109,7 +109,7 @@ const job = new cron.CronJob("0 0 * * *", async function () {
     if (deletedCount > 0) {
       await Notification.create({
         user: superAdmin._id,
-        message: `Hệ thống đã xóa ${deletedCount} thông báo quá hạn 7 ngày!`,
+        message: `Hệ thống đã xóa ${deletedCount} thông báo quá hạn 7 ngày`,
       });
     }
   } catch (error) {

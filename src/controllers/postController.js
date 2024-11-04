@@ -108,6 +108,9 @@ const changeStatusPost = async (req, res) => {
       await Notification.create({
         user: post.user._id,
         data: {
+          user: {
+            _id: post.user._id,
+          },
           post: {
             _id: post.id,
           },
@@ -138,6 +141,11 @@ const deletePost = async (req, res) => {
     if (!post.user._id.equals(user._id) && reason) {
       await Notification.create({
         user: post.user._id,
+        data: {
+          user: {
+            _id: post.user._id,
+          },
+        },
         kind: 3,
         message: `Bài đăng của bạn đã bị gỡ bỏ\nLý do: ${reason}`,
       });

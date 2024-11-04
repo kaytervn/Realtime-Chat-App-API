@@ -1,3 +1,4 @@
+import { formatDate } from "../configurations/schemaConfig.js";
 import Conversation from "../models/conversationModel.js";
 import Friendship from "../models/friendshipModel.js";
 import Post from "../models/postModel.js";
@@ -6,21 +7,13 @@ import Story from "../models/storyModel.js";
 import { postKind, settingKey } from "../static/constant.js";
 
 const formatSettingData = (setting) => {
-  let value;
-  if (
-    setting.keyName === settingKey.VERIFY_FRIEND_POSTS ||
-    setting.keyName === settingKey.VERIFY_PUBLIC_POSTS
-  ) {
-    value = setting.value === 1 ? true : false;
-  } else {
-    value = setting.value;
-  }
   return {
     _id: setting._id,
     title: setting.title,
     keyName: setting.keyName,
     roleKind: setting.roleKind,
-    value,
+    value: setting.value,
+    updatedAt: formatDate(setting.updatedAt),
   };
 };
 

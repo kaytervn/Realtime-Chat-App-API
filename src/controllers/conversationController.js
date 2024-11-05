@@ -13,6 +13,7 @@ import {
   getListConversations,
 } from "../services/conversationService.js";
 import { validateMaxConversations } from "../services/settingService.js";
+import { io } from "../index.js";
 
 const createConversation = async (req, res) => {
   try {
@@ -106,6 +107,10 @@ const updateConversation = async (req, res) => {
         },
         user: member.user,
       }))
+    );
+    io.to(conversation._id.toString()).emit(
+      "UPDATE_CONVERSATION",
+      conversation._id
     );
     return makeSuccessResponse({ res, message: "Conversation updated" });
   } catch (error) {
@@ -225,6 +230,10 @@ const updateConversationPermission = async (req, res) => {
         },
         user: member.user,
       }))
+    );
+    io.to(conversation._id.toString()).emit(
+      "UPDATE_CONVERSATION",
+      conversation._id
     );
     return makeSuccessResponse({
       res,

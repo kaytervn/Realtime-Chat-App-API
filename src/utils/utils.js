@@ -19,6 +19,12 @@ const setupSocketHandlers = (io) => {
     socket.on("LEAVE_CONVERSATION", (conversationId) => {
       socket.leave(conversationId);
     });
+    socket.on("JOIN_NOTIFICATION", (userId) => {
+      socket.join(userId);
+    });
+    socket.on("LEAVE_NOTIFICATION", (userId) => {
+      socket.join(userId);
+    });
     socket.on("disconnect", () => {
       console.log("A user disconnected");
     });

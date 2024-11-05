@@ -10,10 +10,12 @@ import {
   makeErrorResponse,
   makeSuccessResponse,
 } from "../services/apiService.js";
+import { getListConversations } from "../services/conversationService.js";
 import {
   formatMessageData,
   getListMessages,
 } from "../services/messageService.js";
+import { formatUserData } from "../services/userService.js";
 import { secretKey } from "../static/constant.js";
 import { decrypt, encrypt } from "../utils/utils.js";
 
@@ -54,6 +56,23 @@ const createMessage = async (req, res) => {
       { lastReadMessage: message._id }
     );
     io.to(getConversation._id.toString()).emit("CREATE_MESSAGE", message._id);
+    const members = await ConversationMember.find({
+      conversation: getConversation._id,
+    }).populate({
+      path: "user",
+      populate: {
+        path: "role",
+      },
+    });
+    await Promise.all(
+      members.map(async (member) => {
+        const formattedUserData = await formatUserData(member.user);
+        io.to(member.user._id.toString()).emit(
+          "NEW_NOTIFICATION",
+          formattedUserData
+        );
+      })
+    );
     return makeSuccessResponse({
       res,
       message: "Create message success",
@@ -82,6 +101,23 @@ const updateMessage = async (req, res) => {
     message.imageUrl = isValidUrl(imageUrl) ? imageUrl : null;
     await message.save();
     io.to(message.conversation.toString()).emit("UPDATE_MESSAGE", message._id);
+    const members = await ConversationMember.find({
+      conversation: message.conversation,
+    }).populate({
+      path: "user",
+      populate: {
+        path: "role",
+      },
+    });
+    await Promise.all(
+      members.map(async (member) => {
+        const formattedUserData = await formatUserData(member.user);
+        io.to(member.user._id.toString()).emit(
+          "NEW_NOTIFICATION",
+          formattedUserData
+        );
+      })
+    );
     return makeSuccessResponse({ res, message: "Message updated" });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
@@ -119,6 +155,23 @@ const deleteMessage = async (req, res) => {
       }))
     );
     io.to(message.conversation.toString()).emit("DELETE_MESSAGE", message._id);
+    const members = await ConversationMember.find({
+      conversation: message.conversation,
+    }).populate({
+      path: "user",
+      populate: {
+        path: "role",
+      },
+    });
+    await Promise.all(
+      members.map(async (member) => {
+        const formattedUserData = await formatUserData(member.user);
+        io.to(member.user._id.toString()).emit(
+          "NEW_NOTIFICATION",
+          formattedUserData
+        );
+      })
+    );
     return makeSuccessResponse({
       res,
       message: "Delete message success",

@@ -1,5 +1,8 @@
 import mongoose, { Schema } from "mongoose";
 import { schemaOptions } from "../configurations/schemaConfig.js";
+import User from "./userModel.js";
+import { io } from "../index.js";
+import { formatUserData } from "../services/userService.js";
 
 const NotificationSchema = new mongoose.Schema(
   {
@@ -29,6 +32,18 @@ const NotificationSchema = new mongoose.Schema(
     },
   },
   schemaOptions
+);
+
+NotificationSchema.post(
+  "save",
+  { document: true, query: false },
+  async function (doc) {
+    try {
+      const user = await User.findById(doc.user).populate("role");
+      const formattedUserData = await formatUserData(user);
+      io.to(user._id.toString()).emit("NEW_NOTIFICATION", formattedUserData);
+    } catch (ignored) {}
+  }
 );
 
 const Notification = mongoose.model("Notification", NotificationSchema);

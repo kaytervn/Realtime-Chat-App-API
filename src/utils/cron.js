@@ -11,6 +11,9 @@ import Story from "../models/storyModel.js";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+const daysToDeleteStories = 7;
+const daysToDeleteNotification = 14;
+
 const birthDateNotification = async () => {
   const today = dayjs().tz("Asia/Ho_Chi_Minh").format("DD/MM");
   const users = await User.find({
@@ -76,7 +79,9 @@ const birthDateNotification = async () => {
 };
 
 const deleteExpiredStories = async () => {
-  const cutoffDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const cutoffDate = new Date(
+    Date.now() - daysToDeleteStories * 24 * 60 * 60 * 1000
+  );
   const stories = await Story.find({
     createdAt: { $lt: cutoffDate },
   });
@@ -99,7 +104,9 @@ const job = new cron.CronJob("0 0 * * *", async function () {
     await birthDateNotification();
     await deleteExpiredStories();
 
-    const cutoffDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const cutoffDate = new Date(
+      Date.now() - daysToDeleteNotification * 24 * 60 * 60 * 1000
+    );
 
     const { deletedCount } = await Notification.deleteMany({
       createdAt: { $lt: cutoffDate },

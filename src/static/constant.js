@@ -5,6 +5,8 @@ const PhonePattern = /^0[35789][0-9]{8}$/;
 const EmailPattern =
   /^(?!.*[.]{2,})[a-zA-Z0-9.%]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
+const StudentIdPattern = /^[1-9][0-9]{7}$/;
+
 const corsOptions = {
   origin: "*",
   methods: ["GET", "POST", "PUT", "DELETE"],
@@ -42,4 +44,5 @@ export {
   secretKey,
   settingKey,
   postKind,
+  StudentIdPattern,
 };

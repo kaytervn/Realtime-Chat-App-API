@@ -17,6 +17,11 @@ import "dotenv/config.js";
 import jwt from "jsonwebtoken";
 import Notification from "../models/notificationModel.js";
 import { formatUserData, getListUsers } from "../services/userService.js";
+import {
+  EmailPattern,
+  PhonePattern,
+  StudentIdPattern,
+} from "../static/constant.js";
 
 const loginUser = async (req, res) => {
   try {
@@ -62,8 +67,59 @@ const getUserProfile = async (req, res) => {
 const registerUser = async (req, res) => {
   try {
     const { displayName, email, password, phone, studentId } = req.body;
-    if (!displayName || !email || !password || !phone || !studentId) {
-      return makeErrorResponse({ res, message: "Invalid form data" });
+    const errors = [];
+    if (!displayName || !displayName.trim()) {
+      errors.push({
+        field: "displayName",
+        message: "displayName cannot be null",
+      });
+    }
+    if (!email || !email.trim()) {
+      errors.push({
+        field: "email",
+        message: "email cannot be null",
+      });
+    } else if (!EmailPattern.test(email)) {
+      errors.push({
+        field: "email",
+        message: "email is invalid",
+      });
+    }
+    if (!password) {
+      errors.push({
+        field: "password",
+        message: "password cannot be null",
+      });
+    } else if (password.length < 6) {
+      errors.push({
+        field: "password",
+        message: "password must be at least 6 characters",
+      });
+    }
+    if (!phone || !phone.trim()) {
+      errors.push({
+        field: "phone",
+        message: "phone cannot be null",
+      });
+    } else if (!PhonePattern.test(phone)) {
+      errors.push({
+        field: "phone",
+        message: "phone is invalid",
+      });
+    }
+    if (!studentId || !studentId.trim()) {
+      errors.push({
+        field: "studentId",
+        message: "studentId cannot be null",
+      });
+    } else if (!StudentIdPattern.test(studentId)) {
+      errors.push({
+        field: "studentId",
+        message: "studentId is invalid",
+      });
+    }
+    if (errors.length > 0) {
+      return makeErrorResponse({ res, data: errors, message: "Invalid form" });
     }
     if (await User.findOne({ studentId })) {
       return makeErrorResponse({
@@ -88,6 +144,10 @@ const registerUser = async (req, res) => {
       }
     }
     const otp = createOtp();
+    const role = await Role.findOne({ kind: 1 });
+    if (!role) {
+      return makeErrorResponse({ res, message: "User role not found" });
+    }
     await User.create({
       displayName,
       email,
@@ -254,6 +314,16 @@ const updateUserProfile = async (req, res) => {
       newPassword,
     } = req.body;
     const { user } = req;
+    const errors = [];
+    if (!displayName || !displayName.trim()) {
+      errors.push({
+        field: "displayName",
+        message: "displayName cannot be null",
+      });
+    }
+    if (errors.length > 0) {
+      return makeErrorResponse({ res, data: errors, message: "Invalid form" });
+    }
     if (avatarUrl != user.avatarUrl) {
       await deleteFileByUrl(user.avatarUrl);
     }
@@ -502,6 +572,22 @@ const updateUser = async (req, res) => {
 const loginAdmin = async (req, res) => {
   try {
     const { username, password } = req.body;
+    const errors = [];
+    if (!username || !username.trim()) {
+      errors.push({
+        field: "username",
+        message: "username cannot be null",
+      });
+    }
+    if (!password) {
+      errors.push({
+        field: "password",
+        message: "password cannot be null",
+      });
+    }
+    if (errors.length > 0) {
+      return makeErrorResponse({ res, data: errors, message: "Invalid form" });
+    }
     const user = await User.findOne({
       $or: [{ studentId: username }, { phone: username }, { email: username }],
     });
@@ -515,7 +601,9 @@ const loginAdmin = async (req, res) => {
       });
     }
     const role = await Role.findById(user.role._id);
-    if (role.kind === 1) {
+    if (!role) {
+      return makeErrorResponse({ res, message: "Role not found" });
+    } else if (role.kind === 1) {
       return makeErrorResponse({
         res,
         message: "Bạn không được phép đăng nhập vào trang này",
@@ -524,7 +612,7 @@ const loginAdmin = async (req, res) => {
     const accessToken = createToken(user._id);
     return makeSuccessResponse({
       res,
-      message: "Login success!",
+      message: "Login success",
       data: { accessToken },
     });
   } catch (error) {

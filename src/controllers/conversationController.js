@@ -19,17 +19,39 @@ const createConversation = async (req, res) => {
   try {
     const { name, avatarUrl, conversationMembers } = req.body;
     const currentUser = req.user;
+    const errors = [];
+    if (!name || !name.trim()) {
+      errors.push({ field: "name", message: "name cannot be null" });
+    }
+    if (!conversationMembers) {
+      errors.push({
+        field: "conversationMembers",
+        message: "conversationMembers cannot be null",
+      });
+    } else if (!Array.isArray(conversationMembers)) {
+      errors.push({
+        field: "conversationMembers",
+        message: "conversationMembers must be an array",
+      });
+    } else {
+      const validMembers = conversationMembers.filter(
+        (item) => isValidObjectId(item) && !currentUser._id.equals(item)
+      );
+      if (validMembers.length < 2) {
+        errors.push({
+          field: "conversationMembers",
+          message: "conversationMembers must have at least 2 members",
+        });
+      }
+    }
+    if (errors.length > 0) {
+      return makeErrorResponse({ res, message: "Invalid form", data: errors });
+    }
     const isAllowed = await validateMaxConversations(currentUser);
     if (!isAllowed) {
       return makeErrorResponse({
         res,
         message: "Bạn đã đạt giới hạn tạo nhóm hội thoại",
-      });
-    }
-    if (conversationMembers.length < 2) {
-      return makeErrorResponse({
-        res,
-        message: "Number of members must be at least 2",
       });
     }
     const conversation = await Conversation.create({

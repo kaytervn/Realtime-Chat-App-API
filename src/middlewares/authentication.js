@@ -7,7 +7,7 @@ const auth = (permissionCode) => {
   return async (req, res, next) => {
     const { authorization } = req.headers;
     if (!authorization) {
-      return makeErrorResponse({ res, message: "You must be logged in!" });
+      return makeErrorResponse({ res, message: "You must be logged in" });
     }
     const token = authorization.split(" ")[1];
     try {
@@ -19,9 +19,9 @@ const auth = (permissionCode) => {
         },
       });
       if (!user) {
-        return makeErrorResponse({ res, message: "User not found!" });
+        return makeErrorResponse({ res, message: "User not found" });
       }
-      if (user.status === 0) {
+      if (user.status !== 1) {
         return makeErrorResponse({
           res,
           message: "Tài khoản chưa được kích hoạt",

@@ -10,7 +10,6 @@ import {
   makeErrorResponse,
   makeSuccessResponse,
 } from "../services/apiService.js";
-import { getListConversations } from "../services/conversationService.js";
 import {
   formatMessageData,
   getListMessages,

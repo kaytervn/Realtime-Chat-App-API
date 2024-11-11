@@ -16,9 +16,27 @@ import {
 const createComment = async (req, res) => {
   try {
     const { post, content, parent, imageUrl } = req.body;
+    const errors = [];
+    if (!post) {
+      errors.push({ field: "post", message: "post cannot be null" });
+    } else if (!isValidObjectId(post)) {
+      errors.push({ field: "post", message: "post id is invalid" });
+    }
+    if (!content || !content.trim()) {
+      errors.push({ field: "content", message: "content cannot be null" });
+    }
+    if (parent && !isValidObjectId(parent)) {
+      errors.push({
+        field: "parent",
+        message: "parent id is invalid",
+      });
+    }
+    if (errors.length > 0) {
+      return makeErrorResponse({ res, message: "Invalid form", data: errors });
+    }
     const currenttUser = req.user;
     let parentComment;
-    if (isValidObjectId(parent)) {
+    if (parent) {
       parentComment = await Comment.findById(parent);
       if (!parentComment) {
         return makeErrorResponse({
@@ -26,9 +44,6 @@ const createComment = async (req, res) => {
           message: "Parent comment not found",
         });
       }
-    }
-    if (!isValidObjectId(post)) {
-      return makeErrorResponse({ res, message: "Invalid post" });
     }
     const getPost = await Post.findById(post);
     if (!getPost) {

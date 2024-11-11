@@ -16,6 +16,16 @@ import {
 const createPost = async (req, res) => {
   try {
     const { content, imageUrls, kind } = req.body;
+    const errors = [];
+    if (!kind || ![1, 2, 3].includes(kind)) {
+      errors.push({ field: "kind", message: "Invalid post kind" });
+    }
+    if (!content || !content.trim()) {
+      errors.push({ field: "content", message: "content cannot be null" });
+    }
+    if (errors.length > 0) {
+      return makeErrorResponse({ res, message: "Invalid form", data: errors });
+    }
     const { user } = req;
     const isAllowed = await validatePostsPerDay(user);
     if (!isAllowed) {
@@ -102,6 +112,24 @@ const changeStatusPost = async (req, res) => {
     const post = await Post.findById(id).populate("user");
     if (!post) {
       return makeErrorResponse({ res, message: "Post not found" });
+    }
+    if (post.status !== 1) {
+      return makeErrorResponse({
+        res,
+        message: "Not allowed to change this post status",
+      });
+    }
+    if (!status || ![2, 3].includes(kind)) {
+      return makeErrorResponse({
+        res,
+        message: "Invalid post status",
+      });
+    }
+    if (status == 3 && (!reason || !reason.trim())) {
+      return makeErrorResponse({
+        res,
+        message: "Please provide reason when rejecting post",
+      });
     }
     await post.updateOne({ status });
     if (!post.user._id.equals(user._id)) {

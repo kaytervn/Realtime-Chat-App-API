@@ -11,7 +11,7 @@ import Story from "../models/storyModel.js";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-const daysToDeleteStories = 7;
+const daysToDeleteStories = 30;
 const daysToDeleteNotification = 14;
 
 const birthDateNotification = async () => {
@@ -93,7 +93,7 @@ const deleteExpiredStories = async () => {
     if (superAdmin) {
       await Notification.create({
         user: superAdmin._id,
-        message: `Hệ thống đã xóa ${stories.length} bản tin đã hết hạn 24 giờ`,
+        message: `Hệ thống đã xóa ${stories.length} bản tin đã hết hạn ${daysToDeleteStories} ngày`,
       });
     }
   }
@@ -116,7 +116,7 @@ const job = new cron.CronJob("0 0 * * *", async function () {
     if (deletedCount > 0) {
       await Notification.create({
         user: superAdmin._id,
-        message: `Hệ thống đã xóa ${deletedCount} thông báo quá hạn 7 ngày`,
+        message: `Hệ thống đã xóa ${deletedCount} thông báo quá hạn ${daysToDeleteNotification} ngày`,
       });
     }
   } catch (error) {

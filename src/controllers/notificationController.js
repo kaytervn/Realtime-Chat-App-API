@@ -17,28 +17,28 @@ const getMyNotifications = async (req, res) => {
   }
 };
 
-const readNotification = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { user } = req;
-    const notification = await Notification.findOneAndUpdate(
-      { _id: id, user: user._id },
-      { status: 2 },
-      { new: true }
-    );
-    if (!notification) {
-      return makeErrorResponse({ res, message: "Notification not found" });
-    }
-    const result = await Notification.find({ user: user._id });
-    return makeSuccessResponse({
-      res,
-      message: "Notification marked as read",
-      data: result,
-    });
-  } catch (error) {
-    return makeErrorResponse({ res, message: error.message });
-  }
-};
+// const readNotification = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { user } = req;
+//     const notification = await Notification.findOneAndUpdate(
+//       { _id: id, user: user._id },
+//       { status: 2 },
+//       { new: true }
+//     );
+//     if (!notification) {
+//       return makeErrorResponse({ res, message: "Notification not found" });
+//     }
+//     const result = await Notification.find({ user: user._id });
+//     return makeSuccessResponse({
+//       res,
+//       message: "Notification marked as read",
+//       data: result,
+//     });
+//   } catch (error) {
+//     return makeErrorResponse({ res, message: error.message });
+//   }
+// };
 
 const readAllNotifications = async (req, res) => {
   try {

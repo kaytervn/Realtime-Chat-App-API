@@ -5,17 +5,17 @@ import {
 } from "../services/apiService.js";
 import { getListNotifications } from "../services/notificationService.js";
 
-const getMyNotifications = async (req, res) => {
-  try {
-    const result = await getListNotifications(req);
-    return makeSuccessResponse({
-      res,
-      data: result,
-    });
-  } catch (error) {
-    return makeErrorResponse({ res, message: error.message });
-  }
-};
+// const getMyNotifications = async (req, res) => {
+//   try {
+//     const result = await getListNotifications(req);
+//     return makeSuccessResponse({
+//       res,
+//       data: result,
+//     });
+//   } catch (error) {
+//     return makeErrorResponse({ res, message: error.message });
+//   }
+// };
 
 const readNotification = async (req, res) => {
   try {

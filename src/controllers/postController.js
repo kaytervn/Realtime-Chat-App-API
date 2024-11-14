@@ -119,7 +119,7 @@ const changeStatusPost = async (req, res) => {
         message: "Not allowed to change this post status",
       });
     }
-    if (!status || ![2, 3].includes(kind)) {
+    if (!status || ![2, 3].includes(status)) {
       return makeErrorResponse({
         res,
         message: "Invalid post status",

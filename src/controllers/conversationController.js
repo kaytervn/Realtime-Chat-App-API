@@ -14,6 +14,8 @@ import {
 } from "../services/conversationService.js";
 import { validateMaxConversations } from "../services/settingService.js";
 import { io } from "../index.js";
+import { createMessage } from "../services/messageService.js";
+import { encrypt } from "../utils/utils.js";
 
 const createConversation = async (req, res) => {
   try {
@@ -73,6 +75,22 @@ const createConversation = async (req, res) => {
         conversation: conversation._id,
         user: member,
       }))
+    );
+    const members = await ConversationMember.find({
+      conversation: conversation._id,
+      user: { $ne: currentUser._id },
+    }).populate("user");
+    await createMessage(
+      currentUser,
+      conversation,
+      null,
+      encrypt(
+        `Chào mừng, ${members
+          .map((member) => member.user.displayName)
+          .join(", ")}`,
+        currentUser.secretKey
+      ),
+      null
     );
     await Notification.create(
       conversationMembers.map((member) => ({

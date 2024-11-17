@@ -13,6 +13,7 @@ import {
 import {
   formatMessageData,
   getListMessages,
+  createMessage as createMessageService,
 } from "../services/messageService.js";
 import { formatUserData } from "../services/userService.js";
 import { secretKey } from "../static/constant.js";
@@ -36,41 +37,12 @@ const createMessage = async (req, res) => {
         });
       }
     }
-    const decryptedContent = decrypt(content, currentUser.secretKey);
-    const message = await Message.create({
-      conversation: getConversation._id,
-      user: currentUser._id,
-      content: encrypt(decryptedContent, secretKey),
-      imageUrl: isValidUrl(imageUrl) ? imageUrl : null,
-      parent: parentMessage ? parentMessage._id : null,
-    });
-    await getConversation.updateOne({
-      lastMessage: message._id,
-    });
-    await ConversationMember.findOneAndUpdate(
-      {
-        conversation: getConversation._id,
-        user: currentUser._id,
-      },
-      { lastReadMessage: message._id }
-    );
-    io.to(getConversation._id.toString()).emit("CREATE_MESSAGE", message._id);
-    const members = await ConversationMember.find({
-      conversation: getConversation._id,
-    }).populate({
-      path: "user",
-      populate: {
-        path: "role",
-      },
-    });
-    await Promise.all(
-      members.map(async (member) => {
-        const formattedUserData = await formatUserData(member.user);
-        io.to(member.user._id.toString()).emit(
-          "NEW_NOTIFICATION",
-          formattedUserData
-        );
-      })
+    await createMessageService(
+      currentUser,
+      getConversation,
+      parentMessage,
+      content,
+      imageUrl
     );
     return makeSuccessResponse({
       res,

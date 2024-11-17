@@ -3,10 +3,12 @@ import { formatDistanceToNowStrict } from "date-fns";
 import { vi } from "date-fns/locale";
 import Message from "../models/messageModel.js";
 import MessageReaction from "../models/messageReactionModel.js";
-import { isValidObjectId } from "./apiService.js";
+import { isValidObjectId, isValidUrl } from "./apiService.js";
 import ConversationMember from "../models/conversationMemberModel.js";
 import { decrypt, encrypt } from "../utils/utils.js";
 import { secretKey } from "../static/constant.js";
+import { io } from "../index.js";
+import { formatUserData } from "./userService.js";
 
 const formatMessageData = async (message, currentUser) => {
   const userKey = currentUser.secretKey;
@@ -127,4 +129,50 @@ const getListMessages = async (req) => {
   };
 };
 
-export { formatMessageData, getListMessages };
+const createMessage = async (
+  currentUser,
+  getConversation,
+  parentMessage,
+  content,
+  imageUrl
+) => {
+  const decryptedContent = decrypt(content, currentUser.secretKey);
+  console.log(decryptedContent);
+  const message = await Message.create({
+    conversation: getConversation._id,
+    user: currentUser._id,
+    content: encrypt(decryptedContent, secretKey),
+    imageUrl: isValidUrl(imageUrl) ? imageUrl : null,
+    parent: parentMessage ? parentMessage._id : null,
+  });
+  await getConversation.updateOne({
+    lastMessage: message._id,
+  });
+  await ConversationMember.findOneAndUpdate(
+    {
+      conversation: getConversation._id,
+      user: currentUser._id,
+    },
+    { lastReadMessage: message._id }
+  );
+  io.to(getConversation._id.toString()).emit("CREATE_MESSAGE", message._id);
+  const members = await ConversationMember.find({
+    conversation: getConversation._id,
+  }).populate({
+    path: "user",
+    populate: {
+      path: "role",
+    },
+  });
+  await Promise.all(
+    members.map(async (member) => {
+      const formattedUserData = await formatUserData(member.user);
+      io.to(member.user._id.toString()).emit(
+        "NEW_NOTIFICATION",
+        formattedUserData
+      );
+    })
+  );
+};
+
+export { formatMessageData, getListMessages, createMessage };

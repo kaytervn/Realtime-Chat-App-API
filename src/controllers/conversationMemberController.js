@@ -10,26 +10,41 @@ import { getListConversationMembers } from "../services/conversationMemberServic
 
 const addMember = async (req, res) => {
   try {
-    const { conversation, user } = req.body;
+    const { conversation, users } = req.body; // 'users' là một mảng ID người dùng
     const currentUser = req.user;
-    if (!isValidObjectId(conversation) || !isValidObjectId(user)) {
-      return makeErrorResponse({ res, message: "Invalid id" });
+    if (!isValidObjectId(conversation) || !Array.isArray(users)) {
+      return makeErrorResponse({ res, message: "Invalid input data" });
     }
-    const newMember = await User.findById(user);
-    if (!newMember) {
-      return makeErrorResponse({ res, message: "User not found" });
+    const validUsers = users.filter(isValidObjectId);
+    if (validUsers.length === 0) {
+      return makeErrorResponse({ res, message: "No valid user IDs provided" });
     }
-    const existingMember = await ConversationMember.findOne({
+    const newMembers = await User.find({ _id: { $in: validUsers } });
+    if (newMembers.length === 0) {
+      return makeErrorResponse({ res, message: "No users found" });
+    }
+    const existingMembers = await ConversationMember.find({
       conversation,
-      user: newMember._id,
+      user: { $in: validUsers },
     });
-    if (existingMember) {
-      return makeErrorResponse({ res, message: "User already a member" });
+    const existingUserIds = existingMembers.map((member) =>
+      member.user.toString()
+    );
+    const membersToAdd = newMembers.filter(
+      (user) => !existingUserIds.includes(user._id.toString())
+    );
+    if (membersToAdd.length === 0) {
+      return makeErrorResponse({
+        res,
+        message: "All users are already members",
+      });
     }
-    await ConversationMember.create({
-      conversation,
-      user: newMember._id,
-    });
+    await ConversationMember.create(
+      membersToAdd.map((user) => ({
+        conversation,
+        user: user._id,
+      }))
+    );
     const notificationData = {
       user: {
         _id: currentUser._id,
@@ -38,25 +53,31 @@ const addMember = async (req, res) => {
         _id: conversation,
       },
     };
-    const conversationMembers = await ConversationMember.find({
+    await Notification.create(
+      membersToAdd.map((user) => ({
+        user: user._id,
+        data: notificationData,
+        message: `${currentUser.displayName} đã thêm bạn vào cuộc trò chuyện`,
+      }))
+    );
+    const otherMembers = await ConversationMember.find({
       conversation,
-      user: { $nin: [currentUser._id, newMember._id] },
-    });
-    await Notification.create({
-      user: newMember._id,
-      data: notificationData,
-      message: `${currentUser.displayName} đã thêm bạn vào cuộc trò chuyện`,
+      user: {
+        $nin: [currentUser._id, ...membersToAdd.map((user) => user._id)],
+      },
     });
     await Notification.create(
-      conversationMembers.map((member) => ({
-        message: `${currentUser.displayName} đã thêm ${newMember.displayName} vào cuộc trò chuyện`,
-        data: notificationData,
+      otherMembers.map((member) => ({
         user: member.user,
+        data: notificationData,
+        message: `${currentUser.displayName} đã thêm ${membersToAdd
+          .map((user) => user.displayName)
+          .join(", ")} vào cuộc trò chuyện`,
       }))
     );
     return makeSuccessResponse({
       res,
-      message: "Member added to conversation",
+      message: "Members added to conversation",
     });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
@@ -123,8 +144,4 @@ const getConversationMembers = async (req, res) => {
   }
 };
 
-export {
-  addMember,
-  removeMember,
-  getConversationMembers,
-};
+export { addMember, removeMember, getConversationMembers };

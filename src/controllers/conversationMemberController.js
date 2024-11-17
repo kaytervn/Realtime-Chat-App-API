@@ -10,7 +10,7 @@ import { getListConversationMembers } from "../services/conversationMemberServic
 
 const addMember = async (req, res) => {
   try {
-    const { conversation, users } = req.body; // 'users' là một mảng ID người dùng
+    const { conversation, users } = req.body;
     const currentUser = req.user;
     if (!isValidObjectId(conversation) || !Array.isArray(users)) {
       return makeErrorResponse({ res, message: "Invalid input data" });

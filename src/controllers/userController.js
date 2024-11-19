@@ -200,7 +200,7 @@ const forgotUserPassword = async (req, res) => {
     const { email } = req.body;
     const user = await User.findOne({ email });
     if (!user) {
-      return makeErrorResponse({ res, message: "Tài khoản không tồn tại" });
+      return makeErrorResponse({ res, message: "Email không tồn tại" });
     }
     const otp = createOtp();
     await user.updateOne({ otp });

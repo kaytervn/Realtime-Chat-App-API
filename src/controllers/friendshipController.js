@@ -2,6 +2,7 @@ import ConversationMember from "../models/conversationMemberModel.js";
 import Conversation from "../models/conversationModel.js";
 import Friendship from "../models/friendshipModel.js";
 import Notification from "../models/notificationModel.js";
+import User from "../models/userModel.js";
 import {
   isValidObjectId,
   makeErrorResponse,
@@ -18,14 +19,34 @@ const sendFriendRequest = async (req, res) => {
   try {
     const { user } = req.body;
     const currentUser = req.user;
-    if (!isValidObjectId(user)) {
-      return makeErrorResponse({ res, message: "Invalid user" });
+    if (
+      !user ||
+      !isValidObjectId(user) ||
+      currentUser._id.equals(user) ||
+      !(await User.findById(user))
+    ) {
+      return makeErrorResponse({
+        res,
+        message: "Please provide a valid user ID",
+      });
     }
     const isAllowed = await validateMaxFriendRequests(currentUser);
     if (!isAllowed) {
       return makeErrorResponse({
         res,
         message: "Bạn đã đạt giới hạn gửi lời mời kết bạn",
+      });
+    }
+    const existingFriendship = await Friendship.findOne({
+      $or: [
+        { sender: currentUser._id, receiver: user },
+        { sender: user, receiver: currentUser._id },
+      ],
+    });
+    if (existingFriendship) {
+      return makeErrorResponse({
+        res,
+        message: "Friend request exiists",
       });
     }
     const friendship = await Friendship.create({

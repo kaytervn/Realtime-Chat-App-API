@@ -151,9 +151,9 @@ const getListUsers = async (req) => {
   if (phone) {
     userQuery.phone = phone;
   }
-  if (status) {
-    userQuery.status = Number(status);
-  }
+  // if (status) {
+  //   userQuery.status = Number(status);
+  // }
   if (mongoose.isValidObjectId(role)) {
     userQuery.role = new mongoose.Types.ObjectId(role);
   }

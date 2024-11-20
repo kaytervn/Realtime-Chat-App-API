@@ -41,10 +41,10 @@ const deleteFile = async (req, res) => {
     return makeErrorResponse({ res, message: "Invalid file path" });
   }
   try {
-    // await deleteFileByUrl(filePath);
+    await deleteFileByUrl(filePath);
     return makeSuccessResponse({
       res,
-      // message: "File deleted successfully",
+      message: "File deleted successfully",
     });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });

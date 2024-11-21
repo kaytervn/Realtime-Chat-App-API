@@ -115,6 +115,11 @@ const getListMessages = async (req) => {
   }
   const pagedMessages = filteredMessages.slice(offset, offset + limit);
 
+  io.to(currentUser._id.toString()).emit(
+    "NEW_NOTIFICATION",
+    await formatUserData(currentUser)
+  );
+
   const totalPages = Math.ceil(filteredMessages.length / limit);
   const result = await Promise.all(
     pagedMessages.map(async (message) => {

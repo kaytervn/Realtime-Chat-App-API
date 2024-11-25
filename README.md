@@ -62,7 +62,7 @@ npm install
 npm start
 ```
 
-Your application will be accessible from `localhost:<YOUR_PORT>`
+Your application will be accessible from `localhost:<YOUR_API_PORT>`
 
 ---
 

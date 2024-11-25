@@ -35,7 +35,9 @@ const readNotification = async (req, res) => {
       "NEW_NOTIFICATION",
       await formatUserData(user)
     );
-    const result = await Notification.find({ user: user._id });
+    const result = await Notification.find({ user: user._id }).sort({
+      createdAt: -1,
+    });
     return makeSuccessResponse({
       res,
       message: "Notification marked as read",
@@ -50,7 +52,9 @@ const readAllNotifications = async (req, res) => {
   try {
     const { user } = req;
     await Notification.updateMany({ user: user._id, status: 1 }, { status: 2 });
-    const result = await Notification.find({ user: user._id });
+    const result = await Notification.find({ user: user._id }).sort({
+      createdAt: -1,
+    });
     io.to(user._id.toString()).emit(
       "NEW_NOTIFICATION",
       await formatUserData(user)
@@ -80,7 +84,9 @@ const deleteNotification = async (req, res) => {
       "NEW_NOTIFICATION",
       await formatUserData(user)
     );
-    const result = await Notification.find({ user: user._id });
+    const result = await Notification.find({ user: user._id }).sort({
+      createdAt: -1,
+    });
     return makeSuccessResponse({
       res,
       message: "Notification deleted successfully",
@@ -99,7 +105,9 @@ const deleteAllNotifications = async (req, res) => {
       "NEW_NOTIFICATION",
       await formatUserData(user)
     );
-    const result = await Notification.find({ user: user._id });
+    const result = await Notification.find({ user: user._id }).sort({
+      createdAt: -1,
+    });
     return makeSuccessResponse({
       res,
       message: "All notifications deleted successfully",

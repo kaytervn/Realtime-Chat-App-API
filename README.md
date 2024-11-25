@@ -54,7 +54,7 @@ npm install
 - `NODEMAILER_USER` - Your Nodemailer Email
 - `NODEMAILER_PASS` - Your Nodemailer Password
 
-2. Rename `.env.example` into `.env` (Ignore this if you're hosting it on Vercel)
+2. Rename `.env.example` into `.env`
 
 ### Starting the server
 

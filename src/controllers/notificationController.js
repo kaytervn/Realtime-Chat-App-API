@@ -35,9 +35,11 @@ const readNotification = async (req, res) => {
       "NEW_NOTIFICATION",
       await formatUserData(user)
     );
+    const result = await Notification.find({ user: user._id });
     return makeSuccessResponse({
       res,
       message: "Notification marked as read",
+      data: result,
     });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
@@ -56,6 +58,7 @@ const readAllNotifications = async (req, res) => {
     return makeSuccessResponse({
       res,
       message: "All notifications marked as read",
+      data: result,
     });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
@@ -77,9 +80,11 @@ const deleteNotification = async (req, res) => {
       "NEW_NOTIFICATION",
       await formatUserData(user)
     );
+    const result = await Notification.find({ user: user._id });
     return makeSuccessResponse({
       res,
       message: "Notification deleted successfully",
+      data: result,
     });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
@@ -94,9 +99,11 @@ const deleteAllNotifications = async (req, res) => {
       "NEW_NOTIFICATION",
       await formatUserData(user)
     );
+    const result = await Notification.find({ user: user._id });
     return makeSuccessResponse({
       res,
       message: "All notifications deleted successfully",
+      data: result,
     });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });

@@ -15,19 +15,54 @@ Software Technologies & Advance Mobile Programming Courseworks
 
 | **Resource**      | **Link**                                                                                                                                                                                                                                                                                            |
 | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| API Documentation | [Swagger UI](https://realtime-chat-app-api-tbaf.onrender.com/api-docs/)                                                                                                                                                                                                                             |
+| API Documentation | [Swagger UI](https://realtime-chat-app-api-1.onrender.com/api-docs/)                                                                                                                                                                                                                                |
 | Database Diagram  | [DBDiagram.IO](https://dbdiagram.io/d/ZaloUTE-66c6a9b4a346f9518cbd7113)                                                                                                                                                                                                                             |
-| Figma Design      | [Figma](https://www.figma.com/design/Zd2iaoJXvTNSHX8B4IgB8M/Zalo-UTE-Web?node-id=1-2&node-type=canvas&t=Uus2gIX75ZeJz9KY-0)                                                                                                                                                                             |
+| Figma Design      | [Figma](https://www.figma.com/design/Zd2iaoJXvTNSHX8B4IgB8M/Zalo-UTE-Web?node-id=1-2&node-type=canvas&t=Uus2gIX75ZeJz9KY-0)                                                                                                                                                                         |
 | UML Diagram       | [Draw.IO Viewer](https://viewer.diagrams.net/index.html?tags=%7B%7D&lightbox=1&highlight=0000ff&edit=_blank&layers=1&nav=1&title=ZALO_UTE.drawio#Uhttps%3A%2F%2Fdrive.google.com%2Fuc%3Fid%3D10gYy3U7rP2TbTBpTU1muv2NwPHpvSXMV%26export%3Ddownload#%7B%22pageId%22%3A%221ek5O3LtdH5z4QkGbGpv%22%7D) |
 
 **GitHub Repositories:**
 
-| Project         | Repository Link                                                               |                       Deployed Link                        |
-| --------------- | ----------------------------------------------------------------------------- | :--------------------------------------------------------: |
-| Web - CMS       |                                                                               |                                                            |
-| Web - Portal    | [Github Repository](https://github.com/kaytervn/Realtime-Chat-App-Portal-Web) | [LINK](https://realtime-chat-app-portal-web.onrender.com/) |
-| Mobile - CMS    |                                                                               |                                                            |
-| Mobile - Portal | [Github Repository](https://github.com/kaytervn/React-Native-App-Demo)        |                                                            |
+| Project         | Repository Link                                                                    |                       Deployed Link                        |
+| --------------- | ---------------------------------------------------------------------------------- | :--------------------------------------------------------: |
+| Web - CMS       | [Github Repository](https://github.com/The-Cookies-Team/Realtime-Chat-App-CMS-Web) |  [LINK](https://realtime-chat-app-cms-web.onrender.com/)   |
+| Web - Portal    | [Github Repository](https://github.com/kaytervn/Realtime-Chat-App-Portal-Web)      | [LINK](https://realtime-chat-app-portal-web.onrender.com/) |
+| Mobile - CMS    | [Github Repository](https://github.com/The-Cookies-Team/Realtime-Chat-App-Flutter) |                            N/A                             |
+| Mobile - Portal | [Github Repository](https://github.com/kaytervn/React-Native-App-Demo)             |                            N/A                             |
+
+---
+
+## Installation
+
+```sh
+npm install
+```
+
+## Usage
+
+### Setting environment variables
+
+1. Edit `.env.example`:
+
+- `PORT` - Port your server should run on (e.g. `3000`)
+- `MONGODB_URI` - Your MongoDB Connection URI
+- `DB_NAME` - Your MongoDB Database Name
+- `JWT_SECRET` - Secret key for JWT
+- `SERVER_SECRET` - A 16-bit secret key for the server (e.g. `d643hjftsdh39fje`)
+- `CLOUD_NAME` - Your Cloudinary Cloud Name
+- `CLOUD_API_KEY` - Your Cloudinary API Key
+- `CLOUD_API_SECRET` - Your Cloudinary API Secret
+- `NODEMAILER_USER` - Your Nodemailer Email
+- `NODEMAILER_PASS` - Your Nodemailer Password
+
+2. Rename `.env.example` into `.env` (Ignore this if you're hosting it on Vercel)
+
+### Starting the server
+
+```sh
+npm start
+```
+
+Your application will be accessible from `localhost:<YOUR_PORT>`
 
 ---
 

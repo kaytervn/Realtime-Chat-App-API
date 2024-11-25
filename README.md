@@ -33,6 +33,8 @@ Software Technologies & Advance Mobile Programming Courseworks
 
 ## Installation
 
+To install the dependencies for the project, run the following command:
+
 ```sh
 npm install
 ```

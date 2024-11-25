@@ -64,6 +64,23 @@ npm start
 
 Your application will be accessible from `localhost:<YOUR_API_PORT>`
 
+If the database is successfully initialized, a message will be displayed in the console:
+
+```sh
+Database initialized successfully.
+```
+
+You can log in using the default admin credentials via the following API endpoint:
+
+- POST: `localhost:<YOUR_API_PORT>/v1/user/login`
+
+**Default Credentials:**
+
+- **Username:** `superadmin@gmail.com`
+- **Password:** `123456`
+
+To modify default data configurations, navigate to the following folder: `src`/`data`/`**`
+
 ---
 
 # Use Case Specifications

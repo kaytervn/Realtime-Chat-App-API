@@ -218,8 +218,9 @@ const toggleFollowFriend = async (req, res) => {
       return makeErrorResponse({ res, message: "Friendship not found" });
     }
     if (
-      !currentUser._id.equals(getFriendship.sender) &&
-      !currentUser._id.equals(getFriendship.receiver)
+      (!currentUser._id.equals(getFriendship.sender) &&
+        !currentUser._id.equals(getFriendship.receiver)) ||
+      getFriendship.status !== 2
     ) {
       return makeErrorResponse({ res, message: "Unauthorized action" });
     }

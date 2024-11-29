@@ -63,6 +63,7 @@ const getListPosts = async (req) => {
   const friendships = await Friendship.find({
     $or: [{ sender: currentUser._id }, { receiver: currentUser._id }],
     status: 2,
+    followers: currentUser._id,
   });
 
   const friendIds = friendships.map((friendship) =>

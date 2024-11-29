@@ -25,6 +25,7 @@ const formatFriendshipData = (friendship, user, conversation) => ({
         conversation: {
           _id: conversation?._id,
         },
+        isFollowed: friendship.isFollowed,
       }
     : {
         sender: {
@@ -81,6 +82,15 @@ const getFriends = async (req) => {
         (f) => f.sender.equals(user._id) || f.receiver.equals(user._id)
       );
       const conversation = await Conversation.findOne({ friendship });
+      if (
+        friendship.status === 2 &&
+        friendship.followers &&
+        friendship.followers.includes(currentUser._id)
+      ) {
+        friendship.isFollowed = 1;
+      } else {
+        friendship.isFollowed = 0;
+      }
       return formatFriendshipData(friendship, user, conversation);
     })
   );

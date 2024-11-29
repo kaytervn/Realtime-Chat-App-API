@@ -84,15 +84,17 @@ const acceptFriendRequest = async (req, res) => {
       return makeErrorResponse({ res, message: "Invalid friendship" });
     }
 
-    const getFriendship = await Friendship.findByIdAndUpdate(
-      friendship,
-      { status: 2 },
-      { new: true }
-    ).populate("sender receiver");
-
+    const getFriendship = await Friendship.findOne({
+      _id: friendship,
+    }).populate("sender receiver");
     if (!getFriendship) {
       return makeErrorResponse({ res, message: "Friendship not found" });
     }
+    const { sender, receiver } = getFriendship;
+    await getFriendship.updateOne({
+      status: 2,
+      followers: [sender._id, receiver._id],
+    });
 
     const notificationData = {
       user: getFriendship.sender._id,
@@ -204,10 +206,51 @@ const getListFriendships = async (req, res) => {
   }
 };
 
+const toggleFollowFriend = async (req, res) => {
+  try {
+    const { friendship } = req.body;
+    const currentUser = req.user;
+    if (!isValidObjectId(friendship)) {
+      return makeErrorResponse({ res, message: "Invalid friendship id" });
+    }
+    const getFriendship = await Friendship.findById(friendship);
+    if (!getFriendship) {
+      return makeErrorResponse({ res, message: "Friendship not found" });
+    }
+    if (
+      !currentUser._id.equals(getFriendship.sender) &&
+      !currentUser._id.equals(getFriendship.receiver)
+    ) {
+      return makeErrorResponse({ res, message: "Unauthorized action" });
+    }
+    const isFollowing = getFriendship.followers.includes(currentUser._id);
+    if (isFollowing) {
+      getFriendship.followers = getFriendship.followers.filter(
+        (followerId) => !followerId.equals(currentUser._id)
+      );
+      await getFriendship.save();
+      return makeSuccessResponse({
+        res,
+        message: "Friend unfollowed successfully",
+      });
+    } else {
+      getFriendship.followers.push(currentUser._id);
+      await getFriendship.save();
+      return makeSuccessResponse({
+        res,
+        message: "Friend followed successfully",
+      });
+    }
+  } catch (error) {
+    return makeErrorResponse({ res, message: error.message });
+  }
+};
+
 export {
   sendFriendRequest,
   acceptFriendRequest,
   rejectFriendRequest,
   getListFriendships,
   deleteFriendRequest,
+  toggleFollowFriend,
 };

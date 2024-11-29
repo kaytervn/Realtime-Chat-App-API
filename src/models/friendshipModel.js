@@ -22,6 +22,12 @@ const FriendshipSchema = new mongoose.Schema(
       enum: [1, 2], // 1: pending, 2: accepted
       default: 1,
     },
+    followers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
   },
   schemaOptions
 );
